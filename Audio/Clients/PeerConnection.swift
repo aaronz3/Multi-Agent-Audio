@@ -16,10 +16,10 @@ protocol PeerConnectionDelegate: AnyObject {
 }
 // We use Google's public stun servers. For production apps you should deploy your own stun/turn servers.
 let defaultIceServers = ["stun:stun.l.google.com:19302",
-                                     "stun:stun1.l.google.com:19302",
-                                     "stun:stun2.l.google.com:19302",
-                                     "stun:stun3.l.google.com:19302",
-                                     "stun:stun4.l.google.com:19302"]
+                         "stun:stun1.l.google.com:19302",
+                         "stun:stun2.l.google.com:19302",
+                         "stun:stun3.l.google.com:19302",
+                         "stun:stun4.l.google.com:19302"]
 
 class PeerConnectionFactory {
     static let factory: RTCPeerConnectionFactory = {
@@ -97,51 +97,37 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
     
     // MARK: SIGNALING
     
-    func offer(completion: @escaping (_ sdp: RTCSessionDescription) -> Void) {
+    func offer() async throws -> RTCSessionDescription {
         
         let constrains = RTCMediaConstraints(mandatoryConstraints: self.mediaConstrains,
                                              optionalConstraints: nil)
         
+        let sdp = try await self.peerConnection.offer(for: constrains) // If error, then print fails to get offer sdp
         
-        self.peerConnection.offer(for: constrains) { [weak self] (sdp, error) in
-            guard let self = self else {
-                print("NOTE: THIS PEER CONNECTION INSTANCE WAS DELETED BEFORE HERE")
-                return
-            }
-            
-            guard let sdp = sdp else {
-                return
-            }
-
-            self.peerConnection.setLocalDescription(sdp) { (error) in
-                
-                completion(sdp)
-            }
-        }
+        try await self.peerConnection.setLocalDescription(sdp)         // If error, then print fails to set sdp
+        
+        return sdp
     }
     
-    func answer(completion: @escaping (_ sdp: RTCSessionDescription) -> Void)  {
+    func answer() async throws -> RTCSessionDescription {
         let constrains = RTCMediaConstraints(mandatoryConstraints: self.mediaConstrains,
                                              optionalConstraints: nil)
-        self.peerConnection.answer(for: constrains) { (sdp, error) in
-            guard let sdp = sdp else {
-                return
-            }
-            
-            self.peerConnection.setLocalDescription(sdp) { (error) in
-                completion(sdp)
-            }
-        }
+        
+        let sdp = try await self.peerConnection.answer(for: constrains) // If error, then print fails to get answer sdp
+        
+        try await self.peerConnection.setLocalDescription(sdp)          // If error, then print fails to get set sdp
+        
+        return sdp
     }
     
     // MARK: SET THE SDP AND ADD THE ICE CANDIDATES
     
-    func set(remoteSdp: RTCSessionDescription, completion: @escaping (Error?) -> ()) {
-        self.peerConnection.setRemoteDescription(remoteSdp, completionHandler: completion)
+    func set(remoteSdp: RTCSessionDescription) async throws {
+        try await self.peerConnection.setRemoteDescription(remoteSdp)
     }
     
-    func set(remoteCandidate: RTCIceCandidate, completion: @escaping (Error?) -> ()) {
-        self.peerConnection.add(remoteCandidate, completionHandler: completion)
+    func set(remoteCandidate: RTCIceCandidate) async throws {
+        try await self.peerConnection.add(remoteCandidate)
     }
     
     // MARK: MUTING AND UNMUTING OF AUDIO

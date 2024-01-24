@@ -38,12 +38,10 @@ struct WebRTCView: View {
         }
         .onAppear {
             networkMonitor.start()
-        }
-        .task {
-            
-            await HandleAudioSession.checkAudioPermission()
+            HandleAudioSession.checkAudioPermission()
             HandleAudioSession.speakerOn()
         }
+        
     }
     
     

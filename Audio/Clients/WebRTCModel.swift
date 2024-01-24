@@ -8,8 +8,6 @@
 import Foundation
 import WebRTC
 
-let dataProcessingQueue = DispatchQueue(label: "Data Processing Queue")
-
 //@Observable
 class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, ObservableObject {
             
@@ -18,7 +16,6 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
 
     @Published var signalingConnected = false
     @Published var disableTalkButton = true
-    
     
     private let semaphore = DispatchSemaphore(value: 0)
 
@@ -48,31 +45,26 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
         self.resetPeerConnections()
     }
     
-    func webSocket(didReceiveData data: Data) {
+    func webSocket(didReceiveData data: Data) async {
         
-        dataProcessingQueue.sync {
-            print("NOTE: Procesing data thread: \(Thread.current)")
+        guard self.peerConnections.first != nil else {
+            print("DEBUG: Peer connections is nil here")
+            return
+        }
+        switch self.decodeReceivedData(data: data) {
+        
+        case .candidate(let iceCandidate): await self.receivedCandidate(iceCandidate: iceCandidate)
             
-            guard self.peerConnections.first != nil else {
-                print("DEBUG: Peer connections is nil here")
-                return
-            }
+        case .sdp(let sessionDescription): await self.receivedSDP(sessionDescription: sessionDescription)
+        
+        // Runs when some other user connects to the signaling server. The server relays the other user's information to you.
+        case .justConnectedUser(let justConnectedUser): await self.receivedConnectedUser(justConnectedUser: justConnectedUser)
             
-            switch self.decodeReceivedData(data: data) {
+        case .justDisconnectedUser(let disconnectedUser): await self.receivedDisconnectedUser(disconnectedUser: disconnectedUser)
             
-            case .candidate(let iceCandidate): self.receivedCandidate(iceCandidate: iceCandidate)
-                
-            case .sdp(let sessionDescription): self.receivedSDP(sessionDescription: sessionDescription)
+        default :
+            print("DEBUG: Got an unknown message.")
             
-            // Runs when some other user connects to the signaling server. The server relays the other user's information to you.
-            case .justConnectedUser(let justConnectedUser): self.receivedConnectedUser(justConnectedUser: justConnectedUser)
-                
-            case .justDisconnectedUser(let disconnectedUser): self.receivedDisconnectedUser(disconnectedUser: disconnectedUser)
-                
-            default :
-                print("DEBUG: Got an unknown message.")
-                
-            }
         }
     }
     
@@ -80,208 +72,190 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
         do {
             let returnMessage = try self.signalingClient.decoder.decode(Message.self, from: data)
             return returnMessage
-        }
-        catch {
-            print("DEBUG: \(error.localizedDescription)")
+        } catch {
+            print("DEBUG: Error in decodeReceivedData. \(error.localizedDescription)")
             return nil
         }
     }
     
-    func receivedCandidate(iceCandidate: IceCandidate) {
+    func receivedCandidate(iceCandidate: IceCandidate) async {
         for pC in self.peerConnections {
-            if pC.receivingAgentsUUID == iceCandidate.fromUUID {
+            
+            guard pC.receivingAgentsUUID == iceCandidate.fromUUID else {
+                continue
+            }
+            
+            do {
+                try await pC.set(remoteCandidate: iceCandidate.rtcIceCandidate)
                 
-                pC.set(remoteCandidate: iceCandidate.rtcIceCandidate) { error in
-                    guard error == nil else {
-                        print("DEBUG: Error with setting remote candidate. Local Description:", error!.localizedDescription)
-                        return
-                    }
-                    
-                    print("SUCCESS: Set \(iceCandidate.fromUUID) remote candidate")
-                    
-                    
-                    // TODO: Only for testing purposes
-                    self.processDataCompletion?("Candidate \(iceCandidate.fromUUID)")
+                // TODO: Only for testing purposes
+                self.processDataCompletion?("Candidate \(iceCandidate.fromUUID)")
 
-                    
-                    if !pC.returnedSDP {
-                        
-                        pC.returnedSDP = true
-                        
-                        print("NOTE: Sending answer to", iceCandidate.fromUUID)
-                        
-                        // If a disconnection occurs before this block runs, exit this block.
-                        guard self.signalingClient.webSocket != nil else {
-                            print("NOTE: Websocket has been disconnected")
-                            return
-                        }
-                        
-                        // Guard against if peer connection does not exist anymore. We do not want to answer if the offerer has disconnected.
-                        guard pC.receivingAgentsUUID != nil else {
-                            print("NOTE: The other user disconnected")
-                            return
-                        }
-                        
-                        pC.answer { sdp in
-                            self.signalingClient.send(toUUID: iceCandidate.fromUUID, message: .sdp(sdp))
-                            print("SUCCESS: Sent the answer to \(iceCandidate.fromUUID)")
-                            
-                            self.processDataCompletion?("Answer \(iceCandidate.fromUUID)")
-
-                        }
-                    }
-                    
+                // Check to see if agent has already sent an answer sdp in the past.
+                // If so, do not send another answer sdp and do not continue running for loop
+                guard !pC.returnedSDP else {
+                    return
                 }
                 
+                pC.returnedSDP = true
                 
+                // If a disconnection occurs before this block runs, exit this block.
+                // If peer connection does not exist anymore (this implies the offerer has disconnected), then we do not want to answer.
+                guard self.signalingClient.webSocket != nil && pC.receivingAgentsUUID != nil else {
+                    print("NOTE: Websocket has been disconnected or the other user disconnected")
+                    return
+                }
+                
+                let sdp = try await pC.answer()
+                
+                await self.signalingClient.send(toUUID: iceCandidate.fromUUID, message: .sdp(sdp))
+                print("SUCCESS: Sent the answer to \(iceCandidate.fromUUID)")
+                
+                // TODO: Only for testing purposes
+                self.processDataCompletion?("Answer \(iceCandidate.fromUUID)")
+                
+            } catch {
+                print("DEBUG: Error in receivedCandidate. \(error.localizedDescription)")
             }
+            
         }
     }
     
     // TODO: TEST THIS
-    func receivedSDP(sessionDescription: SessionDescription) {
+    func receivedSDP(sessionDescription: SessionDescription) async {
         
-        let allReceivingAgentsUUID = self.returnAllReceivingAgentsUUID()
-        let pC: PeerConnection?
-        
-        // This is for the answerer that has not gotten the UUID of an offerer when he has not gotten any offers
-        if self.peerConnections[0].receivingAgentsUUID == nil {
-            
-            pC = peerConnections[0]
-            pC!.receivingAgentsUUID = sessionDescription.fromUUID
-            
-        // This is for the answerer that has not gotten the UUID of an offerer when he already has offers.
-        } else if !allReceivingAgentsUUID.contains(where: { sessionDescription.fromUUID == $0 }) {
-            
-            pC = PeerConnection(receivingAgentsUUID: sessionDescription.fromUUID, delegate: self)
-            self.peerConnections.append(pC!)
-            
-        // This for the offerer that already set the receivingAgentsUUID when it got the UUID of the just connected user.
-        } else if allReceivingAgentsUUID.contains(where: { sessionDescription.fromUUID == $0 }) {
-            var pCInner: PeerConnection? = nil
-            for pCInLoop in self.peerConnections {
-                if pCInLoop.receivingAgentsUUID == sessionDescription.fromUUID {
-                    pCInner = pCInLoop
-                    break
-                }
-            }
-            
-            pC = pCInner
-            
-        } else {
-            print("DEBUG: UUID fell through everything")
+        guard self.signalingClient.webSocket != nil else {
+            print("DEBUG: Websocket is nil")
             return
         }
         
-        if let pC = pC {
-            pC.set(remoteSdp: sessionDescription.rtcSessionDescription) { [weak webSocket = signalingClient.webSocket] (error) in
+        let allReceivingAgentsUUID = self.returnAllReceivingAgentsUUID()
+        
+        do {
+            // This is for the answerer that has not gotten the UUID of an offerer when he has not gotten any offers
+            if self.peerConnections[0].receivingAgentsUUID == nil {
                 
-                guard webSocket != nil else {
-                    print("DEBUG: Websocket is nil")
-                    return
+                await MainActor.run {
+                    self.peerConnections[0].receivingAgentsUUID = sessionDescription.fromUUID
                 }
                 
-                guard error == nil else {
-                    print("DEBUG: Failed in setting sdp.", error!.localizedDescription)
-                    return
-                }
-                
+                try await self.peerConnections[0].set(remoteSdp: sessionDescription.rtcSessionDescription)
                 print("SUCCESS: Received and set offer/answer sdp from", sessionDescription.fromUUID)
                 
-                // TODO: Only for testing purposes
-                self.processDataCompletion?("Received & Set SDP")
                 
-                self.semaphore.signal()
+            // This is for the answerer that has not gotten the UUID of an offerer when he already has offers.
+            } else if !allReceivingAgentsUUID.contains(where: { sessionDescription.fromUUID == $0 }) {
+                let pC = PeerConnection(receivingAgentsUUID: sessionDescription.fromUUID, delegate: self)
                 
+                await MainActor.run {
+                    self.peerConnections.append(pC)
+                }
                 
+                try await pC.set(remoteSdp: sessionDescription.rtcSessionDescription)
                 
+            // This for the offerer that already set the receivingAgentsUUID when it got the UUID of the just connected user.
+            } else if allReceivingAgentsUUID.contains(where: { sessionDescription.fromUUID == $0 }) {
+                
+                for pC in self.peerConnections {
+                    guard pC.receivingAgentsUUID == sessionDescription.fromUUID else {
+                        continue
+                    }
+                    try await pC.set(remoteSdp: sessionDescription.rtcSessionDescription)
+                    
+                    break
+                }
+                
+            } else {
+                print("DEBUG: UUID fell through everything")
+                return
             }
-        }
-        
-        semaphore.wait()
-        
-        print("NOTE: There are \(self.peerConnections.count) peer connection instances")
-
-    }
-    
-    func receivedConnectedUser(justConnectedUser: JustConnectedUser) {
-        
-        // Gather the UUIDs of all PeerConnection objects to see if any have the same UUID.
-        let allReceivingAgentsUUID = self.returnAllReceivingAgentsUUID()
-        let pC: PeerConnection
-        
-        if self.peerConnections[0].receivingAgentsUUID == nil {
             
-            pC = self.peerConnections[0]
-            pC.receivingAgentsUUID = justConnectedUser.userUUID
-            
-        } else if !allReceivingAgentsUUID.contains(where: { justConnectedUser.userUUID == $0 }) {
-            
-            pC = PeerConnection(receivingAgentsUUID: justConnectedUser.userUUID, delegate: self)
-            self.peerConnections.append(pC)
+            // TODO: Only for testing purposes
+            self.processDataCompletion?("Received & Set SDP")
             
             print("NOTE: There are \(self.peerConnections.count) peer connection instances")
             
-        } else {
-            print("DEBUG: Fell through everything")
-            return
+        } catch {
+            print("DEBUG: Error in receivedSDP. \(error.localizedDescription)")
         }
         
-        pC.offer { sdp in
+    }
+    
+    func receivedConnectedUser(justConnectedUser: JustConnectedUser) async {
+        
+        // Gather the UUIDs of all PeerConnection objects to see if any have the same UUID.
+        let allReceivingAgentsUUID = self.returnAllReceivingAgentsUUID()
+        do {
+            // This is for the offerer whose first connected user is the incoming user
+            if self.peerConnections[0].receivingAgentsUUID == nil {
+                
+                await MainActor.run {
+                    self.peerConnections[0].receivingAgentsUUID = justConnectedUser.userUUID
+                }
+                
+                let sdp = try await self.peerConnections[0].offer()
+                
+                await self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
+                
+                self.peerConnections[0].returnedSDP = true
+                
+                // This is for the offerer who already connected with other agents.
+            } else if !allReceivingAgentsUUID.contains(where: { justConnectedUser.userUUID == $0 }) {
+                let pC = PeerConnection(receivingAgentsUUID: justConnectedUser.userUUID, delegate: self)
+                
+                await MainActor.run {
+                    self.peerConnections.append(pC)
+                }
+                
+                let sdp = try await pC.offer()
+                
+                await self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
+                
+                self.peerConnections[0].returnedSDP = true
+                
+            } else {
+                print("DEBUG: Fell through everything")
+                return
+            }
             
-            print("NOTE: Thread when made sdp offer: \(Thread.current)")
-            
-            self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
-
             // TODO: Only for testing purposes
             self.processDataCompletion?("Connected User")
             
-            self.semaphore.signal()
+            print("SUCCESS: Received UUID from \(justConnectedUser.userUUID) and OFFERED sdp")
+            print("NOTE: There are \(self.peerConnections.count) peer connection instances")
+            
+        } catch {
+            print("DEBUG: Error in receivedConnectedUser. \(error.localizedDescription)")
         }
         
-        // This stops dataProcessingQueue from continuing until semaphore.signal() executes.
-        semaphore.wait()
-        
-        pC.returnedSDP = true
-        
-        print("SUCCESS: Received UUID from \(justConnectedUser.userUUID) and OFFERED sdp")
-        print("NOTE: There are \(self.peerConnections.count) peer connection instances")
 
     }
     
     
-    func receivedDisconnectedUser(disconnectedUser: DisconnectedUser) {
-        print("NOTE: Thread when inside disconnection: \(Thread.current)")
+    func receivedDisconnectedUser(disconnectedUser: DisconnectedUser) async {
         
+        // This is for the offerer who has only one connection
         if self.peerConnections.count == 1 {
-
-            self.peerConnections.removeAll { pC in
-                pC.receivingAgentsUUID == disconnectedUser.userUUID
-            }
             
             let peer = PeerConnection(receivingAgentsUUID: nil, delegate: self)
-            self.peerConnections.append(peer)
             
-            self.disableTalkButton = true
+            await MainActor.run {
+                self.peerConnections.append(peer)
+                self.disableTalkButton = true
+            }
             
             print("NOTE: Sucessfully removed and appended new peer connection instance. There are \(self.peerConnections.count) peerconnection instances")
             
-            // TODO: Only for testing purposes
-            self.processDataCompletion?("Disconnected User")
-            
-        } else {
-
-            // TODO: TEST THIS
+        }
+        
+        await MainActor.run {
             self.peerConnections.removeAll { pC in
                 pC.receivingAgentsUUID == disconnectedUser.userUUID
             }
-            
-            // TODO: Only for testing purposes
-            self.processDataCompletion?("Disconnected User")
-
-            
-            
         }
+        
+        // TODO: Only for testing purposes
+        self.processDataCompletion?("Disconnected User")
         
     }
     
@@ -313,8 +287,11 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
     
     func didDiscoverLocalCandidate(sendToAgent: String, candidate: RTCIceCandidate) {
         print("NOTE: Discovered local candidate. Send candidate to: \(sendToAgent).")
-        self.signalingClient.send(toUUID: sendToAgent, message: .candidate(candidate))
+        Task {
+            await self.signalingClient.send(toUUID: sendToAgent, message: .candidate(candidate))
+        }
     }
+
     
     func webRTCClientConnected() {
         print("NOTE: Enabled talk button since connected")

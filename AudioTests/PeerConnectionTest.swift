@@ -40,10 +40,10 @@ final class AudioTests: XCTestCase {
     // MARK: RECEIVED CONNECTED USER MESSAGE
     
     // If user receives a JustConnectedUser message, it should update its peerConnections array accordingly
-    func testSetFirstPeerConnectionAndSendSDPIfReceivedConnectedUserMessage() throws {
+    func testSetFirstPeerConnectionAndSendSDPIfReceivedConnectedUserMessage() async throws {
          
         // Act: Call my API, using the filledJustConnectedUserObject created in the TestData.swift file.
-        webRTCModel.receivedConnectedUser(justConnectedUser: filledJustConnectedUserObject)
+        await webRTCModel.receivedConnectedUser(justConnectedUser: filledJustConnectedUserObject)
         
         // Check to see if results from API were expected
         XCTAssertTrue(webRTCModel.peerConnections[0].receivingAgentsUUID == "BF73C8CF-8176-4E76-952B-3A20CD2EB21D")
@@ -51,7 +51,7 @@ final class AudioTests: XCTestCase {
     }
     
     // If there already exists 2 peer connections, peer connections array should be appended with new peer connection
-    func testSetPeerConnectionAndSendSDPIfReceivedConnectedUserMessageAndPeersExists() throws {
+    func testSetPeerConnectionAndSendSDPIfReceivedConnectedUserMessageAndPeersExists() async throws {
         
         let existingPeerConnections = [PeerConnection(receivingAgentsUUID: "FIRSTPEERID1", delegate: webRTCModel),
                                        PeerConnection(receivingAgentsUUID: "SECONDPEERID", delegate: webRTCModel)
@@ -61,17 +61,17 @@ final class AudioTests: XCTestCase {
         webRTCModel.peerConnections = existingPeerConnections
         
         // Act: Call my API, using the filledJustConnectedUserObject created in the TestData.swift file.
-        webRTCModel.receivedConnectedUser(justConnectedUser: filledJustConnectedUserObject)
+        await webRTCModel.receivedConnectedUser(justConnectedUser: filledJustConnectedUserObject)
         
         XCTAssertTrue(webRTCModel.peerConnections[2].receivingAgentsUUID == "BF73C8CF-8176-4E76-952B-3A20CD2EB21D")
     }
     
     
     // If user receives an incorrectly formatted JustConnectedUser message, pC.receivingAgentsUUID should not be updated with such UUID
-    func testErrorIfReceivedEmptyConnectedUserMessage() throws {
+    func testErrorIfReceivedEmptyConnectedUserMessage() async throws {
         
         // Act: Call API
-        webRTCModel.webSocket(didReceiveData: emptyConnectedUserUUIDData!)
+        await webRTCModel.webSocket(didReceiveData: emptyConnectedUserUUIDData!)
         
         // Check:
         XCTAssertNil(webRTCModel.peerConnections[0].receivingAgentsUUID)
@@ -80,25 +80,21 @@ final class AudioTests: XCTestCase {
     
     // MARK: RECEIVED DISCONNECTED USER MESSAGE
         
-    func testErrorIfReceivedEmptyDisconnectedUserMessage() throws {
+    func testErrorIfReceivedEmptyDisconnectedUserMessage() async throws {
         
         // Act: Call my API
-        webRTCModel.webSocket(didReceiveData: emptyDisconnectedUserUUID!)
+        await webRTCModel.webSocket(didReceiveData: emptyDisconnectedUserUUID!)
         
         // Check:
         XCTAssertNil(webRTCModel.peerConnections[0].receivingAgentsUUID)
         
     }
     
-    // MARK: RECEIVED CANDIDATE & ANSWERING
-
-    // TODO: HERE
-    
     
     // MARK: INTEGRATION TEST | ORDER OF RECEIVING CONNECTION & DISCONNECTION
     
     // This test makes sure that didReceiveData method executes only after all methods executed (inside of it) when the first time it was called is runned (including @escaping closures).
-    func testOrderOfDidReceivingConnectionDisconnection() throws {
+    func testOrderOfDidReceivingConnectionDisconnection() async throws {
         let expectation = XCTestExpectation(description: "Data processed in order")
         expectation.expectedFulfillmentCount = 2
 
@@ -124,11 +120,10 @@ final class AudioTests: XCTestCase {
             }
         }
         
-        webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
-        webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
         
-        wait(for: [expectation], timeout: 1)
-
+        await fulfillment(of: [expectation])
     }
     
     // MARK: INTEGRATION TEST | CONNECTING & DISCONNECTING
@@ -136,7 +131,7 @@ final class AudioTests: XCTestCase {
     // This makes sure that a peer connection instance is removed properly everytime they disconnect.
     // It also makes sure that new peer connection instances are added properly to webRTCModel even when the same agent reconnects.
     
-    func testReconnectingAfterDisconnecting() throws {
+    func testReconnectingAfterDisconnecting() async throws {
         let expectation = XCTestExpectation(description: "Data processed in order")
         expectation.expectedFulfillmentCount = 10
 
@@ -149,31 +144,30 @@ final class AudioTests: XCTestCase {
             }
         }
         
-        webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
-        webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[1]!)
-        webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
-        webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[2]!)
-        webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
-        webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[3]!)
-        webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
-        webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[1]!)
-        webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[2]!)
-        webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[3]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[1]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[2]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[3]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[1]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[2]!)
+        await webRTCModel.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[3]!)
 
-        wait(for: [expectation], timeout: 2)
+        await fulfillment(of: [expectation])
     }
     
-    // MARK: INTEGRATION TEST | RECEIVING SDP & CANDIDATE
+    // MARK: INTEGRATION TEST | RECEIVING SDP/CANDIDATE & ANSWERING
     
     // This tests whether the webRTC object can handle when multiple users send offer sdp and candidate information.
     // We see if the answerer can handle multiple simultaneous messages from the connected agents.
     
-    func testReceivingSDPAndCandidatesAndAnswering() throws {
-        let semaphore = DispatchSemaphore(value: 0)
+    func testReceivingSDPAndCandidatesAndAnswering() async throws {
         let expectation = XCTestExpectation(description: "Order of Receiving SDP & Candidates")
         expectation.expectedFulfillmentCount = 19
 
-        try webRTCModel.signalingClient.connect()
+        try await webRTCModel.signalingClient.connect()
         
         var sdpCount = 0
         var candidateFromUsersCount = [0,0,0,0]
@@ -194,31 +188,23 @@ final class AudioTests: XCTestCase {
                 expectation.fulfill()
             }
             
-            if sdpCount + candidateFromUsersCount.reduce(0, +) + answerSDPToUsersCount.reduce(0, +) == 19 {
-                print("PASS SEMAPHORE")
-                semaphore.signal()
-            }
         }
         
-        webRTCModel.webSocket(didReceiveData: toThisUserSDPData[0]!)
-        webRTCModel.webSocket(didReceiveData: user1CandidateData[0]!)
-        webRTCModel.webSocket(didReceiveData: user1CandidateData[1]!)
-        webRTCModel.webSocket(didReceiveData: toThisUserSDPData[1]!)
-        webRTCModel.webSocket(didReceiveData: toThisUserSDPData[2]!)
-        webRTCModel.webSocket(didReceiveData: toThisUserSDPData[3]!)
-        webRTCModel.webSocket(didReceiveData: user2CandidateData[0]!)
-        webRTCModel.webSocket(didReceiveData: user1CandidateData[2]!)
-        webRTCModel.webSocket(didReceiveData: user2CandidateData[1]!)
-        webRTCModel.webSocket(didReceiveData: user1CandidateData[3]!)
-        webRTCModel.webSocket(didReceiveData: user3CandidateData[0]!)
-        webRTCModel.webSocket(didReceiveData: user4CandidateData[0]!)
-        webRTCModel.webSocket(didReceiveData: user3CandidateData[1]!)
-        webRTCModel.webSocket(didReceiveData: user1CandidateData[4]!)
-        webRTCModel.webSocket(didReceiveData: user4CandidateData[1]!)
-
-
-        
-        semaphore.wait()
+        await webRTCModel.webSocket(didReceiveData: toThisUserSDPData[0]!)
+        await webRTCModel.webSocket(didReceiveData: user1CandidateData[0]!)
+        await webRTCModel.webSocket(didReceiveData: user1CandidateData[1]!)
+        await webRTCModel.webSocket(didReceiveData: toThisUserSDPData[1]!)
+        await webRTCModel.webSocket(didReceiveData: toThisUserSDPData[2]!)
+        await webRTCModel.webSocket(didReceiveData: toThisUserSDPData[3]!)
+        await webRTCModel.webSocket(didReceiveData: user2CandidateData[0]!)
+        await webRTCModel.webSocket(didReceiveData: user1CandidateData[2]!)
+        await webRTCModel.webSocket(didReceiveData: user2CandidateData[1]!)
+        await webRTCModel.webSocket(didReceiveData: user1CandidateData[3]!)
+        await webRTCModel.webSocket(didReceiveData: user3CandidateData[0]!)
+        await webRTCModel.webSocket(didReceiveData: user4CandidateData[0]!)
+        await webRTCModel.webSocket(didReceiveData: user3CandidateData[1]!)
+        await webRTCModel.webSocket(didReceiveData: user1CandidateData[4]!)
+        await webRTCModel.webSocket(didReceiveData: user4CandidateData[1]!)
         
         XCTAssertTrue(webRTCModel.peerConnections[0].receivingAgentsUUID == "USER1")
         XCTAssertTrue(webRTCModel.peerConnections[1].receivingAgentsUUID == "USER2")
@@ -229,9 +215,8 @@ final class AudioTests: XCTestCase {
         XCTAssertTrue(candidateFromUsersCount == [5,2,2,2])
         XCTAssertTrue(answerSDPToUsersCount == [1,1,1,1])
         
+        await fulfillment(of: [expectation])
         
-        wait(for: [expectation], timeout: 10)
-
     }
     
     // MARK: INTEGRATION TEST | DISCONNECT WHILE ATTEMPTING TO SEND ANSWER

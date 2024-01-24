@@ -21,9 +21,9 @@ final class SignalingTest: XCTestCase {
         signalingClient = SignalingClient(url: url)
     }
     
-//    override func tearDown() {
-//        signalingClient = nil
-//    }
+    override func tearDown() {
+        signalingClient = nil
+    }
     
     func testSignalingClientInitializer() {
         XCTAssertTrue(signalingClient.currentUserUUID == CurrentUserModel.loadUsername())
@@ -32,8 +32,7 @@ final class SignalingTest: XCTestCase {
     
     // (1) The signaling class should send a user's UUID to the server when he connects
     // (2) When the user disconnects, the readMessage() method should exit and stop running
-    func testSendUUIDAfterConnectingAndSuccessfullyDisconnectWebsockets() throws {
-        let semaphore = DispatchSemaphore(value: 0)
+    func testSendUUIDAfterConnectingAndSuccessfullyDisconnectWebsockets() async throws {
         let expectation = XCTestExpectation(description: "(1) Connected/sent UUID & (2) Disconnected websockets")
         expectation.expectedFulfillmentCount = 3
         
@@ -41,10 +40,9 @@ final class SignalingTest: XCTestCase {
         
         signalingClient.processDataCompletion = { data in
             switch data {
-            case "SentUUID":
-                previousData.append("SentUUID")
+            case "current connected agent's UUID":
+                previousData.append("current connected agent's UUID")
                 expectation.fulfill()
-                semaphore.signal()
             
             case "Disconnected":
                 if previousData.contains(where: { $0 == "Disconnected" }) {
@@ -56,7 +54,6 @@ final class SignalingTest: XCTestCase {
                 }
                 
             case "FailedInReceiving":
-                print("FailedInReceiving")
                 if previousData.contains(where: { $0 == "FailedInReceiving" }) {
                     XCTFail("TEST FAILED: FailedInReceiving returned twice")
                 } else {
@@ -68,12 +65,12 @@ final class SignalingTest: XCTestCase {
             }
         }
         
-        try signalingClient.connect()
-        semaphore.wait()
+        try await signalingClient.connect()
+
         signalingClient.disconnect()
 
-        wait(for: [expectation], timeout: 2)
-
+        await fulfillment(of: [expectation])
+        
     }
     
 //    func testErrorWhenReceivingIfWebsocketDisconnects() throws {

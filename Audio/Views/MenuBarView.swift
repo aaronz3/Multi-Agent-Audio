@@ -30,10 +30,12 @@ struct MenuBarView: View {
     
     var connect: some View {
         Button("Connect") {
-            do {
-                try self.webRTCModel.signalingClient.connect()
-            } catch {
-                print("DEBUG: \(error.localizedDescription)")
+            Task {
+                do {
+                    try await self.webRTCModel.signalingClient.connect()
+                } catch {
+                    print("DEBUG: \(error.localizedDescription)")
+                }
             }
         }
         .disabled(webRTCModel.signalingConnected)
@@ -46,7 +48,6 @@ struct MenuBarView: View {
                 perform: {},
                 onPressingChanged: { pressed in
                     if pressed {
-                        
                         self.webRTCModel.unmuteAudio()
                         isLongPressed.toggle()
                     } else {

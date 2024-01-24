@@ -9,8 +9,6 @@ import Foundation
 import AVFoundation
 import WebRTC
 
-
-
 class HandleAudioSession {
     
     static private let rtcAudioSession = RTCAudioSession.sharedInstance()
@@ -44,8 +42,8 @@ class HandleAudioSession {
         self.rtcAudioSession.unlockForConfiguration()
     }
     
-    static func checkAudioPermission() async {
-
+    static func checkAudioPermission() {
+        
         // Check the current audio permission status
         AVAudioSession.sharedInstance().requestRecordPermission { granted in
             if granted {
