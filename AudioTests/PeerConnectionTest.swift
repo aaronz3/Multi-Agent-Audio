@@ -8,8 +8,7 @@
 import XCTest
 @testable import Audio
 
-@MainActor
-final class PeerConnectionTest: XCTestCase {
+final class AudioTests: XCTestCase {
     
     var webRTCModel: WebRTCModel! = nil
     
@@ -21,7 +20,7 @@ final class PeerConnectionTest: XCTestCase {
         webRTCModel = nil
     }
 
-    func testNoPeerConnectionsIfJustInitializedWebRTCModel() async {
+    func testNoPeerConnectionsIfJustInitializedWebRTCModel() {
         XCTAssertTrue(webRTCModel.peerConnections.count == 1)
         XCTAssertNil(webRTCModel.peerConnections[0].receivingAgentsUUID)
     }

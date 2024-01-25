@@ -8,15 +8,17 @@
 import Foundation
 import WebRTC
 
-@MainActor
+//@Observable
 class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, ObservableObject {
             
-    @Published private(set) var peerConnections: [PeerConnection] = []
+    @Published var peerConnections: [PeerConnection] = []
     var signalingClient: SignalingClient = SignalingClient(url: defaultSignalingServerUrl)
 
-    @Published private(set) var signalingConnected = false
-    @Published private(set) var disableTalkButton = true
+    @Published var signalingConnected = false
+    @Published var disableTalkButton = true
     
+    private let semaphore = DispatchSemaphore(value: 0)
+
     // TODO: Only for testing purposes
     var processDataCompletion: ((String) -> ())?
 
@@ -33,20 +35,14 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
     
     func webSocketDidConnect() {
         print("NOTE: Attempted to connect websocket.")
-        self.signalingConnected = true
+        DispatchQueue.main.async {
+            self.signalingConnected = true
+        }
     }
     
     func webSocketDidDisconnect() {
         print("NOTE: Websocket disconnected (executed from protocol)")
-        if !self.peerConnections.isEmpty {
-            self.peerConnections = []
-            
-            let peer = PeerConnection(receivingAgentsUUID: nil, delegate: self)
-            self.peerConnections.append(peer)
-            
-            self.signalingConnected = false
-            print("SUCCESS: Peer connections reset")
-        }
+        self.resetPeerConnections()
     }
     
     func webSocket(didReceiveData data: Data) async {
@@ -139,15 +135,21 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             // This is for the answerer that has not gotten the UUID of an offerer when he has not gotten any offers
             if self.peerConnections[0].receivingAgentsUUID == nil {
                 
-                self.peerConnections[0].receivingAgentsUUID = sessionDescription.fromUUID
+                await MainActor.run {
+                    self.peerConnections[0].receivingAgentsUUID = sessionDescription.fromUUID
+                }
                 
                 try await self.peerConnections[0].set(remoteSdp: sessionDescription.rtcSessionDescription)
+                print("SUCCESS: Received and set offer/answer sdp from", sessionDescription.fromUUID)
+                
                 
             // This is for the answerer that has not gotten the UUID of an offerer when he already has offers.
             } else if !allReceivingAgentsUUID.contains(where: { sessionDescription.fromUUID == $0 }) {
                 let pC = PeerConnection(receivingAgentsUUID: sessionDescription.fromUUID, delegate: self)
                 
-                self.peerConnections.append(pC)
+                await MainActor.run {
+                    self.peerConnections.append(pC)
+                }
                 
                 try await pC.set(remoteSdp: sessionDescription.rtcSessionDescription)
                 
@@ -171,7 +173,6 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             // TODO: Only for testing purposes
             self.processDataCompletion?("Received & Set SDP")
             
-            print("SUCCESS: Received and set offer/answer sdp from", sessionDescription.fromUUID)
             print("NOTE: There are \(self.peerConnections.count) peer connection instances")
             
         } catch {
@@ -188,7 +189,9 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             // This is for the offerer whose first connected user is the incoming user
             if self.peerConnections[0].receivingAgentsUUID == nil {
                 
-                self.peerConnections[0].receivingAgentsUUID = justConnectedUser.userUUID
+                await MainActor.run {
+                    self.peerConnections[0].receivingAgentsUUID = justConnectedUser.userUUID
+                }
                 
                 let sdp = try await self.peerConnections[0].offer()
                 
@@ -200,7 +203,9 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             } else if !allReceivingAgentsUUID.contains(where: { justConnectedUser.userUUID == $0 }) {
                 let pC = PeerConnection(receivingAgentsUUID: justConnectedUser.userUUID, delegate: self)
                 
-                self.peerConnections.append(pC)
+                await MainActor.run {
+                    self.peerConnections.append(pC)
+                }
                 
                 let sdp = try await pC.offer()
                 
@@ -234,15 +239,19 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             
             let peer = PeerConnection(receivingAgentsUUID: nil, delegate: self)
             
-            self.peerConnections.append(peer)
-            self.disableTalkButton = true
+            await MainActor.run {
+                self.peerConnections.append(peer)
+                self.disableTalkButton = true
+            }
             
             print("NOTE: Sucessfully removed and appended new peer connection instance. There are \(self.peerConnections.count) peerconnection instances")
             
         }
         
-        self.peerConnections.removeAll { pC in
-            pC.receivingAgentsUUID == disconnectedUser.userUUID
+        await MainActor.run {
+            self.peerConnections.removeAll { pC in
+                pC.receivingAgentsUUID == disconnectedUser.userUUID
+            }
         }
         
         // TODO: Only for testing purposes
@@ -260,9 +269,23 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
         return allReceivingAgentsUUID
     }
     
+    func resetPeerConnections() {
+        DispatchQueue.main.async {
+            if !self.peerConnections.isEmpty {
+                self.peerConnections = []
+                
+                let peer = PeerConnection(receivingAgentsUUID: nil, delegate: self)
+                self.peerConnections.append(peer)
+                
+                self.signalingConnected = false
+                print("SUCCESS: Peer connections reset")
+            }
+        }
+    }
+    
     // MARK: PeerConnectionDelegate PROTOCOL FUNCTIONS
     
-    nonisolated func didDiscoverLocalCandidate(sendToAgent: String, candidate: RTCIceCandidate) {
+    func didDiscoverLocalCandidate(sendToAgent: String, candidate: RTCIceCandidate) {
         print("NOTE: Discovered local candidate. Send candidate to: \(sendToAgent).")
         Task {
             await self.signalingClient.send(toUUID: sendToAgent, message: .candidate(candidate))
@@ -272,13 +295,18 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
     
     func webRTCClientConnected() {
         print("NOTE: Enabled talk button since connected")
-        self.disableTalkButton = false
+        DispatchQueue.main.async {
+            self.disableTalkButton = false
+        }
+        
     }
     
     func webRTCClientDisconnected() {
         print("NOTE: Disabled talk button since disconnected")
         if self.peerConnections.first?.receivingAgentsUUID == nil {
-            self.disableTalkButton = true
+            DispatchQueue.main.async {
+                self.disableTalkButton = true
+            }
         }
     }
     
