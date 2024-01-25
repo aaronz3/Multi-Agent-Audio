@@ -11,9 +11,10 @@ import WebRTC
 protocol PeerConnectionDelegate: AnyObject {
     
     func didDiscoverLocalCandidate(sendToAgent: String, candidate: RTCIceCandidate)
-    func webRTCClientConnected()
-    func webRTCClientDisconnected()
+    @MainActor func webRTCClientConnected()
+    @MainActor func webRTCClientDisconnected()
 }
+
 // We use Google's public stun servers. For production apps you should deploy your own stun/turn servers.
 let defaultIceServers = ["stun:stun.l.google.com:19302",
                          "stun:stun1.l.google.com:19302",
@@ -30,7 +31,6 @@ class PeerConnectionFactory {
     }()
 }
 
-//@Observable
 class PeerConnection: NSObject, Identifiable, ObservableObject {
     
     @Published private var peerConnection: RTCPeerConnection
@@ -198,7 +198,7 @@ extension PeerConnection: RTCPeerConnectionDelegate {
         print("NOTE: peerConnection should negotiate")
     }
     
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
+    @MainActor func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
         guard let receivingAgentsUUID = self.receivingAgentsUUID else {
             print("DEBUG: ReceivingAgentsUUID is nil, but state changed")
             return

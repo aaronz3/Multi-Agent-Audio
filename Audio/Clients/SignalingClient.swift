@@ -9,7 +9,7 @@ import Foundation
 import WebRTC
 import Network
 
-protocol WebSocketProviderDelegate: AnyObject {
+@MainActor protocol WebSocketProviderDelegate: AnyObject {
     func webSocketDidConnect()
     func webSocketDidDisconnect()
     func webSocket(didReceiveData data: Data) async
@@ -26,14 +26,13 @@ enum SignalingErrors: Error {
     case noUserID
 }
 
-class SignalingClient: NSObject, ObservableObject {
+class SignalingClient: NSObject {
     
     let url: URL
     var urlSession: URLSession?
     var webSocket: URLSessionWebSocketTask?
     weak var weakWebSocket: URLSessionWebSocketTask?
 
-//    var pingTimer: Timer?
     var delegate: WebSocketProviderDelegate?
 
     let decoder = JSONDecoder()
@@ -74,8 +73,8 @@ class SignalingClient: NSObject, ObservableObject {
         
         await self.send(toUUID: nil, message: .justConnectedUser(uuid))
         
-        // Alert the data model that a websocket connection has been established
-        self.delegate?.webSocketDidConnect()
+        // Alert the view model that a websocket connection has been established and update the UI.
+        await self.delegate?.webSocketDidConnect()
         
         // Start receiving messages from the server in a separate task
         Task {
@@ -184,8 +183,10 @@ class SignalingClient: NSObject, ObservableObject {
         
         self.webSocket?.cancel(with: .normalClosure, reason: nil)
         self.webSocket = nil
-              
-        self.delegate?.webSocketDidDisconnect()
+        
+        Task {
+            await self.delegate?.webSocketDidDisconnect()
+        }
         
         // TODO: Only for testing purposes
         self.processDataCompletion?("Disconnected")
