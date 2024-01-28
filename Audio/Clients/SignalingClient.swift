@@ -26,8 +26,8 @@ enum SignalingErrors: Error {
     case noUserID
 }
 
-class SignalingClient: NSObject, Signaling, ObservableObject {
-    f
+class SignalingClient: NSObject, ObservableObject {
+    
     let url: URL
     var webSocket: NetworkSocket?
     
@@ -45,6 +45,14 @@ class SignalingClient: NSObject, Signaling, ObservableObject {
         
         super.init()
         
+        handleWebsocketForTesting(websocket: websocket)
+    }
+    
+    deinit {
+        print("NOTE: Signaling Client deinitialized")
+    }
+    
+    func handleWebsocketForTesting(websocket: NetworkSocket?) {
         // For testing use the injected fake websocket
         if let webSocketTask = websocket {
             self.webSocket = webSocketTask
@@ -56,13 +64,11 @@ class SignalingClient: NSObject, Signaling, ObservableObject {
         }
     }
     
-    deinit {
-        print("NOTE: Signaling Client deinitialized")
-    }
-    
-    func connect() async throws {
+    func connect(websocket: NetworkSocket? = nil) async throws {
         
-        self.webSocket!.resume()
+        handleWebsocketForTesting(websocket: websocket)
+        
+        self.webSocket?.resume()
         
         // Send over the current agent's UUID to other agents
         guard let uuid = self.currentUserUUID else {

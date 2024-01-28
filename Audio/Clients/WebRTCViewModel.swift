@@ -108,7 +108,6 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
                 let sdp = try await pC.answer()
                 
                 await self.signalingClient.send(toUUID: iceCandidate.fromUUID, message: .sdp(sdp))
-                print("SUCCESS: Sent the answer to \(iceCandidate.fromUUID)")
                 
                 // TODO: Only for testing purposes
                 self.processDataCompletion?("Answer \(iceCandidate.fromUUID)")
