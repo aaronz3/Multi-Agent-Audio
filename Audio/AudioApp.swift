@@ -10,13 +10,13 @@ import SwiftUI
 @main
 struct AudioApp: App {
     
-    @StateObject var webRTCModel = WebRTCModel()
+    @StateObject var webRTCVM = WebRTCViewModel(signalingClient: SignalingClient(url: defaultSignalingServerUrl, currentUserUUID: CurrentUserModel.loadUsername()))
     @StateObject var networkMonitor = NetworkMonitor()
     
     var body: some Scene {
         WindowGroup {
             WebRTCView()
-                .environmentObject(webRTCModel)
+                .environmentObject(webRTCVM)
                 .environmentObject(networkMonitor)
                 
             

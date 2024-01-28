@@ -26,45 +26,42 @@ enum SignalingErrors: Error {
     case noUserID
 }
 
-class SignalingClient: NSObject, ObservableObject {
-    
+class SignalingClient: NSObject, Signaling, ObservableObject {
+    f
     let url: URL
-    var urlSession: URLSession?
-    var webSocket: URLSessionWebSocketTask?
-    weak var weakWebSocket: URLSessionWebSocketTask?
-
-//    var pingTimer: Timer?
+    var webSocket: NetworkSocket?
+    
     var delegate: WebSocketProviderDelegate?
 
     let decoder = JSONDecoder()
     let encoder = JSONEncoder()
     
-    let currentUserUUID: String?
-
-    // TODO: Only for testing purposes
-    var processDataCompletion: ((String) -> ())?
+    var currentUserUUID: String?
     
-    init(url: URL) {
+    init(url: URL, currentUserUUID: String, websocket: NetworkSocket? = nil) {
         
         self.url = url
-        self.currentUserUUID = CurrentUserModel.loadUsername()
+        self.currentUserUUID = currentUserUUID
         
         super.init()
         
+        // For testing use the injected fake websocket
+        if let webSocketTask = websocket {
+            self.webSocket = webSocketTask
+        
+        // For production use the real websocket
+        } else {
+            let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+            self.webSocket = session.webSocketTask(with: url)
+        }
     }
-
+    
     deinit {
         print("NOTE: Signaling Client deinitialized")
     }
     
     func connect() async throws {
-        if self.webSocket != nil {
-            print("Note: A previous websocket task existed.")
-            self.disconnect()
-        }
         
-        self.urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-        self.webSocket = self.urlSession!.webSocketTask(with: url)
         self.webSocket!.resume()
         
         // Send over the current agent's UUID to other agents
@@ -83,11 +80,11 @@ class SignalingClient: NSObject, ObservableObject {
         }
     }
     
- 
+    
     func readMessage() async {
         do {
             let message = try await self.webSocket?.receive()
-
+            
             switch message {
             case .data(let data):
                 await self.delegate?.webSocket(didReceiveData: data)
@@ -96,11 +93,6 @@ class SignalingClient: NSObject, ObservableObject {
                 
             case .string(let string):
                 print("DEBUG: Got string", string)
-
-            case nil:
-                
-                // TODO: Only for testing purposes
-                self.processDataCompletion?("FailedInReceiving")
                 
             default:
                 print("DEBUG: Got some unknown message format: \(String(describing: message))")
@@ -147,7 +139,7 @@ class SignalingClient: NSObject, ObservableObject {
             
             sendMessageContext = Message.justConnectedUser(JustConnectedUser(userUUID: uuid))
             printMessageType = "current connected agent's UUID"
-        
+            
         case .disconnectedUser(let uuid) :
             
             sendMessageContext = Message.justDisconnectedUser(DisconnectedUser(userUUID: uuid))
@@ -155,9 +147,6 @@ class SignalingClient: NSObject, ObservableObject {
         }
         
         await encodeToSend(sendMessageContext: sendMessageContext, printMessageType: printMessageType)
-        
-        // TODO: Only for testing purposes
-        self.processDataCompletion?("\(printMessageType)")
     }
     
     
@@ -173,56 +162,52 @@ class SignalingClient: NSObject, ObservableObject {
             try await self.webSocket?.send(.data(dataMessage))
             
             print("SUCCESS: Successfully sent \(printMessageType)")
-
+            
         }
         catch {
             print("DEBUG: Error in encodeToSend. Could not encode \(printMessageType) or failed to send data.", error.localizedDescription)
         }
     }
-   
+    
     func disconnect() {
         
         self.webSocket?.cancel(with: .normalClosure, reason: nil)
         self.webSocket = nil
-              
+        
         self.delegate?.webSocketDidDisconnect()
         
-        // TODO: Only for testing purposes
-        self.processDataCompletion?("Disconnected")
     }
-        
+    
 }
 
-extension SignalingClient: URLSessionWebSocketDelegate, URLSessionDelegate {
+extension SignalingClient: URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-
+        
     }
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         print("NOTE: Websocket closed by websocket delegate. Reason:", closeCode.description)
     }
-
+    
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         
         guard let error = error as NSError? else {
-           return
+            return
         }
         
         // Check if user has internet.
         if error.domain == NSURLErrorDomain && error.code == NSURLErrorNetworkConnectionLost {
             print("NOTE: Network connection lost")
-            
         }
-
+        
         // Handle the "Socket is not connected" error
         if error.domain == NSPOSIXErrorDomain && error.code == 57 {
             print("NOTE: Socket is not connected")
-            
         }
         
         self.disconnect()
     }
-
+    
 }
 
 extension URLSessionWebSocketTask.CloseCode {
@@ -245,10 +230,3 @@ extension URLSessionWebSocketTask.CloseCode {
         }
     }
 }
-
-class WebSocketTask: URLSessionWebSocketTask {
-    deinit {
-        print("")
-    }
-}
-

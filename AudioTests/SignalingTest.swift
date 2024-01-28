@@ -12,22 +12,25 @@ import XCTest
 
 final class SignalingTest: XCTestCase {
 
-    var signalingClient: SignalingClient! = nil
-
+    var signalingClient: SignalingClient!
+    var websocket: MockNetworkSocket!
+    
     override func setUp() {
-        let url = URL(string: "wss://impactsservers.com:3000")!
+        let url = URL(string: "ThisURLDoesNotMatter")!
               //  URL(string: "wss://impactsservers.com:3000")!
               //  URL(string: "ws://172.20.10.7:3000")!
-        signalingClient = SignalingClient(url: url)
+        
+        websocket = MockNetworkSocket()
+        signalingClient = SignalingClient(url: url, currentUserUUID: "THISUSER", websocket: websocket)
     }
     
     override func tearDown() {
+        websocket = nil
         signalingClient = nil
     }
     
     func testSignalingClientInitializer() {
-        XCTAssertTrue(signalingClient.currentUserUUID == CurrentUserModel.loadUsername())
-        print("TEST OUTPUT: Current user username: \(signalingClient.currentUserUUID!)")
+        XCTAssertNotNil(signalingClient.currentUserUUID)
     }
     
     // (1) The signaling class should send a user's UUID to the server when he connects
@@ -38,29 +41,20 @@ final class SignalingTest: XCTestCase {
         
         var previousData: [String] = []
         
-        signalingClient.processDataCompletion = { data in
+        websocket.result = { data in
             switch data {
-            case "current connected agent's UUID":
-                previousData.append("current connected agent's UUID")
+            case "resume":
+                previousData.append("resume")
                 expectation.fulfill()
             
-            case "Disconnected":
-                if previousData.contains(where: { $0 == "Disconnected" }) {
-                    XCTFail("TEST FAILED: Disconnected returned twice")
-                } else {
-                    expectation.fulfill()
-                    previousData.append("Disconnected")
-
-                }
+            case "send":
+                expectation.fulfill()
+                previousData.append("send")
                 
-            case "FailedInReceiving":
-                if previousData.contains(where: { $0 == "FailedInReceiving" }) {
-                    XCTFail("TEST FAILED: FailedInReceiving returned twice")
-                } else {
-                    expectation.fulfill()
-                    previousData.append("FailedInReceiving")
-                }
-                            
+            case "cancelled":
+                expectation.fulfill()
+                previousData.append("cancelled")
+                                 
             default: print("DEBUG: Data fell")
             }
         }
@@ -71,6 +65,7 @@ final class SignalingTest: XCTestCase {
 
         await fulfillment(of: [expectation])
         
+        XCTAssertTrue(previousData == ["resume", "send", "cancelled"])
     }
     
 //    func testErrorWhenReceivingIfWebsocketDisconnects() throws {

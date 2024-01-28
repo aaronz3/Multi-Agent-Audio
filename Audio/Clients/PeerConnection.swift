@@ -35,22 +35,22 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
     
     @Published private var peerConnection: RTCPeerConnection
     @Published var receivingAgentsUUID: String?
-
+    
     private let mediaConstrains = [kRTCMediaConstraintsOfferToReceiveAudio: kRTCMediaConstraintsValueTrue]
     
     var returnedSDP: Bool = false
     
     unowned var delegate: PeerConnectionDelegate
-
+    
     init(receivingAgentsUUID: String?, delegate: PeerConnectionDelegate) {
         
         /* Setup the peerConnection object which will handle the sending and answering of the sdp */
         
         let config = RTCConfiguration()
         config.iceServers = [RTCIceServer(urlStrings: defaultIceServers)]
-                
+        
         config.continualGatheringPolicy = .gatherContinually
-
+        
         
         let constraints = RTCMediaConstraints(mandatoryConstraints: nil,
                                               optionalConstraints: nil)
@@ -66,7 +66,7 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
         self.delegate = delegate
         
         /* This PeerConnection instance will only be in charge of one connection */
-
+        
         self.receivingAgentsUUID = receivingAgentsUUID
         
         /* Setup media steam to send over via SDP and audio session */
@@ -89,7 +89,7 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
         let audioConstraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
         let audioSource = PeerConnectionFactory.factory.audioSource(with: audioConstraints)
         let audioTrack = PeerConnectionFactory.factory.audioTrack(with: audioSource, trackId: "audio0")
-
+        
         self.peerConnection.add(audioTrack, streamIds: [streamId])
         
         
@@ -131,7 +131,7 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
     }
     
     // MARK: MUTING AND UNMUTING OF AUDIO
-
+    
     func muteAudio() {
         setTrackEnabled(RTCAudioTrack.self, isEnabled: false)
     }
@@ -151,7 +151,7 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
 
 
 extension PeerConnection: RTCPeerConnectionDelegate {
-   
+    
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {
         
         guard let receivingAgentsUUID = self.receivingAgentsUUID else {
@@ -208,8 +208,8 @@ extension PeerConnection: RTCPeerConnectionDelegate {
         case .connected, .completed:
             print("NEW STATE: Connected to agent", receivingAgentsUUID)
             
-            self.muteAudio()
             // Turn on the speaker only after two peers have been connected. If you try to turn the speakers on before the peers are connected, the user will need to manually select the speaker button after they have connected.
+            self.muteAudio()
             
             HandleAudioSession.speakerOn()
             
@@ -222,11 +222,11 @@ extension PeerConnection: RTCPeerConnectionDelegate {
         case .failed:
             print("NEW STATE: \(receivingAgentsUUID) failed.")
             self.delegate.webRTCClientDisconnected()
-
+            
         case .closed:
             print("NEW STATE: \(receivingAgentsUUID) closed.")
             self.delegate.webRTCClientDisconnected()
-
+            
         case .new, .checking, .count:
             print("NEW STATE: \(receivingAgentsUUID) checking.")
             
@@ -248,7 +248,7 @@ extension PeerConnection: RTCPeerConnectionDelegate {
         case .gathering:
             print("NEW GATHERING STATE: \(receivingAgentsUUID) is gathering")
         @unknown default: print("DNE")
-    
+            
         }
     }
     

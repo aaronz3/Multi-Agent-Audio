@@ -9,10 +9,10 @@ import SwiftUI
 
 struct WebRTCView: View {
     
-    @EnvironmentObject var webRTCModel: WebRTCModel
+    @EnvironmentObject var webRTCVM: WebRTCViewModel
     @EnvironmentObject var networkMonitor: NetworkMonitor
 
-//    var webRTCModel: WebRTCModel
+//    var webRTCVM: webRTCVM
 //    var currentUserModel: CurrentUserModel
 
     var body: some View {
@@ -22,11 +22,11 @@ struct WebRTCView: View {
             Text("Current user UUID is:" + (CurrentUserModel.loadUsername()))
                 .padding(20)
             
-            Text("Signaling Status:" + (webRTCModel.signalingConnected ? "✅" : "❌"))
+            Text("Signaling Status:" + (webRTCVM.signalingConnected ? "✅" : "❌"))
                 .padding(20)
             
             List {
-                ForEach(webRTCModel.peerConnections) {pC in
+                ForEach(webRTCVM.peerConnections) {pC in
                     Text("PC Receiving Agent's UUID:" + (pC.receivingAgentsUUID ?? "nil"))
                 }
             }
@@ -49,5 +49,5 @@ struct WebRTCView: View {
 
 
 //#Preview {
-//    WebRTCView(webRTCModel: , currentUserModel: currentUserModel)
+//    WebRTCView(webRTCVM: , currentUserModel: currentUserModel)
 //}

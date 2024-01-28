@@ -9,10 +9,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     
-    @EnvironmentObject var webRTCModel: WebRTCModel
-    
-//    var webRTCModel: WebRTCModel
-//    var currentUserModel: CurrentUserModel
+    @EnvironmentObject var webRTCVM: WebRTCViewModel
 
     @State private var isLongPressed = false
     
@@ -32,13 +29,13 @@ struct MenuBarView: View {
         Button("Connect") {
             Task {
                 do {
-                    try await self.webRTCModel.signalingClient.connect()
+                    try await self.webRTCVM.signalingClient.connect()
                 } catch {
                     print("DEBUG: \(error.localizedDescription)")
                 }
             }
         }
-        .disabled(webRTCModel.signalingConnected)
+        .disabled(webRTCVM.signalingConnected)
     }
     
     var talk: some View {
@@ -48,21 +45,21 @@ struct MenuBarView: View {
                 perform: {},
                 onPressingChanged: { pressed in
                     if pressed {
-                        self.webRTCModel.unmuteAudio()
+                        self.webRTCVM.unmuteAudio()
                         isLongPressed.toggle()
                     } else {
-                        self.webRTCModel.muteAudio()
+                        self.webRTCVM.muteAudio()
                         isLongPressed.toggle()
                     }
                 }
             )
-            .disabled(webRTCModel.disableTalkButton)
+            .disabled(webRTCVM.disableTalkButton)
     }
     
     var getInfo: some View {
         Button("Get Info") {
-            print("Initial Peer Connection Object UUID:", webRTCModel.peerConnections.first?.receivingAgentsUUID ?? "nil")
-            print("Number of peer connections:", webRTCModel.peerConnections.count)
+            print("Initial Peer Connection Object UUID:", webRTCVM.peerConnections.first?.receivingAgentsUUID ?? "nil")
+            print("Number of peer connections:", webRTCVM.peerConnections.count)
         }
     }
 }

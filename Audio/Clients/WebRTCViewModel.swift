@@ -1,5 +1,5 @@
 //
-//  ViewModel.swift
+//  WebRTCViewModel.swift
 //  Audio
 //
 //  Created by Aaron Zheng on 1/14/24.
@@ -9,20 +9,19 @@ import Foundation
 import WebRTC
 
 //@Observable
-class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, ObservableObject {
-            
+class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, ObservableObject {
+    
     @Published var peerConnections: [PeerConnection] = []
-    var signalingClient: SignalingClient = SignalingClient(url: defaultSignalingServerUrl)
-
+    var signalingClient: SignalingClient
+    
     @Published var signalingConnected = false
     @Published var disableTalkButton = true
-    
-    private let semaphore = DispatchSemaphore(value: 0)
-
+        
     // TODO: Only for testing purposes
     var processDataCompletion: ((String) -> ())?
-
-    init() {
+    
+    init(signalingClient: SignalingClient) {
+        self.signalingClient = signalingClient
         self.signalingClient.delegate = self
         
         let peer = PeerConnection(receivingAgentsUUID: nil, delegate: self)
@@ -52,12 +51,12 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             return
         }
         switch self.decodeReceivedData(data: data) {
-        
+            
         case .candidate(let iceCandidate): await self.receivedCandidate(iceCandidate: iceCandidate)
             
         case .sdp(let sessionDescription): await self.receivedSDP(sessionDescription: sessionDescription)
-        
-        // Runs when some other user connects to the signaling server. The server relays the other user's information to you.
+            
+            // Runs when some other user connects to the signaling server. The server relays the other user's information to you.
         case .justConnectedUser(let justConnectedUser): await self.receivedConnectedUser(justConnectedUser: justConnectedUser)
             
         case .justDisconnectedUser(let disconnectedUser): await self.receivedDisconnectedUser(disconnectedUser: disconnectedUser)
@@ -90,7 +89,7 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
                 
                 // TODO: Only for testing purposes
                 self.processDataCompletion?("Candidate \(iceCandidate.fromUUID)")
-
+                
                 // Check to see if agent has already sent an answer sdp in the past.
                 // If so, do not send another answer sdp and do not continue running for loop
                 guard !pC.returnedSDP else {
@@ -140,8 +139,6 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
                 }
                 
                 try await self.peerConnections[0].set(remoteSdp: sessionDescription.rtcSessionDescription)
-                print("SUCCESS: Received and set offer/answer sdp from", sessionDescription.fromUUID)
-                
                 
             // This is for the answerer that has not gotten the UUID of an offerer when he already has offers.
             } else if !allReceivingAgentsUUID.contains(where: { sessionDescription.fromUUID == $0 }) {
@@ -173,10 +170,11 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             // TODO: Only for testing purposes
             self.processDataCompletion?("Received & Set SDP")
             
+            print("SUCCESS: Received and set offer/answer sdp from", sessionDescription.fromUUID)
             print("NOTE: There are \(self.peerConnections.count) peer connection instances")
             
         } catch {
-            print("DEBUG: Error in receivedSDP. \(error.localizedDescription)")
+            print("DEBUG: Error in receivedSDP for \(sessionDescription.fromUUID). \(error.localizedDescription)")
         }
         
     }
@@ -218,9 +216,6 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
                 return
             }
             
-            // TODO: Only for testing purposes
-            self.processDataCompletion?("Connected User")
-            
             print("SUCCESS: Received UUID from \(justConnectedUser.userUUID) and OFFERED sdp")
             print("NOTE: There are \(self.peerConnections.count) peer connection instances")
             
@@ -228,7 +223,6 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             print("DEBUG: Error in receivedConnectedUser. \(error.localizedDescription)")
         }
         
-
     }
     
     
@@ -253,9 +247,6 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
                 pC.receivingAgentsUUID == disconnectedUser.userUUID
             }
         }
-        
-        // TODO: Only for testing purposes
-        self.processDataCompletion?("Disconnected User")
         
     }
     
@@ -291,7 +282,7 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             await self.signalingClient.send(toUUID: sendToAgent, message: .candidate(candidate))
         }
     }
-
+    
     
     func webRTCClientConnected() {
         print("NOTE: Enabled talk button since connected")
@@ -327,5 +318,5 @@ class WebRTCModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observable
             pC.unmuteAudio()
         }
     }
-
+    
 }

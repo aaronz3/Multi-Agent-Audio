@@ -14,12 +14,14 @@
 		8D5F53F12B0C5C9500AE646E /* AudioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5F53F02B0C5C9500AE646E /* AudioApp.swift */; };
 		8D5F53F52B0C5C9600AE646E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D5F53F42B0C5C9600AE646E /* Assets.xcassets */; };
 		8D5F53F92B0C5C9600AE646E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D5F53F82B0C5C9600AE646E /* Preview Assets.xcassets */; };
-		8D6515492B5C0E6D00B6843A /* PeerConnectionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6515482B5C0E6D00B6843A /* PeerConnectionTest.swift */; };
+		8D5FC6272B65EB2000276752 /* MockSignalingClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5FC6252B65E31E00276752 /* MockSignalingClient.swift */; };
+		8D5FC6292B66058200276752 /* MockURLSessionWebSocketTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5FC6282B66058200276752 /* MockURLSessionWebSocketTask.swift */; };
+		8D6515492B5C0E6D00B6843A /* WebRTCViewModelTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6515482B5C0E6D00B6843A /* WebRTCViewModelTest.swift */; };
 		8D6515502B5C0F1C00B6843A /* TestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D65154F2B5C0F1C00B6843A /* TestData.swift */; };
 		8D6D26182B5A205B00BB5891 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */; };
 		8DB166F62B528D9A003E6AB5 /* SignalingClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB166F52B528D9A003E6AB5 /* SignalingClient.swift */; };
 		8DDD3F5C2B53792500DFFA31 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 8DDD3F5B2B53792500DFFA31 /* WebRTC */; };
-		8DDD3F602B53BD0D00DFFA31 /* WebRTCModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDD3F5F2B53BD0D00DFFA31 /* WebRTCModel.swift */; };
+		8DDD3F602B53BD0D00DFFA31 /* WebRTCViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDD3F5F2B53BD0D00DFFA31 /* WebRTCViewModel.swift */; };
 		8DDD3F622B54CA0200DFFA31 /* AudioControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDD3F612B54CA0200DFFA31 /* AudioControls.swift */; };
 		8DDD3F642B54F98D00DFFA31 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDD3F632B54F98D00DFFA31 /* MenuBarView.swift */; };
 		8DEEDEBD2B4BA80300ECA1A5 /* WebRTCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEEDEBC2B4BA80300ECA1A5 /* WebRTCView.swift */; };
@@ -46,13 +48,15 @@
 		8D5F53F42B0C5C9600AE646E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8D5F53F62B0C5C9600AE646E /* Audio.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Audio.entitlements; sourceTree = "<group>"; };
 		8D5F53F82B0C5C9600AE646E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		8D5FC6252B65E31E00276752 /* MockSignalingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSignalingClient.swift; sourceTree = "<group>"; };
+		8D5FC6282B66058200276752 /* MockURLSessionWebSocketTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLSessionWebSocketTask.swift; sourceTree = "<group>"; };
 		8D6515462B5C0E6D00B6843A /* AudioTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AudioTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		8D6515482B5C0E6D00B6843A /* PeerConnectionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerConnectionTest.swift; sourceTree = "<group>"; };
+		8D6515482B5C0E6D00B6843A /* WebRTCViewModelTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCViewModelTest.swift; sourceTree = "<group>"; };
 		8D65154F2B5C0F1C00B6843A /* TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestData.swift; sourceTree = "<group>"; };
 		8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		8DB166F52B528D9A003E6AB5 /* SignalingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingClient.swift; sourceTree = "<group>"; };
 		8DD180272B347F8D00441927 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		8DDD3F5F2B53BD0D00DFFA31 /* WebRTCModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCModel.swift; sourceTree = "<group>"; };
+		8DDD3F5F2B53BD0D00DFFA31 /* WebRTCViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCViewModel.swift; sourceTree = "<group>"; };
 		8DDD3F612B54CA0200DFFA31 /* AudioControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioControls.swift; sourceTree = "<group>"; };
 		8DDD3F632B54F98D00DFFA31 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		8DEEDEBC2B4BA80300ECA1A5 /* WebRTCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCView.swift; sourceTree = "<group>"; };
@@ -121,10 +125,19 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		8D5FC62C2B6618C800276752 /* MocksForTest */ = {
+			isa = PBXGroup;
+			children = (
+				8D5FC6282B66058200276752 /* MockURLSessionWebSocketTask.swift */,
+				8D5FC6252B65E31E00276752 /* MockSignalingClient.swift */,
+			);
+			path = MocksForTest;
+			sourceTree = "<group>";
+		};
 		8D6515472B5C0E6D00B6843A /* AudioTests */ = {
 			isa = PBXGroup;
 			children = (
-				8D6515482B5C0E6D00B6843A /* PeerConnectionTest.swift */,
+				8D6515482B5C0E6D00B6843A /* WebRTCViewModelTest.swift */,
 				8D18D62E2B5CD9E20019781C /* SignalingTest.swift */,
 				8DFF37852B5E6C5A002C0AFF /* ServerTest.swift */,
 				8D65154F2B5C0F1C00B6843A /* TestData.swift */,
@@ -144,10 +157,11 @@
 		8DEEDEBE2B4BA80800ECA1A5 /* Clients */ = {
 			isa = PBXGroup;
 			children = (
-				8DDD3F5F2B53BD0D00DFFA31 /* WebRTCModel.swift */,
+				8DDD3F5F2B53BD0D00DFFA31 /* WebRTCViewModel.swift */,
 				8D0588BB2B527CE500D77E7D /* PeerConnection.swift */,
 				8DB166F52B528D9A003E6AB5 /* SignalingClient.swift */,
 				8D456E6E2B578D4B008EB384 /* Message.swift */,
+				8D5FC62C2B6618C800276752 /* MocksForTest */,
 			);
 			path = Clients;
 			sourceTree = "<group>";
@@ -259,13 +273,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DEEDEBD2B4BA80300ECA1A5 /* WebRTCView.swift in Sources */,
-				8DDD3F602B53BD0D00DFFA31 /* WebRTCModel.swift in Sources */,
+				8DDD3F602B53BD0D00DFFA31 /* WebRTCViewModel.swift in Sources */,
 				8DB166F62B528D9A003E6AB5 /* SignalingClient.swift in Sources */,
 				8D456E6F2B578D4B008EB384 /* Message.swift in Sources */,
 				8DDD3F642B54F98D00DFFA31 /* MenuBarView.swift in Sources */,
 				8D0588BC2B527CE500D77E7D /* PeerConnection.swift in Sources */,
 				8D32019D2B551CBD00214C3B /* CurrentUserModel.swift in Sources */,
+				8D5FC6272B65EB2000276752 /* MockSignalingClient.swift in Sources */,
 				8D6D26182B5A205B00BB5891 /* NetworkMonitor.swift in Sources */,
+				8D5FC6292B66058200276752 /* MockURLSessionWebSocketTask.swift in Sources */,
 				8DDD3F622B54CA0200DFFA31 /* AudioControls.swift in Sources */,
 				8D5F53F12B0C5C9500AE646E /* AudioApp.swift in Sources */,
 			);
@@ -276,7 +292,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D18D62F2B5CD9E20019781C /* SignalingTest.swift in Sources */,
-				8D6515492B5C0E6D00B6843A /* PeerConnectionTest.swift in Sources */,
+				8D6515492B5C0E6D00B6843A /* WebRTCViewModelTest.swift in Sources */,
 				8DFF37862B5E6C5A002C0AFF /* ServerTest.swift in Sources */,
 				8D6515502B5C0F1C00B6843A /* TestData.swift in Sources */,
 			);
