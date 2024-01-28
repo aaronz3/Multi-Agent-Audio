@@ -33,7 +33,7 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
     // MARK: WebSocketProviderDelegate PROTOCOL FUNCTIONS
     
     func webSocketDidConnect() {
-        print("NOTE: Attempted to connect websocket.")
+        print("SUCCESS: Websockets connected.")
         DispatchQueue.main.async {
             self.signalingConnected = true
         }
@@ -156,6 +156,7 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
                     guard pC.receivingAgentsUUID == sessionDescription.fromUUID else {
                         continue
                     }
+
                     try await pC.set(remoteSdp: sessionDescription.rtcSessionDescription)
                     
                     break

@@ -18,14 +18,13 @@ struct AudioApp: App {
             WebRTCView()
                 .environmentObject(webRTCVM)
                 .environmentObject(networkMonitor)
-                
             
         }
     }
 }
 
 // This is set to amazon ec2 signaling server.
-//let defaultSignalingServerUrl = URL(string: "wss://impactsservers.com:3000")!
-let defaultSignalingServerUrl = URL(string: "ws://172.20.10.7:3000")!
+let defaultSignalingServerUrl = URL(string: "wss://impactsservers.com:3000")!
+//let defaultSignalingServerUrl = URL(string: "ws://172.20.10.7:3000")!
 
 

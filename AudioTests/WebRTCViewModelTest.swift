@@ -35,7 +35,7 @@ final class WebRTCViewModelTest: XCTestCase {
     func testDecodeUserMessage() throws {
         XCTAssertNotNil(webRTCMV.decodeReceivedData(data: filledConnectedUserUUIDData!))
         
-        XCTAssertNotNil(webRTCMV.decodeReceivedData(data: toThisUserSDPData[0]!))
+        XCTAssertNotNil(webRTCMV.decodeReceivedData(data: toThisUserSDPOfferData[0]!))
 
         XCTAssertNotNil(webRTCMV.decodeReceivedData(data: user1CandidateData[0]!))
     }
@@ -92,6 +92,31 @@ final class WebRTCViewModelTest: XCTestCase {
         XCTAssertNil(webRTCMV.peerConnections[0].receivingAgentsUUID)
         
     }
+    
+    // MARK: OFFERER RECEIVES ANSWER
+    
+    func testOffererReceivingSDPFromAnswerer() async throws {
+        let expectation = XCTestExpectation(description: "Receive answer")
+        expectation.expectedFulfillmentCount = 1
+        
+        webRTCMV.processDataCompletion = { data in
+            switch data {
+            case "Received & Set SDP":
+                expectation.fulfill()
+            default: break
+            }
+        }
+        
+        webRTCMV.peerConnections.append(PeerConnection(receivingAgentsUUID: "USER2", delegate: webRTCMV))
+        webRTCMV.peerConnections.append(PeerConnection(receivingAgentsUUID: "USER3", delegate: webRTCMV))
+        await webRTCMV.webSocket(didReceiveData: filledConnectedUserUUIDData!)
+        await webRTCMV.webSocket(didReceiveData: toThisUserSDPAnswerData[0]!)
+
+        await fulfillment(of: [expectation])
+
+        XCTAssertTrue(webRTCMV.peerConnections[0].receivingAgentsUUID == "USER1")
+    }
+    
         
     // MARK: INTEGRATION TEST | CONNECTING & DISCONNECTING
     
@@ -152,16 +177,15 @@ final class WebRTCViewModelTest: XCTestCase {
             }
         }
                 
-    
-        await webRTCMV.webSocket(didReceiveData: toThisUserSDPData[0]!)
+        await webRTCMV.webSocket(didReceiveData: toThisUserSDPOfferData[0]!)
         XCTAssertTrue(webRTCMV.peerConnections[0].receivingAgentsUUID == "USER1")
         await webRTCMV.webSocket(didReceiveData: user1CandidateData[0]!)
         await webRTCMV.webSocket(didReceiveData: user1CandidateData[1]!)
-        await webRTCMV.webSocket(didReceiveData: toThisUserSDPData[1]!)
+        await webRTCMV.webSocket(didReceiveData: toThisUserSDPOfferData[1]!)
         XCTAssertTrue(webRTCMV.peerConnections[1].receivingAgentsUUID == "USER2")
-        await webRTCMV.webSocket(didReceiveData: toThisUserSDPData[2]!)
+        await webRTCMV.webSocket(didReceiveData: toThisUserSDPOfferData[2]!)
         XCTAssertTrue(webRTCMV.peerConnections[2].receivingAgentsUUID == "USER3")
-        await webRTCMV.webSocket(didReceiveData: toThisUserSDPData[3]!)
+        await webRTCMV.webSocket(didReceiveData: toThisUserSDPOfferData[3]!)
         XCTAssertTrue(webRTCMV.peerConnections[3].receivingAgentsUUID == "USER4")
         await webRTCMV.webSocket(didReceiveData: user2CandidateData[0]!)
         await webRTCMV.webSocket(didReceiveData: user1CandidateData[2]!)

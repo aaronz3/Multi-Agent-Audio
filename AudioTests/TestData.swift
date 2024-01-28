@@ -20,7 +20,7 @@ let emptyConnectedUserUUIDData = """
 let filledConnectedUserUUIDData = """
     {
         "type" : "JustConnectedUser",
-        "payload" : { "userUUID" : "BF73C8CF-8176-4E76-952B-3A20CD2EB21D" }
+        "payload" : { "userUUID" : "USER1" }
     }
     """.data(using: .utf8)
 
@@ -104,7 +104,22 @@ let emptyDisconnectedUserUUID = """
 
 // MARK: SDP & CANDIDATE DATA
 
-let toThisUserSDPData = [
+
+let toThisUserSDPAnswerData = [
+        """
+        {
+          "type": "SessionDescription",
+          "payload": {
+            "fromUUID": "USER1",
+            "toUUID": "THISUSER",
+            "type": "answer",
+            "sdp": "v=0\\r\\no=- 1179363012337521081 2 IN IP4 127.0.0.1\\r\\ns=-\\r\\nt=0 0\\r\\na=group:BUNDLE 0\\r\\na=extmap-allow-mixed\\r\\na=msid-semantic: WMS stream\\r\\nm=audio 9 UDP/TLS/RTP/SAVPF 111 63 9 102 0 8 13 110 126\\r\\nc=IN IP4 0.0.0.0\\r\\na=rtcp:9 IN IP4 0.0.0.0\\r\\na=ice-ufrag:aKo2\\r\\na=ice-pwd:Lz7c4D9U/N5tp8VFdSko2iUK\\r\\na=ice-options:trickle renomination\\r\\na=fingerprint:sha-256 89:8D:67:7C:FF:3D:AC:94:E1:86:F2:7E:48:99:08:20:EA:2A:6F:A4:16:1E:91:01:38:EB:F1:4B:EB:B6:C2:27\\r\\na=setup:active\\r\\na=mid:0\\r\\na=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\\r\\na=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\\r\\na=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\\r\\na=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid\\r\\na=sendrecv\\r\\na=msid:stream audio0\\r\\na=rtcp-mux\\r\\na=rtpmap:111 opus/48000/2\\r\\na=rtcp-fb:111 transport-cc\\r\\na=fmtp:111 minptime=10;useinbandfec=1\\r\\na=rtpmap:63 red/48000/2\\r\\na=fmtp:63 111/111\\r\\na=rtpmap:9 G722/8000\\r\\na=rtpmap:102 ILBC/8000\\r\\na=rtpmap:0 PCMU/8000\\r\\na=rtpmap:8 PCMA/8000\\r\\na=rtpmap:13 CN/8000\\r\\na=rtpmap:110 telephone-event/48000\\r\\na=rtpmap:126 telephone-event/8000\\r\\na=ssrc:3775411830 cname:drB5sA3e1Tqyf4wo\\r\\n"
+          }
+        }
+        """.data(using: .utf8)
+]
+
+let toThisUserSDPOfferData = [
     """
     {
       "type": "SessionDescription",
