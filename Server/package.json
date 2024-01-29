@@ -1,0 +1,25 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Server for iOS audio project",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/youngestGerm/Multi-Agent-Audio.git"
+  },
+  "author": "Aaron Zheng",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/youngestGerm/Multi-Agent-Audio/issues"
+  },
+  "homepage": "https://github.com/youngestGerm/Multi-Agent-Audio#readme",
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "express": "^4.18.2",
+    "http": "^0.0.1-security",
+    "ws": "^8.16.0"
+  }
+}
