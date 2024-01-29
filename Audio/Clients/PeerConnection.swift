@@ -14,12 +14,6 @@ protocol PeerConnectionDelegate: AnyObject {
     func webRTCClientConnected()
     func webRTCClientDisconnected()
 }
-// We use Google's public stun servers. For production apps you should deploy your own stun/turn servers.
-let defaultIceServers = ["stun:stun.l.google.com:19302",
-                         "stun:stun1.l.google.com:19302",
-                         "stun:stun2.l.google.com:19302",
-                         "stun:stun3.l.google.com:19302",
-                         "stun:stun4.l.google.com:19302"]
 
 class PeerConnectionFactory {
     static let factory: RTCPeerConnectionFactory = {
