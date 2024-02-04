@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D5F53EC2B0C5C9500AE646E"
-               BuildableName = "Audio.app"
-               BlueprintName = "Audio"
-               ReferencedContainer = "container:Audio.xcodeproj">
+               BuildableName = "AudioGame.app"
+               BlueprintName = "AudioGame"
+               ReferencedContainer = "container:AudioGame.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -35,9 +35,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D6515452B5C0E6D00B6843A"
-               BuildableName = "AudioTests.xctest"
-               BlueprintName = "AudioTests"
-               ReferencedContainer = "container:Audio.xcodeproj">
+               BuildableName = "AudioGameTests.xctest"
+               BlueprintName = "AudioGameTests"
+               ReferencedContainer = "container:AudioGame.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -57,9 +57,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D5F53EC2B0C5C9500AE646E"
-            BuildableName = "Audio.app"
-            BlueprintName = "Audio"
-            ReferencedContainer = "container:Audio.xcodeproj">
+            BuildableName = "AudioGame.app"
+            BlueprintName = "AudioGame"
+            ReferencedContainer = "container:AudioGame.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -74,9 +74,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D5F53EC2B0C5C9500AE646E"
-            BuildableName = "Audio.app"
-            BlueprintName = "Audio"
-            ReferencedContainer = "container:Audio.xcodeproj">
+            BuildableName = "AudioGame.app"
+            BlueprintName = "AudioGame"
+            ReferencedContainer = "container:AudioGame.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

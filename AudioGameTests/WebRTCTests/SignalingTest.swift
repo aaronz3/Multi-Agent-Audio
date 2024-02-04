@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import Audio
+@testable import AudioGame
 
 // Note to run these tests properly, the server needs to be running
 

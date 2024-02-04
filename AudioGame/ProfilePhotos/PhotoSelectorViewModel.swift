@@ -12,8 +12,6 @@ import PhotosUI
 @available(iOS 16.0, *)
 class PhotoSelectorViewModel: ObservableObject {
     
-    var loadedPhotoData: Data?
-    @Published var avatarImage: Image?
     @Published var userImageURL: URL?
     
     let uploadPhotoURL: URL
@@ -24,35 +22,17 @@ class PhotoSelectorViewModel: ObservableObject {
         self.downloadPhotoURL = downloadPhotoURL
     }
     
-    func convertPhotoDataToImage() {
-        guard let loadedPhotoData else {
-            print("DEBUG: No photo data")
-            return
-        }
-        
-        guard let uiimage = UIImage(data: loadedPhotoData) else {
-            print("DEBUG: Method could not initialize the image from the specified data.")
-            return
-        }
-        DispatchQueue.main.async {
-            self.avatarImage = Image(uiImage: uiimage)
-        }
-    }
-
-    func loadImageToData(image: PhotosPickerItem) async -> Data? {
+    func loadImageToUIImage(image: PhotosPickerItem) async -> UIImage? {
         
         guard let loadedImageAsData = try? await image.loadTransferable(type: Data.self) else {
             print("DEBUG: Method could not initialize the image from the specified data.")
             return nil
         }
         
-        return loadedImageAsData
+        return UIImage(data: loadedImageAsData)
     }
     
-    func setLoadedPhotoData(image: PhotosPickerItem) async {
-        loadedPhotoData = await loadImageToData(image: image)
-    }
-    
+    // Sets userImageURL to the url obtained from getObjectUrl
     func downloadImageData(fromUsers: [String]) async {
         var components = URLComponents(url: downloadPhotoURL, resolvingAgainstBaseURL: false)
      
@@ -64,7 +44,7 @@ class PhotoSelectorViewModel: ObservableObject {
             URLQueryItem(name: "User-UUIDs", value: userIDsString)
         ]
         
-        // Convert the URLComponents to a URL
+        // Convert the URLComponents
         guard let getImageRequestUrl = components?.url else {
             print("DEBUG: Invalid URL")
             return
@@ -81,16 +61,10 @@ class PhotoSelectorViewModel: ObservableObject {
                 print("DEBUG: Invalid url")
                 return
             }
-            
-            print("NOTE: Download image data url is \(getImageDataUrl)")
-            
+                        
             DispatchQueue.main.async {
                 self.userImageURL = getImageDataUrl
             }
-            
-//            let (imageData, _) = try await URLSession.shared.data(from: url)
-//            self.loadedPhotoData = imageData
-//            self.convertPhotoDataToImage()
             
         } catch {
             print("DEBUG: \(error.localizedDescription)")
@@ -99,7 +73,7 @@ class PhotoSelectorViewModel: ObservableObject {
     
     func uploadImageData(image: UIImage, userUUID: String) async {
         var request = URLRequest(url: uploadPhotoURL)
-        let resizedImage = image.scalePreservingAspectRatio(targetSize: CGSize(width: 100, height: 100))
+        let resizedImage = image.scalePreservingAspectRatio(targetSize: CGSize(width: 200, height: 200))
         
         guard let imageAsJPEGData = resizedImage.jpegData(compressionQuality: 1) else {
             print("DEBUG: Some process in uploading image failed")
@@ -115,7 +89,7 @@ class PhotoSelectorViewModel: ObservableObject {
 
         // Append image data
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"image\"\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
         body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
         body.append(imageAsJPEGData)
         body.append("\r\n".data(using: .utf8)!)
@@ -123,7 +97,7 @@ class PhotoSelectorViewModel: ObservableObject {
         // Append additional text field (e.g., User-UUID)
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"User-UUID\"\r\n\r\n".data(using: .utf8)!)
-        body.append("\(userUUID)\r\n".data(using: .utf8)!) // Assuming "1" is the UUID value
+        body.append("\(userUUID)\r\n".data(using: .utf8)!)
 
         // End of the multipart/form-data body
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
@@ -132,7 +106,7 @@ class PhotoSelectorViewModel: ObservableObject {
         
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
-            print("SUCCESS: Sent the image data. Status code:", (response as? HTTPURLResponse)?.statusCode ?? "Nil response")
+            print("SUCCESS: Sent the image data \(body). Status code:", (response as? HTTPURLResponse)?.statusCode ?? "Nil response")
         
         } catch {
             print("DEBUG: \(error.localizedDescription)")

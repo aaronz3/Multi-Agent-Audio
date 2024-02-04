@@ -6,7 +6,7 @@
 //
 
 import Foundation
-@testable import Audio
+@testable import AudioGame
 
 // MARK: CONNECTION & DISCONNECTION DATA
 

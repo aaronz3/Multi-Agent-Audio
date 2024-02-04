@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -11,7 +11,6 @@
 		8D184AFD2B6CFE3600F51215 /* DatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D184AFC2B6CFE3600F51215 /* DatabaseTest.swift */; };
 		8D184B012B6D10EA00F51215 /* PhotoSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D184B002B6D10EA00F51215 /* PhotoSelector.swift */; };
 		8D184B042B6E3E1D00F51215 /* PhotoSelectorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D184B032B6E3E1D00F51215 /* PhotoSelectorViewModel.swift */; };
-		8D184B072B6F5CDB00F51215 /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8D184B062B6F5CDB00F51215 /* SDWebImageSwiftUI */; };
 		8D18D62F2B5CD9E20019781C /* SignalingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D18D62E2B5CD9E20019781C /* SignalingTest.swift */; };
 		8D32019D2B551CBD00214C3B /* CurrentUserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D32019C2B551CBD00214C3B /* CurrentUserModel.swift */; };
 		8D456E6F2B578D4B008EB384 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D456E6E2B578D4B008EB384 /* Message.swift */; };
@@ -49,13 +48,13 @@
 		8D18D62E2B5CD9E20019781C /* SignalingTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingTest.swift; sourceTree = "<group>"; };
 		8D32019C2B551CBD00214C3B /* CurrentUserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentUserModel.swift; sourceTree = "<group>"; };
 		8D456E6E2B578D4B008EB384 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
-		8D5F53ED2B0C5C9500AE646E /* Audio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Audio.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D5F53ED2B0C5C9500AE646E /* AudioGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D5F53F02B0C5C9500AE646E /* AudioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioApp.swift; sourceTree = "<group>"; };
 		8D5F53F42B0C5C9600AE646E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8D5F53F62B0C5C9600AE646E /* Audio.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Audio.entitlements; sourceTree = "<group>"; };
 		8D5F53F82B0C5C9600AE646E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		8D5FC6282B66058200276752 /* MockURLSessionWebSocketTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLSessionWebSocketTask.swift; sourceTree = "<group>"; };
-		8D6515462B5C0E6D00B6843A /* AudioTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AudioTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D6515462B5C0E6D00B6843A /* AudioGameTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AudioGameTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D6515482B5C0E6D00B6843A /* WebRTCViewModelTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCViewModelTest.swift; sourceTree = "<group>"; };
 		8D65154F2B5C0F1C00B6843A /* TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestData.swift; sourceTree = "<group>"; };
 		8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
@@ -73,7 +72,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D184B072B6F5CDB00F51215 /* SDWebImageSwiftUI in Frameworks */,
 				8DDD3F5C2B53792500DFFA31 /* WebRTC in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -97,11 +95,22 @@
 			path = ProfilePhotos;
 			sourceTree = "<group>";
 		};
+		8D184B082B6F6F0600F51215 /* WebRTCTests */ = {
+			isa = PBXGroup;
+			children = (
+				8D6515482B5C0E6D00B6843A /* WebRTCViewModelTest.swift */,
+				8D18D62E2B5CD9E20019781C /* SignalingTest.swift */,
+				8DFF37852B5E6C5A002C0AFF /* ServerTest.swift */,
+				8D65154F2B5C0F1C00B6843A /* TestData.swift */,
+			);
+			path = WebRTCTests;
+			sourceTree = "<group>";
+		};
 		8D5F53E42B0C5C9500AE646E = {
 			isa = PBXGroup;
 			children = (
-				8D5F53EF2B0C5C9500AE646E /* Audio */,
-				8D6515472B5C0E6D00B6843A /* AudioTests */,
+				8D5F53EF2B0C5C9500AE646E /* AudioGame */,
+				8D6515472B5C0E6D00B6843A /* AudioGameTests */,
 				8D5F53EE2B0C5C9500AE646E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -109,13 +118,13 @@
 		8D5F53EE2B0C5C9500AE646E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D5F53ED2B0C5C9500AE646E /* Audio.app */,
-				8D6515462B5C0E6D00B6843A /* AudioTests.xctest */,
+				8D5F53ED2B0C5C9500AE646E /* AudioGame.app */,
+				8D6515462B5C0E6D00B6843A /* AudioGameTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		8D5F53EF2B0C5C9500AE646E /* Audio */ = {
+		8D5F53EF2B0C5C9500AE646E /* AudioGame */ = {
 			isa = PBXGroup;
 			children = (
 				8DD180272B347F8D00441927 /* Info.plist */,
@@ -124,13 +133,13 @@
 				8D32019C2B551CBD00214C3B /* CurrentUserModel.swift */,
 				8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */,
 				8D184B022B6D11AB00F51215 /* ProfilePhotos */,
-				8DCE11162B55750500E0AC8A /* Views */,
-				8DEEDEBE2B4BA80800ECA1A5 /* Clients */,
+				8DCE11162B55750500E0AC8A /* WebRTCViews */,
+				8DEEDEBE2B4BA80800ECA1A5 /* WebRTCClients */,
 				8D5F53F42B0C5C9600AE646E /* Assets.xcassets */,
 				8D5F53F62B0C5C9600AE646E /* Audio.entitlements */,
 				8D5F53F72B0C5C9600AE646E /* Preview Content */,
 			);
-			path = Audio;
+			path = AudioGame;
 			sourceTree = "<group>";
 		};
 		8D5F53F72B0C5C9600AE646E /* Preview Content */ = {
@@ -149,28 +158,25 @@
 			path = MocksForTest;
 			sourceTree = "<group>";
 		};
-		8D6515472B5C0E6D00B6843A /* AudioTests */ = {
+		8D6515472B5C0E6D00B6843A /* AudioGameTests */ = {
 			isa = PBXGroup;
 			children = (
-				8D6515482B5C0E6D00B6843A /* WebRTCViewModelTest.swift */,
-				8D18D62E2B5CD9E20019781C /* SignalingTest.swift */,
-				8DFF37852B5E6C5A002C0AFF /* ServerTest.swift */,
+				8D184B082B6F6F0600F51215 /* WebRTCTests */,
 				8D184AFC2B6CFE3600F51215 /* DatabaseTest.swift */,
-				8D65154F2B5C0F1C00B6843A /* TestData.swift */,
 			);
-			path = AudioTests;
+			path = AudioGameTests;
 			sourceTree = "<group>";
 		};
-		8DCE11162B55750500E0AC8A /* Views */ = {
+		8DCE11162B55750500E0AC8A /* WebRTCViews */ = {
 			isa = PBXGroup;
 			children = (
 				8DEEDEBC2B4BA80300ECA1A5 /* WebRTCView.swift */,
 				8DDD3F632B54F98D00DFFA31 /* MenuBarView.swift */,
 			);
-			path = Views;
+			path = WebRTCViews;
 			sourceTree = "<group>";
 		};
-		8DEEDEBE2B4BA80800ECA1A5 /* Clients */ = {
+		8DEEDEBE2B4BA80800ECA1A5 /* WebRTCClients */ = {
 			isa = PBXGroup;
 			children = (
 				8DDD3F5F2B53BD0D00DFFA31 /* WebRTCViewModel.swift */,
@@ -179,15 +185,15 @@
 				8D456E6E2B578D4B008EB384 /* Message.swift */,
 				8D5FC62C2B6618C800276752 /* MocksForTest */,
 			);
-			path = Clients;
+			path = WebRTCClients;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8D5F53EC2B0C5C9500AE646E /* Audio */ = {
+		8D5F53EC2B0C5C9500AE646E /* AudioGame */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8D5F53FC2B0C5C9600AE646E /* Build configuration list for PBXNativeTarget "Audio" */;
+			buildConfigurationList = 8D5F53FC2B0C5C9600AE646E /* Build configuration list for PBXNativeTarget "AudioGame" */;
 			buildPhases = (
 				8D5F53E92B0C5C9500AE646E /* Sources */,
 				8D5F53EA2B0C5C9500AE646E /* Frameworks */,
@@ -197,18 +203,17 @@
 			);
 			dependencies = (
 			);
-			name = Audio;
+			name = AudioGame;
 			packageProductDependencies = (
 				8DDD3F5B2B53792500DFFA31 /* WebRTC */,
-				8D184B062B6F5CDB00F51215 /* SDWebImageSwiftUI */,
 			);
 			productName = Audio;
-			productReference = 8D5F53ED2B0C5C9500AE646E /* Audio.app */;
+			productReference = 8D5F53ED2B0C5C9500AE646E /* AudioGame.app */;
 			productType = "com.apple.product-type.application";
 		};
-		8D6515452B5C0E6D00B6843A /* AudioTests */ = {
+		8D6515452B5C0E6D00B6843A /* AudioGameTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8D65154E2B5C0E6D00B6843A /* Build configuration list for PBXNativeTarget "AudioTests" */;
+			buildConfigurationList = 8D65154E2B5C0E6D00B6843A /* Build configuration list for PBXNativeTarget "AudioGameTests" */;
 			buildPhases = (
 				8D6515422B5C0E6D00B6843A /* Sources */,
 				8D6515432B5C0E6D00B6843A /* Frameworks */,
@@ -219,9 +224,9 @@
 			dependencies = (
 				8D65154B2B5C0E6D00B6843A /* PBXTargetDependency */,
 			);
-			name = AudioTests;
+			name = AudioGameTests;
 			productName = AudioTests;
-			productReference = 8D6515462B5C0E6D00B6843A /* AudioTests.xctest */;
+			productReference = 8D6515462B5C0E6D00B6843A /* AudioGameTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -243,7 +248,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 8D5F53E82B0C5C9500AE646E /* Build configuration list for PBXProject "Audio" */;
+			buildConfigurationList = 8D5F53E82B0C5C9500AE646E /* Build configuration list for PBXProject "AudioGame" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -254,14 +259,13 @@
 			mainGroup = 8D5F53E42B0C5C9500AE646E;
 			packageReferences = (
 				8DDD3F5A2B53792500DFFA31 /* XCRemoteSwiftPackageReference "WebRTC" */,
-				8D184B052B6F5CDB00F51215 /* XCLocalSwiftPackageReference "../../../../../../Downloads/SDWebImageSwiftUI-2.x" */,
 			);
 			productRefGroup = 8D5F53EE2B0C5C9500AE646E /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D5F53EC2B0C5C9500AE646E /* Audio */,
-				8D6515452B5C0E6D00B6843A /* AudioTests */,
+				8D5F53EC2B0C5C9500AE646E /* AudioGame */,
+				8D6515452B5C0E6D00B6843A /* AudioGameTests */,
 			);
 		};
 /* End PBXProject section */
@@ -323,7 +327,7 @@
 /* Begin PBXTargetDependency section */
 		8D65154B2B5C0E6D00B6843A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 8D5F53EC2B0C5C9500AE646E /* Audio */;
+			target = 8D5F53EC2B0C5C9500AE646E /* AudioGame */;
 			targetProxy = 8D65154A2B5C0E6D00B6843A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -448,15 +452,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Audio/Audio.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AudioGame/Audio.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Audio/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"AudioGame/Preview Content\"";
 				DEVELOPMENT_TEAM = F4RA5U3KTG;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Audio/Info.plist;
+				INFOPLIST_FILE = AudioGame/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The app requires microphone usage.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -488,15 +492,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Audio/Audio.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AudioGame/Audio.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Audio/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"AudioGame/Preview Content\"";
 				DEVELOPMENT_TEAM = F4RA5U3KTG;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Audio/Info.plist;
+				INFOPLIST_FILE = AudioGame/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The app requires microphone usage.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -531,7 +535,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = F4RA5U3KTG;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = AZ.AudioTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -539,7 +543,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Audio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Audio";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AudioGame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AudioGame";
 			};
 			name = Debug;
 		};
@@ -551,7 +555,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = F4RA5U3KTG;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = AZ.AudioTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -559,7 +563,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Audio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Audio";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AudioGame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AudioGame";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -567,7 +571,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8D5F53E82B0C5C9500AE646E /* Build configuration list for PBXProject "Audio" */ = {
+		8D5F53E82B0C5C9500AE646E /* Build configuration list for PBXProject "AudioGame" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8D5F53FA2B0C5C9600AE646E /* Debug */,
@@ -576,7 +580,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8D5F53FC2B0C5C9600AE646E /* Build configuration list for PBXNativeTarget "Audio" */ = {
+		8D5F53FC2B0C5C9600AE646E /* Build configuration list for PBXNativeTarget "AudioGame" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8D5F53FD2B0C5C9600AE646E /* Debug */,
@@ -585,7 +589,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8D65154E2B5C0E6D00B6843A /* Build configuration list for PBXNativeTarget "AudioTests" */ = {
+		8D65154E2B5C0E6D00B6843A /* Build configuration list for PBXNativeTarget "AudioGameTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8D65154C2B5C0E6D00B6843A /* Debug */,
@@ -595,13 +599,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		8D184B052B6F5CDB00F51215 /* XCLocalSwiftPackageReference "../../../../../../Downloads/SDWebImageSwiftUI-2.x" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../../../../Downloads/SDWebImageSwiftUI-2.x";
-		};
-/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
 		8DDD3F5A2B53792500DFFA31 /* XCRemoteSwiftPackageReference "WebRTC" */ = {
@@ -615,10 +612,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		8D184B062B6F5CDB00F51215 /* SDWebImageSwiftUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = SDWebImageSwiftUI;
-		};
 		8DDD3F5B2B53792500DFFA31 /* WebRTC */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8DDD3F5A2B53792500DFFA31 /* XCRemoteSwiftPackageReference "WebRTC" */;

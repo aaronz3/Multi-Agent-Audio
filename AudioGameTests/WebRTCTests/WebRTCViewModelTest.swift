@@ -7,7 +7,7 @@
 
 import XCTest
 import Combine
-@testable import Audio
+@testable import AudioGame
 
 final class WebRTCViewModelTest: XCTestCase {
     

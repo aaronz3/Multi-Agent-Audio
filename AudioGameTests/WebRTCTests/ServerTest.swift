@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import Audio
+@testable import AudioGame
 
 final class ServerTest: XCTestCase {
 

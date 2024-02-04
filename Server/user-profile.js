@@ -19,7 +19,7 @@ function generateUniqueKey(userID) {
 }
 
 function handleUploadProfilePhoto(req) {
- 
+
 	const userUUID = req.body["User-UUID"];
 	const profilePhotoUniqueKey = generateUniqueKey(userUUID);
 	
@@ -45,8 +45,7 @@ async function handleDownloadProfilePhoto(req) {
 	let photoUrls = [];
 
 	for (const uuid of uuidArray) {
-		print(`NOTE: User uuid is ${uuid}`);
-
+		
 		// Get the photo key from the UUIDs of the users with profile photo
 		const photoKey = await accessUserDataDynamoDB.getPhotoKey(uuid);
 
