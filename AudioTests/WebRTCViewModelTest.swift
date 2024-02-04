@@ -17,7 +17,8 @@ final class WebRTCViewModelTest: XCTestCase {
     
     override func setUp() {
         websocket = MockNetworkSocket()
-        signalingClient = SignalingClient(url: defaultSignalingServerUrl, currentUserUUID: "THISUSER", websocket: websocket)
+        signalingClient = SignalingClient(url: defaultSignalingServerUrl, websocket: websocket)
+        signalingClient.setCurrentUserUUID(uuid: "THISUSER")
         webRTCMV = WebRTCViewModel(signalingClient: signalingClient)
     }
     

@@ -3,11 +3,15 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		8D0588BC2B527CE500D77E7D /* PeerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0588BB2B527CE500D77E7D /* PeerConnection.swift */; };
+		8D184AFD2B6CFE3600F51215 /* DatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D184AFC2B6CFE3600F51215 /* DatabaseTest.swift */; };
+		8D184B012B6D10EA00F51215 /* PhotoSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D184B002B6D10EA00F51215 /* PhotoSelector.swift */; };
+		8D184B042B6E3E1D00F51215 /* PhotoSelectorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D184B032B6E3E1D00F51215 /* PhotoSelectorViewModel.swift */; };
+		8D184B072B6F5CDB00F51215 /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8D184B062B6F5CDB00F51215 /* SDWebImageSwiftUI */; };
 		8D18D62F2B5CD9E20019781C /* SignalingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D18D62E2B5CD9E20019781C /* SignalingTest.swift */; };
 		8D32019D2B551CBD00214C3B /* CurrentUserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D32019C2B551CBD00214C3B /* CurrentUserModel.swift */; };
 		8D456E6F2B578D4B008EB384 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D456E6E2B578D4B008EB384 /* Message.swift */; };
@@ -39,6 +43,9 @@
 
 /* Begin PBXFileReference section */
 		8D0588BB2B527CE500D77E7D /* PeerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerConnection.swift; sourceTree = "<group>"; };
+		8D184AFC2B6CFE3600F51215 /* DatabaseTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseTest.swift; sourceTree = "<group>"; };
+		8D184B002B6D10EA00F51215 /* PhotoSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSelector.swift; sourceTree = "<group>"; };
+		8D184B032B6E3E1D00F51215 /* PhotoSelectorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSelectorViewModel.swift; sourceTree = "<group>"; };
 		8D18D62E2B5CD9E20019781C /* SignalingTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingTest.swift; sourceTree = "<group>"; };
 		8D32019C2B551CBD00214C3B /* CurrentUserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentUserModel.swift; sourceTree = "<group>"; };
 		8D456E6E2B578D4B008EB384 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
@@ -66,6 +73,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8D184B072B6F5CDB00F51215 /* SDWebImageSwiftUI in Frameworks */,
 				8DDD3F5C2B53792500DFFA31 /* WebRTC in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -80,6 +88,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8D184B022B6D11AB00F51215 /* ProfilePhotos */ = {
+			isa = PBXGroup;
+			children = (
+				8D184B002B6D10EA00F51215 /* PhotoSelector.swift */,
+				8D184B032B6E3E1D00F51215 /* PhotoSelectorViewModel.swift */,
+			);
+			path = ProfilePhotos;
+			sourceTree = "<group>";
+		};
 		8D5F53E42B0C5C9500AE646E = {
 			isa = PBXGroup;
 			children = (
@@ -106,6 +123,7 @@
 				8DDD3F612B54CA0200DFFA31 /* AudioControls.swift */,
 				8D32019C2B551CBD00214C3B /* CurrentUserModel.swift */,
 				8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */,
+				8D184B022B6D11AB00F51215 /* ProfilePhotos */,
 				8DCE11162B55750500E0AC8A /* Views */,
 				8DEEDEBE2B4BA80800ECA1A5 /* Clients */,
 				8D5F53F42B0C5C9600AE646E /* Assets.xcassets */,
@@ -137,6 +155,7 @@
 				8D6515482B5C0E6D00B6843A /* WebRTCViewModelTest.swift */,
 				8D18D62E2B5CD9E20019781C /* SignalingTest.swift */,
 				8DFF37852B5E6C5A002C0AFF /* ServerTest.swift */,
+				8D184AFC2B6CFE3600F51215 /* DatabaseTest.swift */,
 				8D65154F2B5C0F1C00B6843A /* TestData.swift */,
 			);
 			path = AudioTests;
@@ -181,6 +200,7 @@
 			name = Audio;
 			packageProductDependencies = (
 				8DDD3F5B2B53792500DFFA31 /* WebRTC */,
+				8D184B062B6F5CDB00F51215 /* SDWebImageSwiftUI */,
 			);
 			productName = Audio;
 			productReference = 8D5F53ED2B0C5C9500AE646E /* Audio.app */;
@@ -234,6 +254,7 @@
 			mainGroup = 8D5F53E42B0C5C9500AE646E;
 			packageReferences = (
 				8DDD3F5A2B53792500DFFA31 /* XCRemoteSwiftPackageReference "WebRTC" */,
+				8D184B052B6F5CDB00F51215 /* XCLocalSwiftPackageReference "../../../../../../Downloads/SDWebImageSwiftUI-2.x" */,
 			);
 			productRefGroup = 8D5F53EE2B0C5C9500AE646E /* Products */;
 			projectDirPath = "";
@@ -270,6 +291,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DEEDEBD2B4BA80300ECA1A5 /* WebRTCView.swift in Sources */,
+				8D184B012B6D10EA00F51215 /* PhotoSelector.swift in Sources */,
 				8DDD3F602B53BD0D00DFFA31 /* WebRTCViewModel.swift in Sources */,
 				8DB166F62B528D9A003E6AB5 /* SignalingClient.swift in Sources */,
 				8D456E6F2B578D4B008EB384 /* Message.swift in Sources */,
@@ -280,6 +302,7 @@
 				8D5FC6292B66058200276752 /* MockURLSessionWebSocketTask.swift in Sources */,
 				8DDD3F622B54CA0200DFFA31 /* AudioControls.swift in Sources */,
 				8D5F53F12B0C5C9500AE646E /* AudioApp.swift in Sources */,
+				8D184B042B6E3E1D00F51215 /* PhotoSelectorViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,6 +313,7 @@
 				8D18D62F2B5CD9E20019781C /* SignalingTest.swift in Sources */,
 				8D6515492B5C0E6D00B6843A /* WebRTCViewModelTest.swift in Sources */,
 				8DFF37862B5E6C5A002C0AFF /* ServerTest.swift in Sources */,
+				8D184AFD2B6CFE3600F51215 /* DatabaseTest.swift in Sources */,
 				8D6515502B5C0F1C00B6843A /* TestData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -572,6 +596,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		8D184B052B6F5CDB00F51215 /* XCLocalSwiftPackageReference "../../../../../../Downloads/SDWebImageSwiftUI-2.x" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../../../../../Downloads/SDWebImageSwiftUI-2.x";
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		8DDD3F5A2B53792500DFFA31 /* XCRemoteSwiftPackageReference "WebRTC" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -584,6 +615,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		8D184B062B6F5CDB00F51215 /* SDWebImageSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SDWebImageSwiftUI;
+		};
 		8DDD3F5B2B53792500DFFA31 /* WebRTC */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8DDD3F5A2B53792500DFFA31 /* XCRemoteSwiftPackageReference "WebRTC" */;

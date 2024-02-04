@@ -38,10 +38,9 @@ class SignalingClient: NSObject, ObservableObject {
     
     var currentUserUUID: String?
     
-    init(url: URL, currentUserUUID: String, websocket: NetworkSocket? = nil) {
+    init(url: URL, websocket: NetworkSocket? = nil) {
         
         self.url = url
-        self.currentUserUUID = currentUserUUID
         
         super.init()
         
@@ -50,6 +49,10 @@ class SignalingClient: NSObject, ObservableObject {
     
     deinit {
         print("NOTE: Signaling Client deinitialized")
+    }
+    
+    func setCurrentUserUUID(uuid: String) {
+        self.currentUserUUID = uuid
     }
     
     func handleWebsocketForTesting(websocket: NetworkSocket?) {

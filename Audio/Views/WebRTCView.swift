@@ -11,15 +11,14 @@ struct WebRTCView: View {
     
     @EnvironmentObject var webRTCVM: WebRTCViewModel
     @EnvironmentObject var networkMonitor: NetworkMonitor
-
-//    var webRTCVM: webRTCVM
-//    var currentUserModel: CurrentUserModel
+    @EnvironmentObject var currentUserModel: CurrentUserModel
+    let testUUID = "test"
 
     var body: some View {
         
         VStack {
             
-            Text("Current user UUID is:" + (CurrentUserModel.loadUsername()))
+            Text("Current user UUID is:" + (currentUserModel.currentUserUUID ?? "nil"))
                 .padding(20)
             
             Text("Signaling Status:" + (webRTCVM.signalingConnected ? "✅" : "❌"))
@@ -32,11 +31,21 @@ struct WebRTCView: View {
             }
             .padding(20)
             
-            .padding(20)
+            Button("Send data") {
+                Task {
+                    await currentUserModel.uploadData(data: testUUID)
+                }
+            }
             
             MenuBarView()
         }
         .onAppear {
+//            Task {
+//                await currentUserModel.uploadData(data: testUUID)
+            // TODO: Only access currentuser by function
+//                webRTCVM.signalingClient.currentUserUUID = testUUID
+//            }
+            
             networkMonitor.start()
             HandleAudioSession.checkAudioPermission()
             HandleAudioSession.speakerOn()
