@@ -6,29 +6,22 @@
 //
 
 import Foundation
-struct Order: Codable {
-    let customerId: String
-    let items: [String]
-}
 
+enum UserPersonalData {
+    
+}
 
 class CurrentUserModel: ObservableObject {
     
     var request: URLRequest
-    
-    @Published var currentUserUUID: String?
-    
+
     init(url: URL) {
         self.request = URLRequest(url: url)
     }
     
-    func downloadUUID() async throws {
-        
-    }
-    
-    func uploadData(data: String) async {
+    func uploadUserData(_ data: String) async {
 
-        let testData = Message.justConnectedUser(JustConnectedUser(userUUID: data))
+        let testData = WebRTCMessage.justConnectedUser(JustConnectedUser(userUUID: data))
         
         guard let uploadData = try? JSONEncoder().encode(testData) else {
             return
@@ -48,14 +41,4 @@ class CurrentUserModel: ObservableObject {
         
     }
     
-    func loadUsername() -> String {
-        // Load the saved username from UserDefaults
-        if let savedUsername = UserDefaults.standard.string(forKey: "username") {
-            return savedUsername
-        } else {
-            let username = UUID().uuidString
-            UserDefaults.standard.set(username, forKey: "username")
-            return username
-        }
-    }
 }

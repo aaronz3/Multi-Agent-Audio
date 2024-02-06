@@ -22,11 +22,7 @@ enum SendMessageType {
     case disconnectedUser(String)
 }
 
-enum SignalingErrors: Error {
-    case noUserID
-}
-
-class SignalingClient: NSObject, ObservableObject {
+class SignalingClient: NSObject {
     
     let url: URL
     var webSocket: NetworkSocket?
@@ -41,7 +37,6 @@ class SignalingClient: NSObject, ObservableObject {
     init(url: URL, websocket: NetworkSocket? = nil) {
         
         self.url = url
-        
         super.init()
         
         handleWebsocketForTesting(websocket: websocket)
@@ -67,7 +62,7 @@ class SignalingClient: NSObject, ObservableObject {
         }
     }
     
-    func connect(websocket: NetworkSocket? = nil) async throws {
+    func connect(websocket: NetworkSocket? = nil) async {
         
         handleWebsocketForTesting(websocket: websocket)
         
@@ -75,7 +70,8 @@ class SignalingClient: NSObject, ObservableObject {
         
         // Send over the current agent's UUID to other agents
         guard let uuid = self.currentUserUUID else {
-            throw SignalingErrors.noUserID
+            print("DEBUG: No UUID")
+            return
         }
         
         await self.send(toUUID: nil, message: .justConnectedUser(uuid))
@@ -109,8 +105,6 @@ class SignalingClient: NSObject, ObservableObject {
             
         } catch {
             print("DEBUG: Error in readMessage block.", error.localizedDescription)
-            
-            
         }
         
     }
@@ -122,7 +116,7 @@ class SignalingClient: NSObject, ObservableObject {
             return
         }
         
-        var sendMessageContext: Message
+        var sendMessageContext: WebRTCMessage
         var printMessageType: String
         
         switch message {
@@ -132,7 +126,7 @@ class SignalingClient: NSObject, ObservableObject {
                 return
             }
             
-            sendMessageContext = Message.sdp(SessionDescription(fromUUID: userUUID, toUUID: toUUID, data: sdp))
+            sendMessageContext = WebRTCMessage.sdp(SessionDescription(fromUUID: userUUID, toUUID: toUUID, data: sdp))
             printMessageType = "SDP"
             
         case .candidate(let iceCandidate):
@@ -141,17 +135,17 @@ class SignalingClient: NSObject, ObservableObject {
                 return
             }
             
-            sendMessageContext = Message.candidate(IceCandidate(fromUUID: userUUID, toUUID: toUUID, from: iceCandidate))
+            sendMessageContext = WebRTCMessage.candidate(IceCandidate(fromUUID: userUUID, toUUID: toUUID, from: iceCandidate))
             printMessageType = "candidate"
             
         case .justConnectedUser(let uuid):
             
-            sendMessageContext = Message.justConnectedUser(JustConnectedUser(userUUID: uuid))
+            sendMessageContext = WebRTCMessage.justConnectedUser(JustConnectedUser(userUUID: uuid))
             printMessageType = "current connected agent's UUID"
             
         case .disconnectedUser(let uuid) :
             
-            sendMessageContext = Message.justDisconnectedUser(DisconnectedUser(userUUID: uuid))
+            sendMessageContext = WebRTCMessage.justDisconnectedUser(DisconnectedUser(userUUID: uuid))
             printMessageType = "current disconnected agent's UUID"
         }
         
@@ -159,7 +153,7 @@ class SignalingClient: NSObject, ObservableObject {
     }
     
     
-    func encodeToSend(sendMessageContext: Message, printMessageType: String) async {
+    func encodeToSend(sendMessageContext: WebRTCMessage, printMessageType: String) async {
         do {
             let dataMessage = try self.encoder.encode(sendMessageContext)
             

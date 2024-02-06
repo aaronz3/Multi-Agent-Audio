@@ -3,7 +3,6 @@ const { DynamoDBClient, GetItemCommand, PutItemCommand } = require("@aws-sdk/cli
 class AccessUserDataDynamoDB {
 	constructor(region) {
 		this.client = new DynamoDBClient({ region: region });
-
 	}
 
 	async getPhotoKey(userID) {

@@ -10,22 +10,21 @@ import SwiftUI
 @main
 struct AudioApp: App {
     
-    @StateObject var currentUserModel = CurrentUserModel(url: userIDUrl)
-    @StateObject var webRTCVM = WebRTCViewModel(signalingClient: SignalingClient(url: defaultSignalingServerUrl))
-    @StateObject var networkMonitor = NetworkMonitor()
+    @StateObject var authenticationVM = AuthenticationViewModel()
     
     var body: some Scene {
         WindowGroup {
-//            WebRTCView()
-//                .environmentObject(webRTCVM)
-//                .environmentObject(networkMonitor)
-//                .environmentObject(currentUserModel)
+            AuthenticationView()
+                .environmentObject(authenticationVM)
             
-            if #available(iOS 16.0, *) {
-                PhotoSelector()
-            } else {
-                // Fallback on earlier versions
-            }
+//            if #available(iOS 16.0, *) {
+//                PhotoSelector()
+//            } else {
+//                // Fallback on earlier versions
+//            }
+            
+            
+                
         }
     }
 }

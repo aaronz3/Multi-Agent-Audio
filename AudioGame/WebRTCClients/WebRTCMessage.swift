@@ -1,5 +1,5 @@
 //
-//  Message.swift
+//  WebRTCMessage.swift
 //  Audio
 //
 //  Created by Aaron Zheng on 1/17/24.
@@ -8,7 +8,7 @@
 import Foundation
 import WebRTC
 
-enum Message {
+enum WebRTCMessage {
     case sdp(SessionDescription)
     case candidate(IceCandidate)
     case justConnectedUser(JustConnectedUser)
@@ -16,7 +16,7 @@ enum Message {
     case ping
 }
 
-extension Message: Codable {
+extension WebRTCMessage: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)

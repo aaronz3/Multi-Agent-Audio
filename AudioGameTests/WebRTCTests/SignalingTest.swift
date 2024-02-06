@@ -60,7 +60,7 @@ final class SignalingTest: XCTestCase {
             }
         }
         
-        try await signalingClient.connect(websocket: websocket)
+        await signalingClient.connect(websocket: websocket)
 
         signalingClient.disconnect()
 

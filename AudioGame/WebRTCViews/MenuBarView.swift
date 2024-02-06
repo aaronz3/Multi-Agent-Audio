@@ -10,6 +10,7 @@ import SwiftUI
 struct MenuBarView: View {
     
     @EnvironmentObject var webRTCVM: WebRTCViewModel
+    @EnvironmentObject var authenticationVM: AuthenticationViewModel
 
     @State private var isLongPressed = false
     
@@ -19,8 +20,6 @@ struct MenuBarView: View {
             connect
             
             talk
-            
-            getInfo
 
         }
     }
@@ -28,11 +27,8 @@ struct MenuBarView: View {
     var connect: some View {
         Button("Connect") {
             Task {
-                do {
-                    try await self.webRTCVM.signalingClient.connect()
-                } catch {
-                    print("DEBUG: \(error.localizedDescription)")
-                }
+                self.webRTCVM.signalingClient.setCurrentUserUUID(uuid: authenticationVM.userID!)
+                await self.webRTCVM.signalingClient.connect()
             }
         }
         .disabled(webRTCVM.signalingConnected)

@@ -27,13 +27,13 @@ final class DatabaseTest: XCTestCase {
         photoSelectorViewModel = nil
     }
     
-    func testUploadData() async {
+    func testUploadImageData() async {
         
         await photoSelectorViewModel.uploadImageData(image: UIImage(systemName: "sun.min")!, userUUID: "1")
 
     }
 
-    func testDownloadData() async {
+    func testDownloadImageData() async {
         
         await photoSelectorViewModel.downloadImageData(fromUsers: ["1"])
 

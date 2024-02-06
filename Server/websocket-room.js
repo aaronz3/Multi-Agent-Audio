@@ -1,5 +1,5 @@
 const WebSocket = require("ws");
-const {rooms} = require("./global-properties");
+const { rooms } = require("./global-properties");
 
 // SECTION: MODIFY ROOM PROPERTIES
 // -----------------------
@@ -44,9 +44,8 @@ function handleWSMessage(room, message, incomingClient) {
 			console.log(`[Room ${room.roomID}] All collected keys are: ${Object.keys(room.agentUUIDConnection)}`);
 
 			// Send the agent's UUID to agents that previously connected
-			sendToAllButSelf(room, message, incomingClient);
+			sendToAllButSelf(room, message, incomingClient, incomingClientUUID);
 
-			console.log(`[Room ${room.roomID}] User ${incomingClientUUID} sent UUID to ${room.websocketServer.clients.size - 1} other users`);
 			break;
         
 		case "SessionDescription":
@@ -75,12 +74,12 @@ function handleWSMessage(room, message, incomingClient) {
 // SECTION: HELPERS TO RELAY MESSAGES 
 // -----------------------
 
-function sendToAllButSelf(room, message, incomingClient) {
-	const wss = room.websocketServer;
-
-	wss.clients.forEach((client) => {
+function sendToAllButSelf(room, message, incomingClient, incomingClientUUID) {
+	console.log(`NOTE: Object.values(room.agentUUIDConnection) is ${Object.values(room.agentUUIDConnection)}`);
+	Object.values(room.agentUUIDConnection).forEach((client) => {
 		if (client !== incomingClient && client.readyState === WebSocket.OPEN) {
 			client.send(message);
+			console.log(`[Room ${room.roomID}] User ${incomingClientUUID} sent UUID to 1 other users`);
 		}
 	});
 }

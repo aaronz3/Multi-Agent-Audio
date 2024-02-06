@@ -12,11 +12,11 @@ import WebRTC
 class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, ObservableObject {
     
     @Published var peerConnections: [PeerConnection] = []
-    var signalingClient: SignalingClient
-    
     @Published var signalingConnected = false
     @Published var disableTalkButton = true
-        
+    
+    var signalingClient: SignalingClient
+    
     // TODO: Only for testing purposes
     var processDataCompletion: ((String) -> ())?
     
@@ -67,9 +67,9 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
         }
     }
     
-    func decodeReceivedData(data: Data) -> Message? {
+    func decodeReceivedData(data: Data) -> WebRTCMessage? {
         do {
-            let returnMessage = try self.signalingClient.decoder.decode(Message.self, from: data)
+            let returnMessage = try self.signalingClient.decoder.decode(WebRTCMessage.self, from: data)
             return returnMessage
         } catch {
             print("DEBUG: Error in decodeReceivedData. \(error.localizedDescription)")
