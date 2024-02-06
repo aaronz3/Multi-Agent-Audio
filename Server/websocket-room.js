@@ -12,6 +12,7 @@ function modifyRoom(room) {
 
 		console.log(`[Room ${room.roomID}] Client connected from IP: ${incomingClient._socket.remoteAddress}. Total connected clients: ${wss.clients.size}.`);
 
+		
 		// Handle message
 		incomingClient.on("message", (message) => {
 			handleWSMessage(room, message, incomingClient);
@@ -21,7 +22,29 @@ function modifyRoom(room) {
 		incomingClient.on("close", () => {
 			handleWSClosure(room, incomingClient);
 		});
-      
+		
+		// Set up a ping interval
+		const pingInterval = setInterval(() => {
+			if (incomingClient.isAlive === false) {
+				console.log("NOTE: Client did not respond to ping, terminating");
+				incomingClient.terminate();
+				handleWSClosure(room, incomingClient);
+				
+				clearInterval(pingInterval);
+				return;
+			}
+	
+			// Mark client as not alive initially
+			incomingClient.isAlive = false;
+			// Send a ping to the client
+			incomingClient.ping();
+		}, 10000); // Ping interval set to 30 seconds
+		
+		// Set up pong response listener
+		incomingClient.on("pong", () => {
+			// Mark client as alive upon receiving a pong
+			incomingClient.isAlive = true;
+		});
 	});
 }
 
@@ -38,13 +61,9 @@ function handleWSMessage(room, message, incomingClient) {
 
 			// This is the current user's UUID
 			const incomingClientUUID = parsedMessage.payload["userUUID"];
-        
-			// Save current user's UUID into a dictionary on the server
-			room.agentUUIDConnection[incomingClientUUID] = incomingClient;
-			console.log(`[Room ${room.roomID}] All collected keys are: ${Object.keys(room.agentUUIDConnection)}`);
-
-			// Send the agent's UUID to agents that previously connected
-			sendToAllButSelf(room, message, incomingClient, incomingClientUUID);
+			
+			// Check if room.agentUUIDConnection already has a reference to the client. If so, terminate the previous instance. If note, add the client to room.agentUUIDConnection.
+			receivedJustConnectedUser(room, message, incomingClient, incomingClientUUID);
 
 			break;
         
@@ -71,11 +90,36 @@ function handleWSMessage(room, message, incomingClient) {
 	}
 }
 
+// SECTION: RECEVIED MESSAGE TYPES
+// -----------------------
+
+function receivedJustConnectedUser(room, message, incomingClient, incomingClientUUID) {
+	
+	// If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance
+	if (incomingClientUUID in room.agentUUIDConnection) {
+		
+		room.agentUUIDConnection[incomingClientUUID].terminate();
+		delete room.agentUUIDConnection[incomingClientUUID];
+		
+		handleWSClosure(room, room.agentUUIDConnection[incomingClientUUID]);
+		console.log(`NOTE: Deleted ${incomingClientUUID} client from room.agentUUIDConnection.`);
+		console.log(`NOTE: Total connected clients is ${room.websocketServer.clients.size}.`);
+		room.numberOfPlayers--;
+	} 
+	
+	// Save current user's UUID into a dictionary on the server
+	room.agentUUIDConnection[incomingClientUUID] = incomingClient;
+	console.log(`[Room ${room.roomID}] All collected keys are: ${Object.keys(room.agentUUIDConnection)}`);
+
+	// Send the agent's UUID to agents that previously connected
+	sendToAllButSelf(room, message, incomingClient, incomingClientUUID);
+
+}
+
 // SECTION: HELPERS TO RELAY MESSAGES 
 // -----------------------
 
 function sendToAllButSelf(room, message, incomingClient, incomingClientUUID) {
-	console.log(`NOTE: Object.values(room.agentUUIDConnection) is ${Object.values(room.agentUUIDConnection)}`);
 	Object.values(room.agentUUIDConnection).forEach((client) => {
 		if (client !== incomingClient && client.readyState === WebSocket.OPEN) {
 			client.send(message);
@@ -98,7 +142,7 @@ function sendTo(room, agent, message) {
 // -----------------------
 
 function handleWSClosure(room, incomingClient) {
-	console.log(`[Room ${room.roomID}] Some client closed the connection`);
+	
 	const disconnectedUserUUID = deleteKeyValuePairAndReturnKey(room.agentUUIDConnection, incomingClient);
 	room.numberOfPlayers--;
 
@@ -106,8 +150,10 @@ function handleWSClosure(room, incomingClient) {
 		console.log(`[Room ${room.roomID}] DEBUG: The server tried to delete a client that was not in agentUUIDConnection array`);
     
 	} else {
+		console.log(`[Room ${room.roomID}] Client ${disconnectedUserUUID} closed the connection`);
+
 		const disconnectionUserMessage = JSON.stringify({ type: "DisconnectedUser", payload: { userUUID: disconnectedUserUUID }});
-		sendToAllButSelf(room, Buffer.from(disconnectionUserMessage), incomingClient);
+		sendToAllButSelf(room, Buffer.from(disconnectionUserMessage), incomingClient, disconnectedUserUUID);
 
 		console.log(`[Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
 		console.log(`[Room ${room.roomID}] All collected keys are: ${Object.keys(room.agentUUIDConnection)}`);

@@ -20,7 +20,7 @@ function handlePlay(request, socket, head) {
 		// Add the newly created room into the rooms array.
 		rooms.push(room);
 
-		// Else join the room that is about to be filled.
+	// Else join the room that is about to be filled.
 	} else {
 		wss = returnMostSuitableRoomAndUpdateRoomProperty();
 	}

@@ -30,8 +30,8 @@ const server = http.createServer(app);
 
 // SECTION: ADDING WEBSOCKETS TO HTTP(S)
 // -----------------------
-
 // Upgrade the HTTP(S) server to a WebSocket server on '/play' route
+
 server.on("upgrade", (request, socket, head) => {
 	const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
 	if (pathname === "/play") {
@@ -69,8 +69,6 @@ app.post("/user-data", express.json(), (req, res) => {
 	console.log("Received data:", req.body);
 	res.status(200).send("Data received");
 });
-
-
 
 server.listen(port, () => {
 	console.log(`Server listening on port ${port}`);

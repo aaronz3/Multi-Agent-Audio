@@ -197,7 +197,7 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
                 
                 self.peerConnections[0].returnedSDP = true
                 
-                // This is for the offerer who already connected with other agents.
+            // This is for the offerer who already connected with other agents.
             } else if !allReceivingAgentsUUID.contains(where: { justConnectedUser.userUUID == $0 }) {
                 let pC = PeerConnection(receivingAgentsUUID: justConnectedUser.userUUID, delegate: self)
                 
@@ -210,7 +210,8 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
                 await self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
                 
                 self.peerConnections[0].returnedSDP = true
-                
+            
+            
             } else {
                 print("DEBUG: Fell through everything")
                 return
