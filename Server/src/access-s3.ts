@@ -1,7 +1,7 @@
-const { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-class AccessS3 {
+export class AccessS3 {
     
 	constructor(bucketRegion) {
 		this.client = new S3Client({ region: bucketRegion });

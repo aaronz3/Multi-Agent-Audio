@@ -1,6 +1,6 @@
-const { DynamoDBClient, GetItemCommand, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 
-class AccessUserDataDynamoDB {
+export class AccessUserDataDynamoDB {
 	constructor(region) {
 		this.client = new DynamoDBClient({ region: region });
 	}

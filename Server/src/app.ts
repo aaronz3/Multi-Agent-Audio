@@ -1,12 +1,14 @@
-const express = require("express");
-const { handlePlay } = require("./matchmaking");
-const { handleUploadProfilePhoto, handleDownloadProfilePhoto } = require("./user-profile");
-const multer = require("multer");
+import { handlePlay } from "./matchmaking";
+import { handleUploadProfilePhoto, handleDownloadProfilePhoto } from "./user-profile";
+
+import express from "express";
+import multer from "multer";
 
 // Use the 'https' module instead of 'http' for production
-const http = require("http");
+import http from "http";
+import internal from "stream";
 // const fs = require('fs')
-// const https = require('https');  
+import https from 'https';  
 
 const app = express();
 
@@ -15,7 +17,7 @@ const port = process.env.PORT;
 
 // SECTION: TEST SERVER
 // -----------------------
-const server = http.createServer(app);
+const server = https.createServer(app);
 
 // SECTION: LIVE SERVER
 // -----------------------
@@ -32,17 +34,25 @@ const server = http.createServer(app);
 // -----------------------
 // Upgrade the HTTP(S) server to a WebSocket server on '/play' route
 
-server.on("upgrade", (request, socket, head) => {
-	const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
-	if (pathname === "/play") {
-		handlePlay(request, socket, head);
-	}
+server.on("upgrade", (request: http.IncomingMessage, socket: internal.Duplex, head: Buffer) => {
+    // Check if request.url is defined
+    if (request.url) {
+        const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
+        if (pathname === "/play") {
+            handlePlay(request, socket, head);
+        }
+    } else {
+        // Handle the case where request.url is undefined
+        // For example, you might want to close the socket
+		console.log("DEBUG: request.url was undefined")
+        socket.destroy();
+    }
 });
 
 // SECTION: PROFILE PHOTO DATA UPLOAD & DOWNLOAD
 // -----------------------
 const storage = multer.memoryStorage();
-const upload = multer({ storage : storage }); 
+const upload = multer({ storage: storage });
 
 app.post("/upload-profile-photo", upload.single("image"), (req, res) => {
 	handleUploadProfilePhoto(req);

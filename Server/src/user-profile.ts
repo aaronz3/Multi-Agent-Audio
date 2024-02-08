@@ -1,6 +1,6 @@
-const { AccessS3 } = require("./access-s3");
-const { AccessUserDataDynamoDB } = require("./access-dynamodb");
-const { v4: uuidv4 } = require("uuid");
+import { AccessS3 } from "./access-s3";
+import { AccessUserDataDynamoDB } from "./access-dynamodb";
+import { v4 as uuidv4 } from 'uuid';
 
 require("dotenv").config();
 
@@ -18,7 +18,7 @@ function generateUniqueKey(userID) {
 	return uniqueKey;
 }
 
-function handleUploadProfilePhoto(req) {
+export function handleUploadProfilePhoto(req) {
 
 	const userUUID = req.body["User-UUID"];
 	const profilePhotoUniqueKey = generateUniqueKey(userUUID);
@@ -35,7 +35,7 @@ function handleUploadProfilePhoto(req) {
 
 }
 
-async function handleDownloadProfilePhoto(req) {
+export async function handleDownloadProfilePhoto(req) {
 	
 	const userUUIDs = req.query["User-UUIDs"];
 	

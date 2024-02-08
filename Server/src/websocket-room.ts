@@ -1,21 +1,47 @@
-const WebSocket = require("ws");
-const { rooms } = require("./global-properties");
+import WebSocket from "ws";
+import { rooms, type Room } from "./global-properties";
 
 // SECTION: MODIFY ROOM PROPERTIES
 // -----------------------
 
 // Update agentUUIDConnection of room
-function modifyRoom(room) {  
+export function modifyRoom(room: Room) {  
+	// Create a Map to track the 'isAlive' property for each client
+	const clientIsAliveMap = new Map<WebSocket, boolean>();
+
 	const wss = room.websocketServer;
-	wss.on("connection", (incomingClient) => {
+	wss.on("connection", (incomingClient: WebSocket, req) => {
+		
 		room.numberOfPlayers++;
 
-		console.log(`[Room ${room.roomID}] Client connected from IP: ${incomingClient._socket.remoteAddress}. Total connected clients: ${wss.clients.size}.`);
-
+		console.log(`[Room ${room.roomID}] Client connected from IP: ${req.socket.remoteAddress}. Total connected clients: ${wss.clients.size}.`);
 		
+		// Initialize the 'isAlive' property for the new client
+		clientIsAliveMap.set(incomingClient, true);
+
 		// Handle message
 		incomingClient.on("message", (message) => {
-			handleWSMessage(room, message, incomingClient);
+			// Ensure message is treated as a string regardless of its original type
+			let messageAsString: string;
+			if (typeof message === 'string') {
+				messageAsString = message;
+			} else if (message instanceof ArrayBuffer) {
+				// If message is an ArrayBuffer, convert it to string
+				messageAsString = new TextDecoder().decode(message);
+			} else if (Array.isArray(message)) {
+				// If message is an array of Buffers, concatenate and convert to string
+				// This case is more unusual and depends on your specific needs
+				// Example approach (might need adjustments based on your data structure):
+				const combinedBuffer = Buffer.concat(message); // Combine Buffer array into a single Buffer
+				messageAsString = combinedBuffer.toString(); // Convert Buffer to string
+			} else {
+				// Fallback for unexpected types, might not be necessary
+				// depending on your confidence in the incoming message types
+				console.error("Unhandled message type", typeof message);
+				messageAsString = ''; // Default fallback, might choose to handle differently
+			}
+
+			handleWSMessage(room, messageAsString, incomingClient);
 		});
   
 		// Handle websocket closure
@@ -23,58 +49,61 @@ function modifyRoom(room) {
 			handleWSClosure(room, incomingClient);
 		});
 		
-		// Set up a ping interval
-		const pingInterval = setInterval(() => {
-			if (incomingClient.isAlive === false) {
-				console.log("NOTE: Client did not respond to ping, terminating");
-				incomingClient.terminate();
-				handleWSClosure(room, incomingClient);
-				
-				clearInterval(pingInterval);
-				return;
-			}
-	
-			// Mark client as not alive initially
-			incomingClient.isAlive = false;
-			// Send a ping to the client
-			incomingClient.ping();
-		}, 10000); // Ping interval set to 30 seconds
-		
 		// Set up pong response listener
 		incomingClient.on("pong", () => {
 			// Mark client as alive upon receiving a pong
-			incomingClient.isAlive = true;
+			clientIsAliveMap.set(incomingClient, true);
 		});
 	});
+
+	function heartbeat() {
+		wss.clients.forEach((ws) => {
+			if (clientIsAliveMap.get(ws) === false) {
+				return ws.terminate();
+			}
+	
+			clientIsAliveMap.set(ws, false);
+			ws.ping();
+		});
+	}
+
+	setInterval(heartbeat, 10000);
 }
+
 
 // SECTION: HANDLE WEBSOCKET MESSAGE EVENT
 // -----------------------
 
-function handleWSMessage(room, message, incomingClient) {
+interface Message {
+	type: string;
+	payload: any;
+}
+
+function handleWSMessage(room: Room, message: string, incomingClient: WebSocket) {
 	try {
-		const parsedMessage = JSON.parse(message);
+
+		const parsedMessage: Message = JSON.parse(message);
     
 		switch (parsedMessage.type) {
       
 		case "JustConnectedUser":
 
 			// This is the current user's UUID
-			const incomingClientUUID = parsedMessage.payload["userUUID"];
+			const incomingClientUUID: string = parsedMessage.payload["userUUID"];
 			
 			// Check if room.agentUUIDConnection already has a reference to the client. If so, terminate the previous instance. If note, add the client to room.agentUUIDConnection.
-			receivedJustConnectedUser(room, message, incomingClient, incomingClientUUID);
+			receivedJustConnectedUser(room, Buffer.from(message), incomingClient, incomingClientUUID);
 
 			break;
         
 		case "SessionDescription":
-			const forwardingAddressForSDP = parsedMessage.payload["toUUID"];
+			const forwardingAddressForSDP: string = parsedMessage.payload["toUUID"];
 			console.log(`[Room ${room.roomID}] Sent SDP to ${forwardingAddressForSDP}`);
 			sendTo(room, forwardingAddressForSDP, message);
 			break;
 
 		case "IceCandidate":
-			const forwardingAddressForICECandidate = parsedMessage.payload["toUUID"];
+			const forwardingAddressForICECandidate: string = parsedMessage.payload["toUUID"];
 
 			console.log(`[Room ${room.roomID}] Sent candidate to ${forwardingAddressForICECandidate}`);
 			sendTo(room, forwardingAddressForICECandidate, message);
@@ -93,7 +122,7 @@ function handleWSMessage(room, message, incomingClient) {
 // SECTION: RECEVIED MESSAGE TYPES
 // -----------------------
 
-function receivedJustConnectedUser(room, message, incomingClient, incomingClientUUID) {
+function receivedJustConnectedUser(room: Room, message: Buffer, incomingClient: WebSocket, incomingClientUUID: string) {
 	
 	// If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance
 	if (incomingClientUUID in room.agentUUIDConnection) {
@@ -119,7 +148,7 @@ function receivedJustConnectedUser(room, message, incomingClient, incomingClient
 // SECTION: HELPERS TO RELAY MESSAGES 
 // -----------------------
 
-function sendToAllButSelf(room, message, incomingClient, incomingClientUUID) {
+function sendToAllButSelf(room: Room, message: Buffer, incomingClient: WebSocket, incomingClientUUID: string) {
 	Object.values(room.agentUUIDConnection).forEach((client) => {
 		if (client !== incomingClient && client.readyState === WebSocket.OPEN) {
 			client.send(message);
@@ -128,7 +157,7 @@ function sendToAllButSelf(room, message, incomingClient, incomingClientUUID) {
 	});
 }
 
-function sendTo(room, agent, message) {
+function sendTo(room: Room, agent: string, message: string) {
 	const wss = room.websocketServer;
 
 	wss.clients.forEach((client) => {
@@ -141,7 +170,7 @@ function sendTo(room, agent, message) {
 // SECTION: HANDLE WEBSOCKET CLOSURE EVENT
 // -----------------------
 
-function handleWSClosure(room, incomingClient) {
+function handleWSClosure(room: Room, incomingClient: WebSocket) {
 	
 	const disconnectedUserUUID = deleteKeyValuePairAndReturnKey(room.agentUUIDConnection, incomingClient);
 	room.numberOfPlayers--;
@@ -152,9 +181,10 @@ function handleWSClosure(room, incomingClient) {
 	} else {
 		console.log(`[Room ${room.roomID}] Client ${disconnectedUserUUID} closed the connection`);
 
-		const disconnectionUserMessage = JSON.stringify({ type: "DisconnectedUser", payload: { userUUID: disconnectedUserUUID }});
-		sendToAllButSelf(room, Buffer.from(disconnectionUserMessage), incomingClient, disconnectedUserUUID);
-
+		const disconnectionUserMessage: string = JSON.stringify({ type: "DisconnectedUser", payload: { userUUID: disconnectedUserUUID }});
+		
+		sendToAllButSelf(room, Buffer.from(disconnectionUserMessage), incomingClient, disconnectedUserUUID);	
+		
 		console.log(`[Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
 		console.log(`[Room ${room.roomID}] All collected keys are: ${Object.keys(room.agentUUIDConnection)}`);
 	}
@@ -166,7 +196,7 @@ function handleWSClosure(room, incomingClient) {
 }
 
 // Helper function to delete the user that left the room
-function deleteKeyValuePairAndReturnKey(obj, targetValue) {
+function deleteKeyValuePairAndReturnKey(obj: {[key: string]: WebSocket}, targetValue: WebSocket) {
 	for (const key in obj) {
 		if (obj[key] === targetValue) {
 			delete obj[key];
@@ -176,7 +206,7 @@ function deleteKeyValuePairAndReturnKey(obj, targetValue) {
 }
 
 // Helper function to delete the room from the global rooms array if there are no players in the room
-function deleteRoomFromRooms(roomToRemove) {
+function deleteRoomFromRooms(roomToRemove: Room) {
 	// Find the index of the room to remove
 	const index = rooms.findIndex(room => room === roomToRemove);
 
@@ -186,5 +216,3 @@ function deleteRoomFromRooms(roomToRemove) {
 	}
 	console.log(`Number of rooms: ${rooms.length}`);
 }
-
-module.exports = modifyRoom;
