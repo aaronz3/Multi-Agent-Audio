@@ -16,14 +16,16 @@ const matchmaking_1 = require("./matchmaking");
 const user_profile_1 = require("./user-profile");
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
+// Use the 'https' module instead of 'http' for production
+const http_1 = __importDefault(require("http"));
 // const fs = require('fs')
-const https_1 = __importDefault(require("https"));
+// import https from 'https';  
 const app = (0, express_1.default)();
 require("dotenv").config();
 const port = process.env.PORT;
-// SECTION: TEST SERVER
+// SECTION: TEST SERVER (ABLE TO RUN ON LOCAL COMPUTER)
 // -----------------------
-const server = https_1.default.createServer(app);
+const server = http_1.default.createServer(app);
 // SECTION: LIVE SERVER
 // -----------------------
 // Load SSL/TLS certificate and private key
@@ -37,7 +39,7 @@ const server = https_1.default.createServer(app);
 // Upgrade the HTTP(S) server to a WebSocket server on '/play' route
 server.on("upgrade", (request, socket, head) => {
     // Check if request.url is defined
-    if (request.url) {
+    if (request.url && request.headers.host) {
         const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
         if (pathname === "/play") {
             (0, matchmaking_1.handlePlay)(request, socket, head);
@@ -46,7 +48,7 @@ server.on("upgrade", (request, socket, head) => {
     else {
         // Handle the case where request.url is undefined
         // For example, you might want to close the socket
-        console.log("DEBUG: request.url was undefined");
+        console.log("DEBUG: some part of request was undefined");
         socket.destroy();
     }
 });

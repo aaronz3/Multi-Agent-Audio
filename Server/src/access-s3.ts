@@ -3,11 +3,13 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export class AccessS3 {
     
-	constructor(bucketRegion) {
+	client: S3Client
+
+	constructor(bucketRegion: string) {
 		this.client = new S3Client({ region: bucketRegion });
 	}
 
-	async getObjectUrl(bucket, key) {
+	async getObjectUrl(bucket: string, key: string) {
 		const input = {
 			"Bucket": bucket,
 			"Key": key
@@ -22,7 +24,7 @@ export class AccessS3 {
 	}
     
     
-	async putObject(body, bucket, key) {
+	async putObject(body: string, bucket: string, key: string) {
 		const input = {
 			"Body": body,
 			"Bucket": bucket,
@@ -34,5 +36,3 @@ export class AccessS3 {
     
 	// Add delete
 }
-
-module.exports = { AccessS3 };

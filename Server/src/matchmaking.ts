@@ -1,19 +1,36 @@
-import { rooms, Room, maxNumberOfPlayers } from "./global-properties";
+import { rooms, roomsContainer, Room, maxNumberOfPlayers } from "./global-properties";
 import crypto from "crypto";
 import WebSocket from 'ws';
 
 import http from "http";
 import internal from "stream";
 
-const modifyRoom = require("./websocket-room");
+import { modifyRoom } from "./websocket-room";
 
+// Emit a connection on some websocket server when an agent connects
 export function handlePlay(request: http.IncomingMessage, socket: internal.Duplex, head: Buffer) {
-	let wss: (WebSocket.Server | undefined); 
+	
+	const wss = updateRoomReturnWebSocketServer()
 
+	if (wss) {
+		wss.handleUpgrade(request, socket, head, (incomingClient) => {
+			wss.emit("connection", incomingClient, request);
+		});
+	} else {
+		console.log("DEBUG: wss undefined")
+	}
+	
+	console.log(`Number of rooms: ${roomsContainer.getRoomsLength()}`);
+}
+
+// Update rooms array and return a websocket server 
+export function updateRoomReturnWebSocketServer(): ( WebSocket.Server | undefined ) {
+	 
 	// If room is empty or all rooms are currently full, create a new room
-	if (rooms.length == 0 || roomIsNotAvailable()) {
+	if (roomsContainer.getRoomsLength() == 0 || roomsContainer.roomIsNotAvailable()) {
+
 		const roomUUID = crypto.randomUUID();
-		wss = new WebSocket.Server({ noServer: true });
+		const wss = new WebSocket.Server({ noServer: true });
       
 		const room = new Room(roomUUID, 0, wss);
 
@@ -21,34 +38,26 @@ export function handlePlay(request: http.IncomingMessage, socket: internal.Duple
 		modifyRoom(room);
       
 		// Add the newly created room into the rooms array.
-		rooms.push(room);
+		roomsContainer.addRoom(room);
+		
+		return wss
 
 	// Else join the room that is about to be filled.
 	} else {
 		const suitableRoom = returnMostSuitableRoomAndUpdateRoomProperty()
 		if (suitableRoom) {
-			wss = suitableRoom;
+			return suitableRoom;
 		} else {
-			console.log("DEBUG: Suitable room was undefined")
+			console.log("DEBUG: Suitable room was not found")
+			return undefined
 		}
-		
 	}
-	
-	if (wss) {
-		wss.handleUpgrade(request, socket, head, (ws) => {
-			if (wss) {
-				wss.emit("connection", ws, request);
-			}
-		});
-	}
-	
-	console.log(`Number of rooms: ${rooms.length}`);
 }
 
 // Algorithm to put the user in an available room with the most people
-function returnMostSuitableRoomAndUpdateRoomProperty(): (WebSocket.Server | undefined) {
+export function returnMostSuitableRoomAndUpdateRoomProperty(): (WebSocket.Server | undefined) {
 	let numberOfPlayersInPreviousRoom = 0;
-	let returnRoom: Room | undefined = undefined;
+	let returnRoom: Room | undefined;
     
 	for (const room of rooms) {
 		if (room.numberOfPlayers > numberOfPlayersInPreviousRoom && room.numberOfPlayers < maxNumberOfPlayers) {
@@ -66,17 +75,4 @@ function returnMostSuitableRoomAndUpdateRoomProperty(): (WebSocket.Server | unde
     }
 }
   
-// Helper function to determine if any rooms are available to join
-function roomIsNotAvailable(): boolean {
-	let noRoomsAvailable = true;
 
-	for (const room of rooms) {
-		if (room.numberOfPlayers > 0 && room.numberOfPlayers < maxNumberOfPlayers) {
-			noRoomsAvailable = false;
-			// Exit the loop as soon as an available room is found
-			break;  
-		}
-	}
-    
-	return noRoomsAvailable;
-}

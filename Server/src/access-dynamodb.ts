@@ -1,11 +1,15 @@
 import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 
 export class AccessUserDataDynamoDB {
-	constructor(region) {
+
+	client: DynamoDBClient
+
+	constructor(region: string) {
 		this.client = new DynamoDBClient({ region: region });
 	}
 
-	async getPhotoKey(userID) {
+	async getPhotoKey(userID: string): Promise<string> {
+
 		const input = {
 			"Key": {
 				"User-ID": {
@@ -17,24 +21,21 @@ export class AccessUserDataDynamoDB {
 		};
 
 		const command = new GetItemCommand(input);
-		try {
-			const results = await this.client.send(command);
-            
-			// Accessing the 'User-Photo-Key' attribute in the Item object
-			if (results.Item && results.Item["User-Photo-Key"] && results.Item["User-Photo-Key"].S) {
-				const userPhotoKey = results.Item["User-Photo-Key"].S;
-				console.log("User Photo Key:", userPhotoKey);
-				return userPhotoKey; 
-			} else {
-				console.log("User Photo Key not found.");
-				return null;
-			}
-		} catch (err) {
-			console.error(err);
+		const results = await this.client.send(command);
+
+		// Accessing the 'User-Photo-Key' attribute in the Item object
+		if (results.Item && results.Item["User-Photo-Key"] && results.Item["User-Photo-Key"].S) {
+			const userPhotoKey = results.Item["User-Photo-Key"].S;
+			console.log("User Photo Key:", userPhotoKey);
+			return userPhotoKey; 
+		
+		} else {
+			console.log("DEBUG: User Photo Key not found.")
+			return "";
 		}
 	}
     
-	async putPhotoKeyItem(userID, userPhotoKey) {
+	async putPhotoKeyItem(userID: string, userPhotoKey: string) {
 		const input = {
 			"Item": {
 				"User-ID": {
@@ -47,14 +48,8 @@ export class AccessUserDataDynamoDB {
 			"TableName": "User-Data"
 		};
         
-		try {
-			const command = new PutItemCommand(input);
-			await this.client.send(command);
-		} catch (err) {
-			console.error(err);
-		}
+		const command = new PutItemCommand(input);
+		await this.client.send(command);
 	}    
 }
-
-module.exports = { AccessUserDataDynamoDB };
 

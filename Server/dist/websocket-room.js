@@ -11,36 +11,22 @@ const global_properties_1 = require("./global-properties");
 // Update agentUUIDConnection of room
 function modifyRoom(room) {
     // Create a Map to track the 'isAlive' property for each client
-    const clientIsAliveMap = new Map();
     const wss = room.websocketServer;
     wss.on("connection", (incomingClient, req) => {
         room.numberOfPlayers++;
         console.log(`[Room ${room.roomID}] Client connected from IP: ${req.socket.remoteAddress}. Total connected clients: ${wss.clients.size}.`);
         // Initialize the 'isAlive' property for the new client
-        clientIsAliveMap.set(incomingClient, true);
+        room.clientIsAliveMap.set(incomingClient, true);
         // Handle message
         incomingClient.on("message", (message) => {
             // Ensure message is treated as a string regardless of its original type
             let messageAsString;
-            if (typeof message === 'string') {
-                messageAsString = message;
-            }
-            else if (message instanceof ArrayBuffer) {
-                // If message is an ArrayBuffer, convert it to string
-                messageAsString = new TextDecoder().decode(message);
-            }
-            else if (Array.isArray(message)) {
-                // If message is an array of Buffers, concatenate and convert to string
-                // This case is more unusual and depends on your specific needs
-                // Example approach (might need adjustments based on your data structure):
-                const combinedBuffer = Buffer.concat(message); // Combine Buffer array into a single Buffer
-                messageAsString = combinedBuffer.toString(); // Convert Buffer to string
+            if (Buffer.isBuffer(message)) {
+                messageAsString = message.toString(); // Default fallback, might choose to handle differently
             }
             else {
-                // Fallback for unexpected types, might not be necessary
-                // depending on your confidence in the incoming message types
-                console.error("Unhandled message type", typeof message);
-                messageAsString = ''; // Default fallback, might choose to handle differently
+                console.log(`DEBUG: Unhandled message type ${message}`);
+                return;
             }
             handleWSMessage(room, messageAsString, incomingClient);
         });
@@ -51,21 +37,23 @@ function modifyRoom(room) {
         // Set up pong response listener
         incomingClient.on("pong", () => {
             // Mark client as alive upon receiving a pong
-            clientIsAliveMap.set(incomingClient, true);
+            room.clientIsAliveMap.set(incomingClient, true);
         });
     });
     function heartbeat() {
         wss.clients.forEach((ws) => {
-            if (clientIsAliveMap.get(ws) === false) {
+            if (room.clientIsAliveMap.get(ws) === false) {
                 return ws.terminate();
             }
-            clientIsAliveMap.set(ws, false);
+            room.clientIsAliveMap.set(ws, false);
             ws.ping();
         });
     }
     setInterval(heartbeat, 10000);
 }
 exports.modifyRoom = modifyRoom;
+// SECTION: HANDLE WEBSOCKET MESSAGE EVENT
+// -----------------------
 function handleWSMessage(room, message, incomingClient) {
     try {
         const parsedMessage = JSON.parse(message);
@@ -135,7 +123,7 @@ function sendTo(room, agent, message) {
 function handleWSClosure(room, incomingClient) {
     const disconnectedUserUUID = deleteKeyValuePairAndReturnKey(room.agentUUIDConnection, incomingClient);
     room.numberOfPlayers--;
-    if (disconnectedUserUUID === null || disconnectedUserUUID === undefined) {
+    if (disconnectedUserUUID === undefined) {
         console.log(`[Room ${room.roomID}] DEBUG: The server tried to delete a client that was not in agentUUIDConnection array`);
     }
     else {
@@ -147,7 +135,7 @@ function handleWSClosure(room, incomingClient) {
     }
     if (room.numberOfPlayers == 0) {
         // Handle deleting the room here
-        deleteRoomFromRooms(room);
+        global_properties_1.roomsContainer.deleteRoomFromRooms(room);
     }
 }
 // Helper function to delete the user that left the room
@@ -158,14 +146,4 @@ function deleteKeyValuePairAndReturnKey(obj, targetValue) {
             return key;
         }
     }
-}
-// Helper function to delete the room from the global rooms array if there are no players in the room
-function deleteRoomFromRooms(roomToRemove) {
-    // Find the index of the room to remove
-    const index = global_properties_1.rooms.findIndex(room => room === roomToRemove);
-    // If the room is found in the array, remove it
-    if (index !== -1) {
-        global_properties_1.rooms.splice(index, 1);
-    }
-    console.log(`Number of rooms: ${global_properties_1.rooms.length}`);
 }

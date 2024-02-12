@@ -8,16 +8,16 @@ import multer from "multer";
 import http from "http";
 import internal from "stream";
 // const fs = require('fs')
-import https from 'https';  
+// import https from 'https';  
 
 const app = express();
 
 require("dotenv").config();
 const port = process.env.PORT;
 
-// SECTION: TEST SERVER
+// SECTION: TEST SERVER (ABLE TO RUN ON LOCAL COMPUTER)
 // -----------------------
-const server = https.createServer(app);
+const server = http.createServer(app);
 
 // SECTION: LIVE SERVER
 // -----------------------
@@ -35,8 +35,9 @@ const server = https.createServer(app);
 // Upgrade the HTTP(S) server to a WebSocket server on '/play' route
 
 server.on("upgrade", (request: http.IncomingMessage, socket: internal.Duplex, head: Buffer) => {
-    // Check if request.url is defined
-    if (request.url) {
+
+	// Check if request.url is defined
+    if (request.url && request.headers.host) {
         const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
         if (pathname === "/play") {
             handlePlay(request, socket, head);
@@ -44,7 +45,7 @@ server.on("upgrade", (request: http.IncomingMessage, socket: internal.Duplex, he
     } else {
         // Handle the case where request.url is undefined
         // For example, you might want to close the socket
-		console.log("DEBUG: request.url was undefined")
+		console.log("DEBUG: some part of request was undefined")
         socket.destroy();
     }
 });
@@ -59,7 +60,7 @@ app.post("/upload-profile-photo", upload.single("image"), (req, res) => {
 	res.send("Image uploaded successfully");
 });
 
-app.get("/download-profile-photo", async (req, res) => {
+app.get("/download-profile-photo", async (req: express.Request, res: express.Response) => {
 	try {
 		// Await the async function to get the resolved value
 		const photoUrls = await handleDownloadProfilePhoto(req);

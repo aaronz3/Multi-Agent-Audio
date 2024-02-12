@@ -1,3 +1,4 @@
 node_modules/
 ServerKey.pem
 .env
+dist/

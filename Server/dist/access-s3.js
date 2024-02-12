@@ -41,4 +41,3 @@ class AccessS3 {
     }
 }
 exports.AccessS3 = AccessS3;
-module.exports = { AccessS3 };

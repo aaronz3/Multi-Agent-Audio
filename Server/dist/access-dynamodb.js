@@ -27,21 +27,16 @@ class AccessUserDataDynamoDB {
                 "AttributesToGet": ["User-Photo-Key"]
             };
             const command = new client_dynamodb_1.GetItemCommand(input);
-            try {
-                const results = yield this.client.send(command);
-                // Accessing the 'User-Photo-Key' attribute in the Item object
-                if (results.Item && results.Item["User-Photo-Key"] && results.Item["User-Photo-Key"].S) {
-                    const userPhotoKey = results.Item["User-Photo-Key"].S;
-                    console.log("User Photo Key:", userPhotoKey);
-                    return userPhotoKey;
-                }
-                else {
-                    console.log("User Photo Key not found.");
-                    return null;
-                }
+            const results = yield this.client.send(command);
+            // Accessing the 'User-Photo-Key' attribute in the Item object
+            if (results.Item && results.Item["User-Photo-Key"] && results.Item["User-Photo-Key"].S) {
+                const userPhotoKey = results.Item["User-Photo-Key"].S;
+                console.log("User Photo Key:", userPhotoKey);
+                return userPhotoKey;
             }
-            catch (err) {
-                console.error(err);
+            else {
+                console.log("DEBUG: User Photo Key not found.");
+                return "";
             }
         });
     }
@@ -58,15 +53,9 @@ class AccessUserDataDynamoDB {
                 },
                 "TableName": "User-Data"
             };
-            try {
-                const command = new client_dynamodb_1.PutItemCommand(input);
-                yield this.client.send(command);
-            }
-            catch (err) {
-                console.error(err);
-            }
+            const command = new client_dynamodb_1.PutItemCommand(input);
+            yield this.client.send(command);
         });
     }
 }
 exports.AccessUserDataDynamoDB = AccessUserDataDynamoDB;
-module.exports = { AccessUserDataDynamoDB };

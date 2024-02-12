@@ -28,16 +28,25 @@ function generateUniqueKey(userID) {
 function handleUploadProfilePhoto(req) {
     const userUUID = req.body["User-UUID"];
     const profilePhotoUniqueKey = generateUniqueKey(userUUID);
-    console.log(`Photo key is: ${profilePhotoUniqueKey}`);
-    // Check the database to see if their already exists a profile photo key. If so, use that key to delete the previous s3 object.
+    // Check the database to see if there already exists a profile photo key. If so, use that key to delete the previous s3 object.
     // Put object in s3 bucket 
-    accessS3.putObject(req.file.buffer, s3BucketName, profilePhotoUniqueKey);
+    if (req.file) {
+        accessS3.putObject(req.file.buffer.toString(), s3BucketName, profilePhotoUniqueKey);
+    }
+    else {
+        console.log("DEBUG: req.file does not exist");
+    }
     // Update database with the generated key
     accessUserDataDynamoDB.putPhotoKeyItem(userUUID, profilePhotoUniqueKey);
 }
 exports.handleUploadProfilePhoto = handleUploadProfilePhoto;
 function handleDownloadProfilePhoto(req) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Check if the request query is a string first. If not return an empty array
+        if (typeof req.query["User-UUIDs"] !== "string") {
+            console.log("DEBUG: Returned query is not an array");
+            return [];
+        }
         const userUUIDs = req.query["User-UUIDs"];
         // Split the string by commas to get an array of user UUIDs
         const uuidArray = userUUIDs.split(",");
@@ -52,4 +61,3 @@ function handleDownloadProfilePhoto(req) {
     });
 }
 exports.handleDownloadProfilePhoto = handleDownloadProfilePhoto;
-module.exports = { handleUploadProfilePhoto, handleDownloadProfilePhoto };
