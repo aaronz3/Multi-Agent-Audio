@@ -17,7 +17,7 @@ function handlePlay(request, socket, head) {
         });
     }
     else {
-        console.log("DEBUG: wss undefined");
+        console.log("DEBUG: Suitable room was not found");
     }
     console.log(`Number of rooms: ${global_properties_1.roomsContainer.getRoomsLength()}`);
 }
@@ -28,7 +28,7 @@ function updateRoomReturnWebSocketServer() {
     if (global_properties_1.roomsContainer.getRoomsLength() == 0 || global_properties_1.roomsContainer.roomIsNotAvailable()) {
         const roomUUID = crypto_1.default.randomUUID();
         const wss = new ws_1.default.Server({ noServer: true });
-        const room = new global_properties_1.Room(roomUUID, 0, wss);
+        const room = new global_properties_1.Room(roomUUID, wss);
         // Modify the properties of a room instance when a user connects, sends a message, etc.
         (0, websocket_room_1.modifyRoom)(room);
         // Add the newly created room into the rooms array.
@@ -42,7 +42,6 @@ function updateRoomReturnWebSocketServer() {
             return suitableRoom;
         }
         else {
-            console.log("DEBUG: Suitable room was not found");
             return undefined;
         }
     }
@@ -53,8 +52,8 @@ function returnMostSuitableRoomAndUpdateRoomProperty() {
     let numberOfPlayersInPreviousRoom = 0;
     let returnRoom;
     for (const room of global_properties_1.rooms) {
-        if (room.numberOfPlayers > numberOfPlayersInPreviousRoom && room.numberOfPlayers < global_properties_1.maxNumberOfPlayers) {
-            numberOfPlayersInPreviousRoom = room.numberOfPlayers;
+        if (room.agentUUIDConnection.size > numberOfPlayersInPreviousRoom && room.agentUUIDConnection.size < global_properties_1.maxNumberOfPlayers) {
+            numberOfPlayersInPreviousRoom = room.agentUUIDConnection.size;
             returnRoom = room;
         }
     }
@@ -62,9 +61,7 @@ function returnMostSuitableRoomAndUpdateRoomProperty() {
         return returnRoom.websocketServer;
     }
     else {
-        // Handle the case where no room is found
-        console.log("DEBUG: No room found");
-        return undefined; // Or throw an error, or return a default value
+        return undefined;
     }
 }
 exports.returnMostSuitableRoomAndUpdateRoomProperty = returnMostSuitableRoomAndUpdateRoomProperty;

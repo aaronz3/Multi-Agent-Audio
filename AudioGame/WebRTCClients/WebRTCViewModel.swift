@@ -238,9 +238,6 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
                 self.peerConnections.append(peer)
                 self.disableTalkButton = true
             }
-            
-            print("NOTE: Sucessfully removed and appended new peer connection instance. There are \(self.peerConnections.count) peerconnection instances")
-            
         }
         
         await MainActor.run {
@@ -249,6 +246,7 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
             }
         }
         
+        print("NOTE: Sucessfully removed and appended new peer connection instance. There are \(self.peerConnections.count) peerconnection instances")
     }
     
     func returnAllReceivingAgentsUUID() -> [String] {
@@ -315,7 +313,6 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
         print("NOTE: Unmuted audio. There are \(self.peerConnections.count) peer connections")
         
         for pC in self.peerConnections {
-            print("One receiving agent's UUID is", pC.receivingAgentsUUID ?? "nil")
             pC.unmuteAudio()
         }
     }

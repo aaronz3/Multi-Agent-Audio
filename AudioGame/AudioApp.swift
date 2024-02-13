@@ -29,7 +29,11 @@ struct AudioApp: App {
     }
 }
 
-let hostAddress = "192.168.1.2"
+// apartment: 192.168.1.3
+// house: 192.168.0.6
+// ec2: 43.203.40.34
+
+let hostAddress = "43.203.40.34"
 let port = "3000"
 
 let uploadPhotoUrl = URL(string: "http://\(hostAddress):\(port)/upload-profile-photo")!

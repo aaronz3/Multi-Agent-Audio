@@ -3,7 +3,7 @@ import { AccessUserDataDynamoDB } from "./access-dynamodb";
 import { v4 as uuidv4 } from 'uuid';
 import { type Request } from 'express';
 
-require("dotenv").config();
+require("dotenv").config({ path: '../.env' });
 
 const s3BucketRegion: string = process.env.S3_BUCKET_REGION!;
 const s3BucketName: string = process.env.S3_BUCKET_NAME!;

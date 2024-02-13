@@ -22,7 +22,7 @@ exports.roomsContainer = {
     roomIsNotAvailable: () => {
         let noRoomsAvailable = true;
         for (const room of exports.rooms) {
-            if (room.numberOfPlayers > 0 && room.numberOfPlayers < exports.maxNumberOfPlayers) {
+            if (room.agentUUIDConnection.size > 0 && room.agentUUIDConnection.size < exports.maxNumberOfPlayers) {
                 noRoomsAvailable = false;
                 // Exit the loop as soon as an available room is found
                 break;
@@ -35,11 +35,10 @@ exports.roomsContainer = {
 exports.maxNumberOfPlayers = 6;
 // Structure of an instance of a room will be as follows 
 class Room {
-    constructor(roomID, numberOfPlayers, websocketServer) {
-        this.agentUUIDConnection = {};
+    constructor(roomID, websocketServer) {
+        this.agentUUIDConnection = new Map();
         this.clientIsAliveMap = new Map();
         this.roomID = roomID;
-        this.numberOfPlayers = numberOfPlayers;
         this.websocketServer = websocketServer;
     }
 }

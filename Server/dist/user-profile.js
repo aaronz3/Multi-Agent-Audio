@@ -13,7 +13,7 @@ exports.handleDownloadProfilePhoto = exports.handleUploadProfilePhoto = void 0;
 const access_s3_1 = require("./access-s3");
 const access_dynamodb_1 = require("./access-dynamodb");
 const uuid_1 = require("uuid");
-require("dotenv").config();
+require("dotenv").config({ path: '../.env' });
 const s3BucketRegion = process.env.S3_BUCKET_REGION;
 const s3BucketName = process.env.S3_BUCKET_NAME;
 const dynamodbBucketRegion = process.env.DYNAMODB_BUCKET_REGION;

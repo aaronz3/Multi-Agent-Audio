@@ -21,7 +21,7 @@ const http_1 = __importDefault(require("http"));
 // const fs = require('fs')
 // import https from 'https';  
 const app = (0, express_1.default)();
-require("dotenv").config();
+require("dotenv").config({ path: '../.env' });
 const port = process.env.PORT;
 // SECTION: TEST SERVER (ABLE TO RUN ON LOCAL COMPUTER)
 // -----------------------

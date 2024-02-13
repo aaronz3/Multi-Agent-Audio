@@ -17,7 +17,7 @@ export function handlePlay(request: http.IncomingMessage, socket: internal.Duple
 			wss.emit("connection", incomingClient, request);
 		});
 	} else {
-		console.log("DEBUG: wss undefined")
+		console.log("DEBUG: Suitable room was not found")
 	}
 	
 	console.log(`Number of rooms: ${roomsContainer.getRoomsLength()}`);
@@ -31,8 +31,7 @@ export function updateRoomReturnWebSocketServer(): ( WebSocket.Server | undefine
 
 		const roomUUID = crypto.randomUUID();
 		const wss = new WebSocket.Server({ noServer: true });
-      
-		const room = new Room(roomUUID, 0, wss);
+		const room = new Room(roomUUID, wss);
 
 		// Modify the properties of a room instance when a user connects, sends a message, etc.
 		modifyRoom(room);
@@ -48,7 +47,6 @@ export function updateRoomReturnWebSocketServer(): ( WebSocket.Server | undefine
 		if (suitableRoom) {
 			return suitableRoom;
 		} else {
-			console.log("DEBUG: Suitable room was not found")
 			return undefined
 		}
 	}
@@ -60,8 +58,8 @@ export function returnMostSuitableRoomAndUpdateRoomProperty(): (WebSocket.Server
 	let returnRoom: Room | undefined;
     
 	for (const room of rooms) {
-		if (room.numberOfPlayers > numberOfPlayersInPreviousRoom && room.numberOfPlayers < maxNumberOfPlayers) {
-			numberOfPlayersInPreviousRoom = room.numberOfPlayers;
+		if (room.agentUUIDConnection.size > numberOfPlayersInPreviousRoom && room.agentUUIDConnection.size < maxNumberOfPlayers) {
+			numberOfPlayersInPreviousRoom = room.agentUUIDConnection.size;
 			returnRoom = room;
 		}
 	}
@@ -69,9 +67,7 @@ export function returnMostSuitableRoomAndUpdateRoomProperty(): (WebSocket.Server
 	if (returnRoom) {
         return returnRoom.websocketServer;
     } else {
-        // Handle the case where no room is found
-		console.log("DEBUG: No room found")
-        return undefined; // Or throw an error, or return a default value
+        return undefined; 
     }
 }
   

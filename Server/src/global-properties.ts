@@ -24,7 +24,7 @@ export const roomsContainer = {
 		let noRoomsAvailable = true;
 	
 		for (const room of rooms) {
-			if (room.numberOfPlayers > 0 && room.numberOfPlayers < maxNumberOfPlayers) {
+			if (room.agentUUIDConnection.size > 0 && room.agentUUIDConnection.size < maxNumberOfPlayers) {
 				noRoomsAvailable = false;
 				// Exit the loop as soon as an available room is found
 				break;  
@@ -43,14 +43,12 @@ export const maxNumberOfPlayers = 6;
 export class Room {
 
 	roomID: string;
-	numberOfPlayers: number;
-	agentUUIDConnection: { [key: string]: WebSocket } = {};
+	agentUUIDConnection = new Map<string, WebSocket>();
 	websocketServer: WebSocket.Server;
 	clientIsAliveMap = new Map<WebSocket, boolean>();
 
-	constructor(roomID: string, numberOfPlayers: number, websocketServer: WebSocket.Server) {
+	constructor(roomID: string, websocketServer: WebSocket.Server) {
 		this.roomID = roomID;
-		this.numberOfPlayers = numberOfPlayers;
 		this.websocketServer = websocketServer;
 	}
 }
