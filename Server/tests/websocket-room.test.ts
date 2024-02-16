@@ -3,13 +3,18 @@ import { receivedJustConnectedUser, deleteKeyValuePairAndReturnKey, handleWSClos
 import { Room, rooms, roomsContainer } from "../src/global-properties";
 import WebSocket from "ws";
 
+require('dotenv').config();
+const testip = process.env.IP_FOR_TESTS;
+const port = process.env.PORT;
+const testWSAddress = `${testip}:${port}`
+
 describe('Websocket room tests', () => {
     beforeEach(() => {
         roomsContainer.setRooms([]);
     })
 
     test('delete key value pair and return key', () => {
-        const client1 = new WebSocket('ws://localhost:3000');
+        const client1 = new WebSocket(`ws://${testWSAddress}`);
 
         const obj = new Map([
             ['uuid1', client1]
@@ -26,7 +31,7 @@ describe('Websocket room tests', () => {
         const room = new Room("test-room", new WebSocket.Server({ noServer: true }))
         
         roomsContainer.addRoom(room)
-        const client1 = new WebSocket('ws://localhost:3000');
+        const client1 = new WebSocket(`ws://${testWSAddress}`);
         room.agentUUIDConnection.set("uuid1", client1)
         
         handleWSClosure(room, client1)
@@ -40,13 +45,14 @@ describe('Websocket room tests', () => {
         const room = new Room("test-room", new WebSocket.Server({ noServer: true }))
         
         roomsContainer.addRoom(room)
-        const client1 = new WebSocket('ws://localhost:3000');
+        const client1 = new WebSocket(`ws://${testWSAddress}`);
+        const client2 = new WebSocket(`ws://${testWSAddress}`);
         room.agentUUIDConnection.set("uuid1", client1)
         
-        receivedJustConnectedUser(room, Buffer.from("test-buffer"), client1, "uuid1")
+        receivedJustConnectedUser(room, Buffer.from("test-buffer"), client2, "uuid1")
 
         expect(roomsContainer.getRoomsLength()).toBe(0)
-        expect(room.agentUUIDConnection.has("uuid1")).toBeTruthy
+        expect(room.agentUUIDConnection.get("uuid1") === client2).toBeTruthy()
 
     });
 
@@ -55,7 +61,7 @@ describe('Websocket room tests', () => {
         const room = new Room("test-room", new WebSocket.Server({ noServer: true }))
         
         roomsContainer.addRoom(room)
-        const client1 = new WebSocket('ws://localhost:3000');
+        const client1 = new WebSocket(`ws://${testWSAddress}`);
         room.agentUUIDConnection.set("uuid1", client1)
         
         // Disconnect via reconnection

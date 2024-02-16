@@ -4,7 +4,8 @@
   "description": "Server for iOS audio project",
   "main": "app.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test:detailed": "jest --coverage"
   },
   "repository": {
     "type": "git",

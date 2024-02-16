@@ -42,6 +42,10 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
     func webSocketDidDisconnect() {
         print("NOTE: Websocket disconnected (executed from protocol)")
         self.resetPeerConnections()
+        
+        DispatchQueue.main.async {
+            self.disableTalkButton = true
+        }
     }
     
     func webSocket(didReceiveData data: Data) async {

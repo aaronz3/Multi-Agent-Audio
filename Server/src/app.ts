@@ -1,8 +1,5 @@
 import { handlePlay } from "./matchmaking";
-import { handleUploadProfilePhoto, handleDownloadProfilePhoto } from "./user-profile";
-
 import express from "express";
-import multer from "multer";
 
 // Use the 'https' module instead of 'http' for production
 import http from "http";
@@ -49,29 +46,6 @@ server.on("upgrade", (request: http.IncomingMessage, socket: internal.Duplex, he
         socket.destroy();
     }
 });
-
-// SECTION: PROFILE PHOTO DATA UPLOAD & DOWNLOAD
-// -----------------------
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
-app.post("/upload-profile-photo", upload.single("image"), (req, res) => {
-	handleUploadProfilePhoto(req);
-	res.send("Image uploaded successfully");
-});
-
-app.get("/download-profile-photo", async (req: express.Request, res: express.Response) => {
-	try {
-		// Await the async function to get the resolved value
-		const photoUrls = await handleDownloadProfilePhoto(req);
-		res.send(photoUrls);
-	} catch (error) {
-		// Handle any errors that occur during fetch
-		console.error(error);
-		res.status(500).send("An error occurred while fetching photos.");
-	}
-});
-
 
 // SECTION: USER ID DATA UPLOADED TO SERVER
 // -----------------------

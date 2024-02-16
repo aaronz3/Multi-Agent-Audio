@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">61.76% </span>
+                <span class="strong">65.62% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>21/34</span>
+                <span class='fraction'>21/32</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">61.76% </span>
+                <span class="strong">65.62% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>21/34</span>
+                <span class='fraction'>21/32</span>
             </div>
         
             
@@ -137,10 +137,7 @@
 <a name='L72'></a><a href='#L72'>72</a>
 <a name='L73'></a><a href='#L73'>73</a>
 <a name='L74'></a><a href='#L74'>74</a>
-<a name='L75'></a><a href='#L75'>75</a>
-<a name='L76'></a><a href='#L76'>76</a>
-<a name='L77'></a><a href='#L77'>77</a>
-<a name='L78'></a><a href='#L78'>78</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L75'></a><a href='#L75'>75</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -190,7 +187,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -210,8 +206,6 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -236,7 +230,7 @@ export function <span class="fstat-no" title="function not covered" >handlePlay(
 <span class="cstat-no" title="statement not covered" >			wss.emit("connection", incomingClient, request);</span>
 		});
 	} else {
-<span class="cstat-no" title="statement not covered" >		console.log("DEBUG: wss undefined")</span>
+<span class="cstat-no" title="statement not covered" >		console.log("DEBUG: Suitable room was not found")</span>
 	}
 	
 <span class="cstat-no" title="statement not covered" >	console.log(`Number of rooms: ${roomsContainer.getRoomsLength()}`);</span>
@@ -250,7 +244,7 @@ export function updateRoomReturnWebSocketServer(): ( WebSocket.Server | undefine
 &nbsp;
 		const roomUUID = crypto.randomUUID();
 		const wss = new WebSocket.Server({ noServer: true });
-		const room = new Room(roomUUID, 0, wss);
+		const room = new Room(roomUUID, wss);
 &nbsp;
 		// Modify the properties of a room instance when a user connects, sends a message, etc.
 		modifyRoom(room);
@@ -266,7 +260,6 @@ export function updateRoomReturnWebSocketServer(): ( WebSocket.Server | undefine
 <span class="cstat-no" title="statement not covered" >		if (suitableRoom) {</span>
 <span class="cstat-no" title="statement not covered" >			return suitableRoom;</span>
 		} else {
-<span class="cstat-no" title="statement not covered" >			console.log("DEBUG: Suitable room was not found")</span>
 <span class="cstat-no" title="statement not covered" >			return undefined</span>
 		}
 	}
@@ -278,8 +271,8 @@ export function returnMostSuitableRoomAndUpdateRoomProperty(): (WebSocket.Server
 	let returnRoom: Room | undefined;
     
 	for (const room of rooms) {
-		if (room.numberOfPlayers &gt; numberOfPlayersInPreviousRoom &amp;&amp; room.numberOfPlayers &lt; maxNumberOfPlayers) {
-			numberOfPlayersInPreviousRoom = room.numberOfPlayers;
+		if (room.agentUUIDConnection.size &gt; numberOfPlayersInPreviousRoom &amp;&amp; room.agentUUIDConnection.size &lt; maxNumberOfPlayers) {
+			numberOfPlayersInPreviousRoom = room.agentUUIDConnection.size;
 			returnRoom = room;
 		}
 	}
@@ -287,9 +280,7 @@ export function returnMostSuitableRoomAndUpdateRoomProperty(): (WebSocket.Server
 	if (returnRoom) {
         return returnRoom.websocketServer;
     } else <span class="missing-if-branch" title="else path not taken" >E</span>{
-        // Handle the case where no room is found
-<span class="cstat-no" title="statement not covered" >		console.log("DEBUG: No room found")</span>
-<span class="cstat-no" title="statement not covered" >        return undefined; </span>// Or throw an error, or return a default value
+<span class="cstat-no" title="statement not covered" >        return undefined; </span>
     }
 }
   
@@ -301,7 +292,7 @@ export function returnMostSuitableRoomAndUpdateRoomProperty(): (WebSocket.Server
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2024-02-12T07:53:19.821Z
+                at 2024-02-15T08:43:18.566Z
             </div>
         <script src="prettify.js"></script>
         <script>

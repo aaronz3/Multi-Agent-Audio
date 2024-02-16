@@ -8,9 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		8D0588BC2B527CE500D77E7D /* PeerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0588BB2B527CE500D77E7D /* PeerConnection.swift */; };
-		8D184AFD2B6CFE3600F51215 /* DatabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D184AFC2B6CFE3600F51215 /* DatabaseTest.swift */; };
-		8D184B012B6D10EA00F51215 /* PhotoSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D184B002B6D10EA00F51215 /* PhotoSelector.swift */; };
-		8D184B042B6E3E1D00F51215 /* PhotoSelectorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D184B032B6E3E1D00F51215 /* PhotoSelectorViewModel.swift */; };
 		8D18D62F2B5CD9E20019781C /* SignalingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D18D62E2B5CD9E20019781C /* SignalingTest.swift */; };
 		8D32019D2B551CBD00214C3B /* CurrentUserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D32019C2B551CBD00214C3B /* CurrentUserModel.swift */; };
 		8D456E6F2B578D4B008EB384 /* WebRTCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D456E6E2B578D4B008EB384 /* WebRTCMessage.swift */; };
@@ -44,9 +41,6 @@
 
 /* Begin PBXFileReference section */
 		8D0588BB2B527CE500D77E7D /* PeerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerConnection.swift; sourceTree = "<group>"; };
-		8D184AFC2B6CFE3600F51215 /* DatabaseTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseTest.swift; sourceTree = "<group>"; };
-		8D184B002B6D10EA00F51215 /* PhotoSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSelector.swift; sourceTree = "<group>"; };
-		8D184B032B6E3E1D00F51215 /* PhotoSelectorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSelectorViewModel.swift; sourceTree = "<group>"; };
 		8D18D62E2B5CD9E20019781C /* SignalingTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingTest.swift; sourceTree = "<group>"; };
 		8D32019C2B551CBD00214C3B /* CurrentUserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentUserModel.swift; sourceTree = "<group>"; };
 		8D456E6E2B578D4B008EB384 /* WebRTCMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCMessage.swift; sourceTree = "<group>"; };
@@ -90,15 +84,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		8D184B022B6D11AB00F51215 /* ProfilePhotos */ = {
-			isa = PBXGroup;
-			children = (
-				8D184B002B6D10EA00F51215 /* PhotoSelector.swift */,
-				8D184B032B6E3E1D00F51215 /* PhotoSelectorViewModel.swift */,
-			);
-			path = ProfilePhotos;
-			sourceTree = "<group>";
-		};
 		8D184B082B6F6F0600F51215 /* WebRTCTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -135,7 +120,6 @@
 				8D5F53F02B0C5C9500AE646E /* AudioApp.swift */,
 				8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */,
 				8DAED04F2B70A7BB00F0837A /* Authentication */,
-				8D184B022B6D11AB00F51215 /* ProfilePhotos */,
 				8DCE11162B55750500E0AC8A /* WebRTCViews */,
 				8DEEDEBE2B4BA80800ECA1A5 /* WebRTCClients */,
 				8D5F53F42B0C5C9600AE646E /* Assets.xcassets */,
@@ -165,7 +149,6 @@
 			isa = PBXGroup;
 			children = (
 				8D184B082B6F6F0600F51215 /* WebRTCTests */,
-				8D184AFC2B6CFE3600F51215 /* DatabaseTest.swift */,
 			);
 			path = AudioGameTests;
 			sourceTree = "<group>";
@@ -309,7 +292,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DEEDEBD2B4BA80300ECA1A5 /* WebRTCView.swift in Sources */,
-				8D184B012B6D10EA00F51215 /* PhotoSelector.swift in Sources */,
 				8DDD3F602B53BD0D00DFFA31 /* WebRTCViewModel.swift in Sources */,
 				8DB166F62B528D9A003E6AB5 /* SignalingClient.swift in Sources */,
 				8D456E6F2B578D4B008EB384 /* WebRTCMessage.swift in Sources */,
@@ -322,7 +304,6 @@
 				8D5FC6292B66058200276752 /* MockURLSessionWebSocketTask.swift in Sources */,
 				8DDD3F622B54CA0200DFFA31 /* AudioControls.swift in Sources */,
 				8D5F53F12B0C5C9500AE646E /* AudioApp.swift in Sources */,
-				8D184B042B6E3E1D00F51215 /* PhotoSelectorViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,7 +314,6 @@
 				8D18D62F2B5CD9E20019781C /* SignalingTest.swift in Sources */,
 				8D6515492B5C0E6D00B6843A /* WebRTCViewModelTest.swift in Sources */,
 				8DFF37862B5E6C5A002C0AFF /* ServerTest.swift in Sources */,
-				8D184AFD2B6CFE3600F51215 /* DatabaseTest.swift in Sources */,
 				8D6515502B5C0F1C00B6843A /* TestData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -478,7 +458,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AudioGame/Info.plist;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The app requires microphone usage.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera is not used in this app, but an external api utilizes this.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is used during gameplay.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -520,7 +501,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AudioGame/Info.plist;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The app requires microphone usage.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera is not used in this app, but an external api utilizes this.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is used during gameplay.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -555,7 +537,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = F4RA5U3KTG;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = AZ.AudioTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -563,7 +545,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AudioGame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AudioGame";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AudioGame.app/AudioGame";
 			};
 			name = Debug;
 		};
@@ -575,7 +557,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = F4RA5U3KTG;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = AZ.AudioTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -583,7 +565,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AudioGame.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AudioGame";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AudioGame.app/AudioGame";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

@@ -17,14 +17,6 @@ struct AudioApp: App {
             AuthenticationView()
                 .environmentObject(authenticationVM)
             
-//            if #available(iOS 16.0, *) {
-//                PhotoSelector()
-//            } else {
-//                // Fallback on earlier versions
-//            }
-            
-            
-                
         }
     }
 }
@@ -35,9 +27,6 @@ struct AudioApp: App {
 
 let hostAddress = "43.203.40.34"
 let port = "3000"
-
-let uploadPhotoUrl = URL(string: "http://\(hostAddress):\(port)/upload-profile-photo")!
-let downloadPhotoUrl = URL(string: "http://\(hostAddress):\(port)/download-profile-photo")!
 
 let userIDUrl = URL(string: "http://\(hostAddress):\(port)/user-data")!
 

@@ -36,7 +36,6 @@ struct WebRTCView: View {
         }
         .padding(20)
         .onAppear {
-            
             networkMonitor.start()
             HandleAudioSession.checkAudioPermission()
             HandleAudioSession.speakerOn()

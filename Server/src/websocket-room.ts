@@ -86,7 +86,6 @@ function handleWSMessage(room: Room, message: string, incomingClient: WebSocket)
 				// Check if room.agentUUIDConnection already has a reference to the client. If so, terminate the previous instance. 
 				// If not, add the client to room.agentUUIDConnection.
 				receivedJustConnectedUser(room, Buffer.from(message), incomingClient, incomingClientUUID);
-
 				break;
 
 			case "SessionDescription":
@@ -100,7 +99,6 @@ function handleWSMessage(room: Room, message: string, incomingClient: WebSocket)
 
 				console.log(`[Room ${room.roomID}] Sent candidate to ${forwardingAddressForICECandidate}`);
 				sendTo(room, forwardingAddressForICECandidate, Buffer.from(message));
-
 				break;
 
 			default:
