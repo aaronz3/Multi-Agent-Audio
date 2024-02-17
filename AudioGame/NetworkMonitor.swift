@@ -28,7 +28,6 @@ class NetworkMonitor: ObservableObject {
         // Set up a handler to be notified when the network path changes
         self.monitor.pathUpdateHandler = { path in
 
-
             if path.usesInterfaceType(.wifi) && self.previousNetwork != .wifi {
                 print("NOTE: Connected via Wi-Fi. Previous network:", self.previousNetwork ?? "nil")
                 

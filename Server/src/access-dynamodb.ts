@@ -1,4 +1,5 @@
-import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { AttributeValue, DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { Interface } from "readline";
 
 export class AccessUserDataDynamoDB {
 
@@ -8,7 +9,7 @@ export class AccessUserDataDynamoDB {
 		this.client = new DynamoDBClient({ region: region });
 	}
 
-	async getPhotoKey(userID: string): Promise<string> {
+	async getData(userID: string): Promise<Record<string, AttributeValue> | undefined> {
 
 		const input = {
 			"Key": {
@@ -17,39 +18,43 @@ export class AccessUserDataDynamoDB {
 				}
 			},
 			"TableName": "User-Data",
-			"AttributesToGet": ["User-Photo-Key"]
 		};
 
 		const command = new GetItemCommand(input);
-		const results = await this.client.send(command);
-
-		// Accessing the 'User-Photo-Key' attribute in the Item object
-		if (results.Item && results.Item["User-Photo-Key"] && results.Item["User-Photo-Key"].S) {
-			const userPhotoKey = results.Item["User-Photo-Key"].S;
-			console.log("User Photo Key:", userPhotoKey);
-			return userPhotoKey; 
 		
-		} else {
-			console.log("DEBUG: User Photo Key not found.")
-			return "";
+		try {
+			const results = await this.client.send(command);
+	
+			if (results.Item) {
+				return results.Item;
+			} else {
+				return undefined; 
+			}
+		} catch (e) {
+			throw new Error(`DEBUG: Error in getData ${e}`);
 		}
 	}
     
-	async putPhotoKeyItem(userID: string, userPhotoKey: string) {
+	async putKeyItemInUserData(userID: string, itemkey: string, keyvalue: string) {
+		
 		const input = {
 			"Item": {
 				"User-ID": {
 					"S": `${userID}`
 				},
-				"User-Photo-Key": {
-					"S": `${userPhotoKey}`
+				[itemkey]: {
+					"S": `${keyvalue}`
 				}
 			},
 			"TableName": "User-Data"
 		};
         
 		const command = new PutItemCommand(input);
-		await this.client.send(command);
+
+		try {
+			await this.client.send(command);
+		} catch (e) {
+			throw new Error(`DEBUG: Error in putKeyItemInUserData ${e}`);
+		}
 	}    
 }
-

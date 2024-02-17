@@ -13,16 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const matchmaking_1 = require("./matchmaking");
-const user_profile_1 = require("./user-profile");
+const authentication_1 = require("./authentication");
 const express_1 = __importDefault(require("express"));
-const multer_1 = __importDefault(require("multer"));
 // Use the 'https' module instead of 'http' for production
 const http_1 = __importDefault(require("http"));
 // const fs = require('fs')
 // import https from 'https';  
 const app = (0, express_1.default)();
-require("dotenv").config({ path: '../.env' });
-const port = process.env.PORT;
 // SECTION: TEST SERVER (ABLE TO RUN ON LOCAL COMPUTER)
 // -----------------------
 const server = http_1.default.createServer(app);
@@ -34,6 +31,8 @@ const server = http_1.default.createServer(app);
 //   cert: fs.readFileSync('/etc/letsencrypt/live/impactsservers.com/fullchain.pem')
 // };
 // const server = https.createServer(serverOptions, app);
+require("dotenv").config({ path: '../.env' });
+const port = process.env.PORT;
 // SECTION: ADDING WEBSOCKETS TO HTTP(S)
 // -----------------------
 // Upgrade the HTTP(S) server to a WebSocket server on '/play' route
@@ -52,32 +51,34 @@ server.on("upgrade", (request, socket, head) => {
         socket.destroy();
     }
 });
-// SECTION: PROFILE PHOTO DATA UPLOAD & DOWNLOAD
-// -----------------------
-const storage = multer_1.default.memoryStorage();
-const upload = (0, multer_1.default)({ storage: storage });
-app.post("/upload-profile-photo", upload.single("image"), (req, res) => {
-    (0, user_profile_1.handleUploadProfilePhoto)(req);
-    res.send("Image uploaded successfully");
-});
-app.get("/download-profile-photo", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        // Await the async function to get the resolved value
-        const photoUrls = yield (0, user_profile_1.handleDownloadProfilePhoto)(req);
-        res.send(photoUrls);
-    }
-    catch (error) {
-        // Handle any errors that occur during fetch
-        console.error(error);
-        res.status(500).send("An error occurred while fetching photos.");
-    }
-}));
 // SECTION: USER ID DATA UPLOADED TO SERVER
 // -----------------------
-app.post("/user-data", express_1.default.json(), (req, res) => {
-    console.log("Received data:", req.body);
-    res.status(200).send("Data received");
-});
+// Get necessary user details when logining in
+app.get("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const data = yield (0, authentication_1.handleGetUserData)(req.query);
+        if (data) {
+            res.json(data);
+        }
+        else {
+            // No data found for userID, send a 404 Not Found response
+            res.status(404).json({ message: "User data not found" });
+        }
+    }
+    catch (e) {
+        res.status(500).send(e);
+    }
+}));
+// Update the database
+app.post("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield (0, authentication_1.handleSetUserData)(req.body);
+        res.status(200).send("Data Received");
+    }
+    catch (e) {
+        res.status(500).send(e);
+    }
+}));
 server.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });

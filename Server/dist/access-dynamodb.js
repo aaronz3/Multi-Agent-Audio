@@ -15,7 +15,7 @@ class AccessUserDataDynamoDB {
     constructor(region) {
         this.client = new client_dynamodb_1.DynamoDBClient({ region: region });
     }
-    getPhotoKey(userID) {
+    getData(userID) {
         return __awaiter(this, void 0, void 0, function* () {
             const input = {
                 "Key": {
@@ -24,37 +24,42 @@ class AccessUserDataDynamoDB {
                     }
                 },
                 "TableName": "User-Data",
-                "AttributesToGet": ["User-Photo-Key"]
             };
             const command = new client_dynamodb_1.GetItemCommand(input);
-            const results = yield this.client.send(command);
-            // Accessing the 'User-Photo-Key' attribute in the Item object
-            if (results.Item && results.Item["User-Photo-Key"] && results.Item["User-Photo-Key"].S) {
-                const userPhotoKey = results.Item["User-Photo-Key"].S;
-                console.log("User Photo Key:", userPhotoKey);
-                return userPhotoKey;
+            try {
+                const results = yield this.client.send(command);
+                if (results.Item) {
+                    return results.Item;
+                }
+                else {
+                    return undefined;
+                }
             }
-            else {
-                console.log("DEBUG: User Photo Key not found.");
-                return "";
+            catch (e) {
+                throw new Error(`DEBUG: Error in getData ${e}`);
             }
         });
     }
-    putPhotoKeyItem(userID, userPhotoKey) {
+    putKeyItemInUserData(userID, itemkey, keyvalue) {
         return __awaiter(this, void 0, void 0, function* () {
             const input = {
                 "Item": {
                     "User-ID": {
                         "S": `${userID}`
                     },
-                    "User-Photo-Key": {
-                        "S": `${userPhotoKey}`
+                    [itemkey]: {
+                        "S": `${keyvalue}`
                     }
                 },
                 "TableName": "User-Data"
             };
             const command = new client_dynamodb_1.PutItemCommand(input);
-            yield this.client.send(command);
+            try {
+                yield this.client.send(command);
+            }
+            catch (e) {
+                throw new Error(`DEBUG: Error in putKeyItemInUserData ${e}`);
+            }
         });
     }
 }

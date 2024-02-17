@@ -1,4 +1,6 @@
 import { handlePlay } from "./matchmaking";
+import { handleSetUserData, handleGetUserData } from "./authentication";
+import { Request, Response } from 'express';
 import express from "express";
 
 // Use the 'https' module instead of 'http' for production
@@ -8,9 +10,6 @@ import internal from "stream";
 // import https from 'https';  
 
 const app = express();
-
-require("dotenv").config({ path: '../.env' });
-const port = process.env.PORT;
 
 // SECTION: TEST SERVER (ABLE TO RUN ON LOCAL COMPUTER)
 // -----------------------
@@ -26,6 +25,9 @@ const server = http.createServer(app);
 // };
 
 // const server = https.createServer(serverOptions, app);
+
+require("dotenv").config({ path: '../.env' });
+const port = process.env.PORT;
 
 // SECTION: ADDING WEBSOCKETS TO HTTP(S)
 // -----------------------
@@ -50,9 +52,29 @@ server.on("upgrade", (request: http.IncomingMessage, socket: internal.Duplex, he
 // SECTION: USER ID DATA UPLOADED TO SERVER
 // -----------------------
 
-app.post("/user-data", express.json(), (req, res) => {
-	console.log("Received data:", req.body);
-	res.status(200).send("Data received");
+// Get necessary user details when logining in
+app.get("/login", express.json(), async (req: Request, res: Response) => {
+    try {
+        const data = await handleGetUserData(req.query)
+        if (data) {
+            res.json(data);
+        } else {
+            // No data found for userID, send a 404 Not Found response
+            res.status(404).json({ message: "User data not found" });
+        }
+    } catch(e) {
+        res.status(500).send(e)
+    }
+});
+
+// Update the database
+app.post("/login", express.json(), async (req: Request, res: Response) => {
+    try {
+        await handleSetUserData(req.body)
+        res.status(200).send("Data Received")
+    } catch(e) {
+        res.status(500).send(e)
+    }
 });
 
 server.listen(port, () => {

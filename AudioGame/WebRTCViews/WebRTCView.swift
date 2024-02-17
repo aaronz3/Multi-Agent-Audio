@@ -46,7 +46,3 @@ struct WebRTCView: View {
     
 }
 
-
-//#Preview {
-//    WebRTCView(webRTCVM: , currentUserModel: currentUserModel)
-//}

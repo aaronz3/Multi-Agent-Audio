@@ -42,6 +42,7 @@ function modifyRoom(room) {
             console.log(`DEBUG: An error occurred with the WebSocket: ${error.message}`);
         });
     });
+    // This is useful for dropping agents that have disconnected the websocket connection but are unable to let the server know.
     function heartbeat() {
         wss.clients.forEach((ws) => {
             if (room.clientIsAliveMap.get(ws) === false) {
@@ -57,8 +58,7 @@ function modifyRoom(room) {
             ws.ping();
         });
     }
-    const heartbeatInterval = setInterval(heartbeat, 10000);
-    heartbeatInterval.unref();
+    setInterval(heartbeat, 10000);
 }
 exports.modifyRoom = modifyRoom;
 // SECTION: HANDLE WEBSOCKET MESSAGE EVENT
@@ -95,7 +95,8 @@ function handleWSMessage(room, message, incomingClient) {
 // SECTION: RECEVIED MESSAGE TYPES
 // -----------------------
 function receivedJustConnectedUser(room, message, incomingClient, incomingClientUUID) {
-    // If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance
+    // If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance.
+    // The is important for when a user disconnects from the internet and reconnects to the internet and to the server.
     if (room.agentUUIDConnection.has(incomingClientUUID)) {
         const agentWebsocket = room.agentUUIDConnection.get(incomingClientUUID);
         handleWSClosure(room, agentWebsocket);

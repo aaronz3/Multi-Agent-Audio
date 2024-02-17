@@ -47,10 +47,10 @@ export function modifyRoom(room: Room) {
 		});
 	});
 
+	// This is useful for dropping agents that have disconnected the websocket connection but are unable to let the server know.
 	function heartbeat() {
 		wss.clients.forEach((ws) => {
 			if (room.clientIsAliveMap.get(ws) === false) {
-
 				try {
 					ws.terminate();
 				} catch (e) {
@@ -64,8 +64,7 @@ export function modifyRoom(room: Room) {
 		});
 	}
 
-	const heartbeatInterval = setInterval(heartbeat, 10000);
-	heartbeatInterval.unref();
+	setInterval(heartbeat, 10000);
 }
 
 
@@ -115,7 +114,8 @@ function handleWSMessage(room: Room, message: string, incomingClient: WebSocket)
 
 export function receivedJustConnectedUser(room: Room, message: Buffer, incomingClient: WebSocket, incomingClientUUID: string) {
 
-	// If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance
+	// If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance.
+	// The is important for when a user disconnects from the internet and reconnects to the internet and to the server.
 	if (room.agentUUIDConnection.has(incomingClientUUID)) {
 		const agentWebsocket: WebSocket = room.agentUUIDConnection.get(incomingClientUUID)!
 		

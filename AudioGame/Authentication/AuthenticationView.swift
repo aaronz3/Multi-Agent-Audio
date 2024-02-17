@@ -24,7 +24,7 @@ struct AuthenticationView: View {
 //                .ignoresSafeArea()
             
             
-            if authenticationVM.userID != nil {
+            if authenticationVM.userID != nil && authenticationVM.userData != nil {
                 WebRTCView()
                     .environmentObject(webRTCVM)
                     .environmentObject(networkMonitor)
@@ -34,7 +34,10 @@ struct AuthenticationView: View {
             }
         }
         .onAppear {
-            authenticationVM.authenticateViaGameCenter()
+            Task {
+                try await authenticationVM.authenticateViaGameCenter()
+                try await authenticationVM.getUserData()
+            }
         }
     }
 }

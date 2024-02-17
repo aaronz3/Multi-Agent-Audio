@@ -21,20 +21,19 @@ struct AudioApp: App {
     }
 }
 
-// apartment: 192.168.1.3
+// apartment: 192.168.1.2
 // house: 192.168.0.6
+// 自习室: 192.168.0.211
 // ec2: 43.203.40.34
 
 let hostAddress = "43.203.40.34"
 let port = "3000"
 
-let userIDUrl = URL(string: "http://\(hostAddress):\(port)/user-data")!
+let loginUrl = URL(string: "http://\(hostAddress):\(port)/login")!
 
-// This is set to amazon ec2 signaling server.
 let defaultSignalingServerUrl = URL(string: "ws://\(hostAddress):\(port)/play")!
 //let defaultSignalingServerUrl = URL(string: "ws://172.20.10.7:3000/play")!
 
-// We use Google's public stun servers. For production apps you should deploy your own stun/turn servers.
 let defaultIceServers = ["stun:stun.l.google.com:19302",
                          "stun:stun1.l.google.com:19302",
                          "stun:stun2.l.google.com:19302",
