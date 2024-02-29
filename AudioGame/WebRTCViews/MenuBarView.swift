@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameKit
 
 struct MenuBarView: View {
     
@@ -17,24 +18,24 @@ struct MenuBarView: View {
     var body: some View {
         HStack {
             
-            connect
+            connect()
             
-            talk
+            talk()
 
         }
     }
     
-    var connect: some View {
+    func connect() -> some View {
         Button("Connect") {
             Task {
-                self.webRTCVM.signalingClient.setCurrentUserUUID(uuid: authenticationVM.userID!)
+                self.webRTCVM.signalingClient.setCurrentUserUUID(uuid: GKLocalPlayer.local.playerID)
                 await self.webRTCVM.signalingClient.connect()
             }
         }
         .disabled(webRTCVM.signalingConnected)
     }
     
-    var talk: some View {
+    func talk() -> some View {
         Button("Talk") { }
             .padding(20.0)
             .onLongPressGesture(

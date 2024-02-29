@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GameKit
 
 struct WebRTCView: View {
     
@@ -18,18 +19,23 @@ struct WebRTCView: View {
         
         VStack {
             Spacer()
-            Text("Current user UUID is: " + (authenticationVM.userID!))
+            Text("Current user name is: " + (authenticationVM.userData?.userName)!)
                 .padding(20)
             
-            Text("Signaling Status:" + (webRTCVM.signalingConnected ? "✅" : "❌"))
+            Text("Current user UUID is: " + (GKLocalPlayer.local.playerID))
                 .padding(20)
             
-            List {
-                ForEach(webRTCVM.peerConnections) {pC in
-                    Text("PC Receiving Agent's UUID:" + (pC.receivingAgentsUUID ?? "nil"))
+            Text("Connected via websockets:" + (webRTCVM.signalingConnected ? "✅" : "❌"))
+                .padding(20)
+            
+            if webRTCVM.signalingConnected {
+                List {
+                    ForEach(webRTCVM.peerConnections) {pC in
+                        Text("PC Receiving Agent's UUID:" + (pC.receivingAgentsUUID ?? "nil"))
+                    }
                 }
+                .padding(20)
             }
-            .padding(20)
             
             MenuBarView()
             Spacer()

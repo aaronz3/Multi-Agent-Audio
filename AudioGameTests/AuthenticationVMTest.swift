@@ -42,7 +42,21 @@ final class AuthenticationVMTest: XCTestCase {
         XCTAssertTrue(authVM.userData?.userId == userID)
     }
     
-    
+//    func testServerDown() async throws {
+//        let userID = "randomUser:C@*JAbh10(AK"
+//        
+//        authVM.userID = userID
+//        
+//        do {
+//            try await authVM.getUserData()
+//        } catch AuthenticationError.serverError {
+//            
+//        } catch {
+//            // Handle all other errors
+//            print("DEBUG:", error.localizedDescription)
+//        }
+//        
+//    }
     
     
 

@@ -10,10 +10,11 @@ import Network
 
 class NetworkMonitor: ObservableObject {
     
+    
+    @Published var previousNetwork: Network.NWInterface.InterfaceType?
+    
     private var monitor: NWPathMonitor = NWPathMonitor()
     private var queue: DispatchQueue
-    var previousNetwork: Network.NWInterface.InterfaceType?
-    
     
     init() {
         self.queue = DispatchQueue.global()
@@ -23,34 +24,48 @@ class NetworkMonitor: ObservableObject {
         self.monitor.cancel()
     }
     
+    @MainActor
     func start() {
-        
         // Set up a handler to be notified when the network path changes
         self.monitor.pathUpdateHandler = { path in
-
+            guard path.status == .satisfied else {
+                print("No internet connection.")
+                DispatchQueue.main.async {
+                    self.previousNetwork = nil
+                }
+                return
+            }
+            
+            print("We're connected to the internet!")
+            
             if path.usesInterfaceType(.wifi) && self.previousNetwork != .wifi {
                 print("NOTE: Connected via Wi-Fi. Previous network:", self.previousNetwork ?? "nil")
                 
-                self.previousNetwork = .wifi
-
+                DispatchQueue.main.async {
+                    self.previousNetwork = .wifi
+                }
                 
             } else if path.usesInterfaceType(.cellular) && self.previousNetwork != .cellular {
                 print("NOTE: Connected via Cellular")
-                self.previousNetwork = .cellular
-
+                
+                DispatchQueue.main.async {
+                    self.previousNetwork = .cellular
+                }
                 
             } else if path.usesInterfaceType(.wiredEthernet) && self.previousNetwork != .wiredEthernet {
                 print("NOTE: Connected via wiredEthernet")
                 
-                self.previousNetwork = .wiredEthernet
-                
-                
+                DispatchQueue.main.async {
+                    self.previousNetwork = .wiredEthernet
+                }
+
             } else if path.usesInterfaceType(.loopback) && self.previousNetwork != .loopback {
                 print("NOTE: Connected via loopback")
                 
-                self.previousNetwork = .loopback
-                
-                
+                DispatchQueue.main.async {
+                    self.previousNetwork = .loopback
+                }
+
             } else if path.usesInterfaceType(.other) {
                 print("DEBUG: Some new interface")
             }

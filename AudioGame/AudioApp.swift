@@ -11,11 +11,13 @@ import SwiftUI
 struct AudioApp: App {
     
     @StateObject var authenticationVM = AuthenticationViewModel()
-    
+    @StateObject var networkMonitor = NetworkMonitor()
+
     var body: some Scene {
         WindowGroup {
             AuthenticationView()
                 .environmentObject(authenticationVM)
+                .environmentObject(networkMonitor)
             
         }
     }

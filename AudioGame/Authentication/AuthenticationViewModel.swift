@@ -10,46 +10,54 @@ import GameKit
 
 class AuthenticationViewModel: ObservableObject {
     
-    @Published var userID: String?
     @Published var userName: String?
     
     @Published var userData: UserRecord?
     
-    let localPlayer = GKLocalPlayer.local
+    private var isContinuationCalled = false
+    
     
     // MARK: Get user uuid from game center
-    
     @MainActor
     func authenticateViaGameCenter() async throws {
-        try await withCheckedThrowingContinuation { continuation in
-            localPlayer.authenticateHandler = { viewController, error in
-                if let viewController = viewController,
-                   let rootController = UIApplication.shared.windows.first?.rootViewController {
-                    // If there's a viewController, present it to complete authentication
-                    rootController.present(viewController, animated: true) {
-                        self.setUserIDViaGameCenter(localPlayer: self.localPlayer)
-                        continuation.resume()
-                        
-                    }
-                } else if self.localPlayer.isAuthenticated {
+        return try await withCheckedThrowingContinuation { continuation in
+            // State to track if continuation has already been called
+
+            GKLocalPlayer.local.authenticateHandler = { viewController, error in
+                // Prevent multiple resumes
+                guard !self.isContinuationCalled else { return }
+
+                if let error = error {
+                    self.isContinuationCalled = true
+                    continuation.resume(throwing: error)
                     
-                    self.setUserIDViaGameCenter(localPlayer: self.localPlayer)
+                    // If the user has not logged in before present the view controller
+                } else if let viewController = viewController,
+                          let rootController = UIApplication.shared.windows.first?.rootViewController {
+                    self.isContinuationCalled = true
+                    rootController.present(viewController, animated: true) {
+                        
+                        // Check to see if the player id has been set after the presentation. If so set the userID.
+                        // TODO: Need to test this code. Firstly is GKLocalPlayer.local.playerID always non nil after successfully completing the presentation. If it is not completed successfully, is the GKLocalPlayer.local.playerID always empty.
+                        if GKLocalPlayer.local.playerID != "" {
+                            continuation.resume()
+                        } else {
+                            continuation.resume(throwing: AuthenticationError.uuidError)
+                        }
+                    }
+                    
+                    // If the user is already authenticated
+                } else if GKLocalPlayer.local.isAuthenticated {
+                    self.isContinuationCalled = true
                     continuation.resume()
                     
-                } else if let error {
-                    // Handle authentication error
-                    print("DEBUG: Error in authenticateViaGameCenter. \(error.localizedDescription)")
-                    continuation.resume(throwing: error)
+                    // If none of the conditions are met and it hasn't been called yet, consider it an unknown error.
                 } else {
+                    self.isContinuationCalled = true
                     continuation.resume()
                 }
             }
         }
-    }
-    
-    func setUserIDViaGameCenter(localPlayer: GKLocalPlayer) {
-        print("NOTE: Playerid using game center login is \(localPlayer.playerID)")
-        self.userID = localPlayer.playerID
     }
     
     // MARK: Get user data from server
@@ -58,33 +66,38 @@ class AuthenticationViewModel: ObservableObject {
     func getUserData() async throws {
         var components = URLComponents(url: loginUrl, resolvingAgainstBaseURL: true)
         
-        guard let uuid = self.userID else {
+        guard GKLocalPlayer.local.playerID != "" else {
+            print("DEBUG: UUID Error")
             throw AuthenticationError.uuidError
         }
         
         components?.queryItems = [
-            URLQueryItem(name: "uuid", value: uuid)
+            URLQueryItem(name: "uuid", value: GKLocalPlayer.local.playerID)
         ]
         
-        guard let url = components?.url else { 
+        guard let url = components?.url else {
             throw AuthenticationError.urlQueryError
         }
         
+        let (data, response) = try await getRequest(url: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            try await handleAbnormalGetResponse(data: data, response: response)
+            return
+        }
+        
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
-            
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-                try await handleAbnormalGetResponse(data: data, response: response)
-                return
-            }
-            
             let userRecord = try JSONDecoder().decode(UserRecord.self, from: data)
             self.userData = userRecord
             
         } catch {
             print("DEBUG: Error in getUserData \(error.localizedDescription)")
-            throw AuthenticationError.getUserDataError
+            throw AuthenticationError.decodingError
         }
+    }
+    
+    func getRequest(url: URL) async throws -> (Data, URLResponse) {
+        return try await URLSession.shared.data(from: url)
     }
     
     func handleAbnormalGetResponse(data: Data, response: URLResponse) async throws {
@@ -96,32 +109,34 @@ class AuthenticationViewModel: ObservableObject {
         // If the user data is not found
         if httpResponse.statusCode == 404 {
             try await handleNewUserOnboarding(data: data)
-        // If there is a server error
+            // If there is a server error
         } else if httpResponse.statusCode == 500 {
             print("DEBUG: Server error")
             throw AuthenticationError.serverError
         } else {
-            print("DEBUG: Unknown error")
+            print("DEBUG: Unknown error. \(httpResponse.statusCode)")
             throw AuthenticationError.unknownServerError
         }
     }
     
     // MARK: Helper functions to help onboard new user
-
+    
+    @MainActor
     func handleNewUserOnboarding(data: Data) async throws {
-        guard let uuid = self.userID else {
+        guard GKLocalPlayer.local.playerID != "" else {
             throw AuthenticationError.uuidError
         }
         
-        let jsonResponse = try? JSONDecoder().decode([String: String].self, from: data)
-        if let message = jsonResponse?["message"], message == "User data not found" {
+        let jsonResponse = try JSONDecoder().decode([String: String].self, from: data)
+        
+        if let message = jsonResponse["message"], message == "User data not found" {
             
             // Send default values to server
             let randomName = getRandomUsername()
             try await sendUserData(name: randomName)
             
             // Set default values to userData
-            self.userData = UserRecord(userName: randomName, userId: uuid)
+            self.userData = UserRecord(userName: randomName, userId: GKLocalPlayer.local.playerID)
             
         } else {
             throw AuthenticationError.unknownFourZeroFourError
@@ -136,15 +151,15 @@ class AuthenticationViewModel: ObservableObject {
     // MARK: Send user data to server
     
     func sendUserData(name: String) async throws {
-        guard let uuid = self.userID else {
+        guard GKLocalPlayer.local.playerID != "" else {
             throw AuthenticationError.uuidError
         }
         
         var request = URLRequest(url: loginUrl)
-
+        
         do {
             // Send the block of user data to the server.
-            let body = User(id: uuid, name: name)
+            let body = User(id: GKLocalPlayer.local.playerID, name: name)
             let bodyData = try JSONEncoder().encode(body)
             
             
@@ -170,17 +185,18 @@ class AuthenticationViewModel: ObservableObject {
         }
     }
     
-    enum AuthenticationError : Error {
-        case urlQueryError
-        case getUserDataError
-        case serverError
-        case unknownFourZeroFourError
-        case unknownServerError
-        case uuidError
-        case encodingError
-        case postRequestError
-        case httpResponseError
-    }
+}
+
+enum AuthenticationError : Error {
+    case urlQueryError
+    case serverError
+    case unknownFourZeroFourError
+    case unknownServerError
+    case uuidError
+    case decodingError
+    case encodingError
+    case postRequestError
+    case httpResponseError
 }
 
 fileprivate let usernames = [
