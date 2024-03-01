@@ -9,10 +9,13 @@ import Foundation
 import WebRTC
 
 enum WebRTCMessage {
+    case roomCharacteristic(RoomCharacteristics)
+    
     case sdp(SessionDescription)
     case candidate(IceCandidate)
     case justConnectedUser(JustConnectedUser)
     case justDisconnectedUser(DisconnectedUser)
+    
     case ping
 }
 
@@ -21,6 +24,9 @@ extension WebRTCMessage: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
         switch type {
+            
+        case String(describing: RoomCharacteristics.self):
+            self = .roomCharacteristic(try container.decode(RoomCharacteristics.self, forKey: .payload))
         case String(describing: SessionDescription.self):
             self = .sdp(try container.decode(SessionDescription.self, forKey: .payload))
         case String(describing: IceCandidate.self):
@@ -52,6 +58,8 @@ extension WebRTCMessage: Codable {
             try container.encode(String(describing: DisconnectedUser.self), forKey: .type)
         case .ping:
             try container.encode(String(describing: Ping.self), forKey: .type)
+        case .roomCharacteristic(_):
+            print("DEBUG: Encoding room characteristic")
         }
     }
     
@@ -62,6 +70,10 @@ extension WebRTCMessage: Codable {
     enum CodingKeys: String, CodingKey {
         case type, payload
     }
+}
+
+struct RoomCharacteristics: Codable {
+    let roomID: String
 }
 
 struct JustConnectedUser: Codable {

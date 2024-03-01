@@ -37,12 +37,14 @@ const port = process.env.PORT;
 // -----------------------
 // Upgrade the HTTP(S) server to a WebSocket server on '/play' route
 server.on("upgrade", (request, socket, head) => {
-    // Check if request.url is defined
+    // Check if request.url and request.headers.host is defined
     if (request.url && request.headers.host) {
         const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
+        // Handle the play path 
         if (pathname === "/play") {
             (0, matchmaking_1.handlePlay)(request, socket, head);
         }
+        // Handle other paths here
     }
     else {
         // Handle the case where request.url is undefined
@@ -53,7 +55,7 @@ server.on("upgrade", (request, socket, head) => {
 });
 // SECTION: USER ID DATA UPLOADED TO SERVER
 // -----------------------
-// Get necessary user details when logining in
+// Get necessary user details when login
 app.get("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = yield (0, authentication_1.handleGetUserData)(req.query);

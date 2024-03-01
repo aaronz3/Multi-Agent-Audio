@@ -1,5 +1,4 @@
 import { AttributeValue, DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
-import { Interface } from "readline";
 
 export class AccessUserDataDynamoDB {
 

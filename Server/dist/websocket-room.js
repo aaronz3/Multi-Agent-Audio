@@ -13,7 +13,7 @@ function modifyRoom(room) {
     // Create a Map to track the 'isAlive' property for each client
     const wss = room.websocketServer;
     wss.on("connection", (incomingClient, req) => {
-        console.log(`[Room ${room.roomID}] Client connected from IP: ${req.socket.remoteAddress}. Total connected clients: ${wss.clients.size}.`);
+        console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] Client connected from IP: ${req.socket.remoteAddress}. Total connected clients: ${wss.clients.size}.`);
         // Initialize the 'isAlive' property for the new client
         room.clientIsAliveMap.set(incomingClient, true);
         // Handle message
@@ -70,18 +70,16 @@ function handleWSMessage(room, message, incomingClient) {
             case "JustConnectedUser":
                 // This is the current user's UUID
                 const incomingClientUUID = parsedMessage.payload["userUUID"];
-                // Check if room.agentUUIDConnection already has a reference to the client. If so, terminate the previous instance. 
-                // If not, add the client to room.agentUUIDConnection.
                 receivedJustConnectedUser(room, Buffer.from(message), incomingClient, incomingClientUUID);
                 break;
             case "SessionDescription":
                 const forwardingAddressForSDP = parsedMessage.payload["toUUID"];
-                console.log(`[Room ${room.roomID}] Sent SDP to ${forwardingAddressForSDP}`);
+                console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] Sent SDP to ${forwardingAddressForSDP}`);
                 sendTo(room, forwardingAddressForSDP, Buffer.from(message));
                 break;
             case "IceCandidate":
                 const forwardingAddressForICECandidate = parsedMessage.payload["toUUID"];
-                console.log(`[Room ${room.roomID}] Sent candidate to ${forwardingAddressForICECandidate}`);
+                console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] Sent candidate to ${forwardingAddressForICECandidate}`);
                 sendTo(room, forwardingAddressForICECandidate, Buffer.from(message));
                 break;
             default:
@@ -104,9 +102,12 @@ function receivedJustConnectedUser(room, message, incomingClient, incomingClient
     }
     // Save current user's UUID into a dictionary on the server
     room.agentUUIDConnection.set(incomingClientUUID, incomingClient);
-    console.log(`[Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
+    console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
     // Send the agent's UUID to agents that previously connected
     sendToAllButSelf(room, message, incomingClient, incomingClientUUID);
+    // Send the room id to the agent that connected
+    const roomID = JSON.stringify({ type: "RoomCharacteristics", payload: { roomID: room.roomID } });
+    sendTo(room, incomingClientUUID, Buffer.from(roomID));
 }
 exports.receivedJustConnectedUser = receivedJustConnectedUser;
 // SECTION: HELPERS TO RELAY MESSAGES 
@@ -116,7 +117,7 @@ function sendToAllButSelf(room, message, incomingClient, incomingClientUUID) {
     room.agentUUIDConnection.forEach((client) => {
         if (client !== incomingClient && client.readyState === ws_1.default.OPEN) {
             client.send(message);
-            console.log(`[Room ${room.roomID}] User ${incomingClientUUID} sent message to 1 other users`);
+            console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] User ${incomingClientUUID} sent message to 1 other users`);
         }
     });
 }
@@ -133,11 +134,11 @@ function sendTo(room, agent, message) {
 function handleWSClosure(room, incomingClient) {
     const disconnectedUserUUID = deleteKeyValuePairAndReturnKey(room.agentUUIDConnection, incomingClient);
     if (disconnectedUserUUID === undefined) {
-        console.log(`[Room ${room.roomID}] DEBUG: The server tried to delete a client that was not in agentUUIDConnection array`);
+        console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] DEBUG: The server tried to delete a client that was not in agentUUIDConnection array`);
     }
     else {
-        console.log(`[Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
-        console.log(`[Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
+        console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
+        console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
         // Let the other agents know that an user has disconnected from the server
         const disconnectionUserMessage = JSON.stringify({ type: "DisconnectedUser", payload: { userUUID: disconnectedUserUUID } });
         sendToAllButSelf(room, Buffer.from(disconnectionUserMessage), incomingClient, disconnectedUserUUID);

@@ -57,3 +57,19 @@ export interface Message {
 	type: string;
 	payload: any;
 }
+
+// For debugging purposes print the current time of events
+export const getCurrentTime = () => {
+    const now = new Date(); // Create a new date object with the current date and time
+
+    // Extract the day, hour, minute, and second
+    const month = now.getMonth() + 1; // Month
+    const day = now.getDate(); // Day of the month
+    const year = now.getFullYear(); // Year
+    const hour = now.getHours(); // Hour (0-23)
+    const minute = now.getMinutes(); // Minute (0-59)
+    const second = now.getSeconds(); // Second (0-59)
+
+    // Return the time components
+    return `[DAY: ${month}-${day}-${year}. TIME: ${hour}:${minute}:${second}]`
+};

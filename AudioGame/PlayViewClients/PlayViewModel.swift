@@ -1,5 +1,5 @@
 //
-//  WebRTCViewModel.swift
+//  PlayViewModel.swift
 //  Audio
 //
 //  Created by Aaron Zheng on 1/14/24.
@@ -9,9 +9,10 @@ import Foundation
 import WebRTC
 
 //@Observable
-class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, ObservableObject {
+class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, ObservableObject {
     
     @Published var peerConnections: [PeerConnection] = []
+    @Published var roomCharacteristics: RoomCharacteristics?
     @Published var signalingConnected = false
     @Published var disableTalkButton = true
     
@@ -41,10 +42,19 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
     
     func webSocketDidDisconnect() {
         print("NOTE: Websocket disconnected (executed from protocol)")
-        self.resetPeerConnections()
         
         DispatchQueue.main.async {
+            if !self.peerConnections.isEmpty {
+                self.peerConnections = []
+                
+                let peer = PeerConnection(receivingAgentsUUID: nil, delegate: self)
+                self.peerConnections.append(peer)
+                
+                self.signalingConnected = false
+            }
+            
             self.disableTalkButton = true
+            print("SUCCESS: Peer connections reset")
         }
     }
     
@@ -57,13 +67,16 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
         switch self.decodeReceivedData(data: data) {
             
         case .candidate(let iceCandidate): await self.receivedCandidate(iceCandidate: iceCandidate)
-            
+        
         case .sdp(let sessionDescription): await self.receivedSDP(sessionDescription: sessionDescription)
             
-            // Runs when some other user connects to the signaling server. The server relays the other user's information to you.
+        // Runs when some other user connects to the signaling server.
+        // The server relays the other user's information include id and photo to you.
         case .justConnectedUser(let justConnectedUser): await self.receivedConnectedUser(justConnectedUser: justConnectedUser)
             
         case .justDisconnectedUser(let disconnectedUser): await self.receivedDisconnectedUser(disconnectedUser: disconnectedUser)
+        
+        case .roomCharacteristic(let roomCharacteristic): self.receivedRoomData(room: roomCharacteristic)
             
         default :
             print("DEBUG: Got an unknown message.")
@@ -73,11 +86,17 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
     
     func decodeReceivedData(data: Data) -> WebRTCMessage? {
         do {
-            let returnMessage = try self.signalingClient.decoder.decode(WebRTCMessage.self, from: data)
-            return returnMessage
+            return try self.signalingClient.decoder.decode(WebRTCMessage.self, from: data)
         } catch {
             print("DEBUG: Error in decodeReceivedData. \(error.localizedDescription)")
             return nil
+        }
+    }
+    
+    func receivedRoomData(room: RoomCharacteristics) {
+        print("NOTE: room.roomID \(room.roomID)")
+        DispatchQueue.main.async {
+            self.roomCharacteristics = RoomCharacteristics(roomID: room.roomID)
         }
     }
     
@@ -262,21 +281,7 @@ class WebRTCViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observ
         }
         return allReceivingAgentsUUID
     }
-    
-    func resetPeerConnections() {
-        DispatchQueue.main.async {
-            if !self.peerConnections.isEmpty {
-                self.peerConnections = []
-                
-                let peer = PeerConnection(receivingAgentsUUID: nil, delegate: self)
-                self.peerConnections.append(peer)
-                
-                self.signalingConnected = false
-                print("SUCCESS: Peer connections reset")
-            }
-        }
-    }
-    
+        
     // MARK: PeerConnectionDelegate PROTOCOL FUNCTIONS
     
     func didDiscoverLocalCandidate(sendToAgent: String, candidate: RTCIceCandidate) {

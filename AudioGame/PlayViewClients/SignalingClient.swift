@@ -74,6 +74,7 @@ class SignalingClient: NSObject {
             return
         }
         
+        // Send the "JustConnectedUser" message to the server
         await self.send(toUUID: nil, message: .justConnectedUser(uuid))
         
         // Alert the data model that a websocket connection has been established

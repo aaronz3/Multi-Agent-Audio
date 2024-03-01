@@ -35,12 +35,17 @@ const port = process.env.PORT;
 
 server.on("upgrade", (request: http.IncomingMessage, socket: internal.Duplex, head: Buffer) => {
 
-	// Check if request.url is defined
+	// Check if request.url and request.headers.host is defined
     if (request.url && request.headers.host) {
         const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
+        
+        // Handle the play path 
         if (pathname === "/play") {
             handlePlay(request, socket, head);
         }
+
+        // Handle other paths here
+
     } else {
         // Handle the case where request.url is undefined
         // For example, you might want to close the socket
@@ -52,7 +57,7 @@ server.on("upgrade", (request: http.IncomingMessage, socket: internal.Duplex, he
 // SECTION: USER ID DATA UPLOADED TO SERVER
 // -----------------------
 
-// Get necessary user details when logining in
+// Get necessary user details when login
 app.get("/login", express.json(), async (req: Request, res: Response) => {
     try {
         const data = await handleGetUserData(req.query)

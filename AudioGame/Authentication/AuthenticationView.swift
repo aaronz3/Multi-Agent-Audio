@@ -13,8 +13,6 @@ struct AuthenticationView: View {
     @EnvironmentObject var authenticationVM: AuthenticationViewModel
     @EnvironmentObject var networkMonitor: NetworkMonitor
 
-    @StateObject var webRTCVM = WebRTCViewModel(signalingClient: SignalingClient(url: defaultSignalingServerUrl))
-    
     @State var serverDown = false
     @State var noInternet = false
     
@@ -26,22 +24,24 @@ struct AuthenticationView: View {
 //                .scaledToFill()
 //                .ignoresSafeArea()
             
-            // Make sure that 
+            // In order for the main menu to appear, these conditions must be fulfilled.
             //   (1) the playerID exists from the authentication
             //   (2) the user data has been imported
             //   (3) there is a viable internet connection
+            // If any of the above conditions is not true show the user which condition is not fulfilled.
             
             if GKLocalPlayer.local.playerID != ""
                 && authenticationVM.userData != nil
                 && networkMonitor.previousNetwork != nil {
-                WebRTCView()
-                    .environmentObject(webRTCVM)
+                
+                // Display the main menu
+                MainMenu()
                     
             } else if serverDown {
                 Text("Server Down")
                     .font(.title)
                     .scaleEffect(1)
-                
+            
             } else if noInternet || networkMonitor.previousNetwork == nil {
                 handleNoInternetView()
                 
@@ -65,7 +65,6 @@ struct AuthenticationView: View {
             Button("Retry") {
                 handleOnAppear()
             }
-            
         }
     }
     

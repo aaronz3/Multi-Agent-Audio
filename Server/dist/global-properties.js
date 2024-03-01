@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Room = exports.maxNumberOfPlayers = exports.roomsContainer = exports.rooms = void 0;
+exports.getCurrentTime = exports.Room = exports.maxNumberOfPlayers = exports.roomsContainer = exports.rooms = void 0;
 // Room Data
 exports.rooms = [];
 // TODO:
@@ -43,3 +43,17 @@ class Room {
     }
 }
 exports.Room = Room;
+// For debugging purposes print the current time of events
+const getCurrentTime = () => {
+    const now = new Date(); // Create a new date object with the current date and time
+    // Extract the day, hour, minute, and second
+    const month = now.getMonth() + 1; // Month
+    const day = now.getDate(); // Day of the month
+    const year = now.getFullYear(); // Year
+    const hour = now.getHours(); // Hour (0-23)
+    const minute = now.getMinutes(); // Minute (0-59)
+    const second = now.getSeconds(); // Second (0-59)
+    // Return the time components
+    return `[DAY: ${month}-${day}-${year}. TIME: ${hour}:${minute}:${second}]`;
+};
+exports.getCurrentTime = getCurrentTime;

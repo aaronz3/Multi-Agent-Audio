@@ -11,7 +11,7 @@ import Combine
 
 final class WebRTCViewModelTest: XCTestCase {
     
-    var webRTCMV: WebRTCViewModel! = nil
+    var playMV: PlayViewModel! = nil
     var websocket: MockNetworkSocket! = nil
     var signalingClient: SignalingClient! = nil
     
@@ -19,26 +19,26 @@ final class WebRTCViewModelTest: XCTestCase {
         websocket = MockNetworkSocket()
         signalingClient = SignalingClient(url: defaultSignalingServerUrl, websocket: websocket)
         signalingClient.setCurrentUserUUID(uuid: "THISUSER")
-        webRTCMV = WebRTCViewModel(signalingClient: signalingClient)
+        playMV = PlayViewModel(signalingClient: signalingClient)
     }
     
     override func tearDown() {
-        webRTCMV = nil
+        playMV = nil
         signalingClient = nil
         websocket = nil
     }
 
     func testNoPeerConnectionsIfJustInitializedwebRTCMV() {
-        XCTAssertTrue(webRTCMV.peerConnections.count == 1)
-        XCTAssertNil(webRTCMV.peerConnections[0].receivingAgentsUUID)
+        XCTAssertTrue(playMV.peerConnections.count == 1)
+        XCTAssertNil(playMV.peerConnections[0].receivingAgentsUUID)
     }
     
     func testDecodeUserMessage() throws {
-        XCTAssertNotNil(webRTCMV.decodeReceivedData(data: filledConnectedUserUUIDData!))
+        XCTAssertNotNil(playMV.decodeReceivedData(data: filledConnectedUserUUIDData!))
         
-        XCTAssertNotNil(webRTCMV.decodeReceivedData(data: toThisUserSDPOfferData[0]!))
+        XCTAssertNotNil(playMV.decodeReceivedData(data: toThisUserSDPOfferData[0]!))
 
-        XCTAssertNotNil(webRTCMV.decodeReceivedData(data: user1CandidateData[0]!))
+        XCTAssertNotNil(playMV.decodeReceivedData(data: user1CandidateData[0]!))
     }
     
     // MARK: RECEIVED CONNECTED USER MESSAGE
@@ -47,27 +47,27 @@ final class WebRTCViewModelTest: XCTestCase {
     func testSetFirstPeerConnectionAndSendSDPIfReceivedConnectedUserMessage() async throws {
          
         // Act: Call my API, using the filledJustConnectedUserObject created in the TestData.swift file.
-        await webRTCMV.receivedConnectedUser(justConnectedUser: filledJustConnectedUserObject)
+        await playMV.receivedConnectedUser(justConnectedUser: filledJustConnectedUserObject)
         
         // Check to see if results from API were expected
-        XCTAssertTrue(webRTCMV.peerConnections[0].receivingAgentsUUID == "BF73C8CF-8176-4E76-952B-3A20CD2EB21D")
+        XCTAssertTrue(playMV.peerConnections[0].receivingAgentsUUID == "BF73C8CF-8176-4E76-952B-3A20CD2EB21D")
         
     }
     
     // If there already exists 2 peer connections, peer connections array should be appended with new peer connection
     func testSetPeerConnectionAndSendSDPIfReceivedConnectedUserMessageAndPeersExists() async throws {
         
-        let existingPeerConnections = [PeerConnection(receivingAgentsUUID: "FIRSTPEERID1", delegate: webRTCMV),
-                                       PeerConnection(receivingAgentsUUID: "SECONDPEERID", delegate: webRTCMV)
+        let existingPeerConnections = [PeerConnection(receivingAgentsUUID: "FIRSTPEERID1", delegate: playMV),
+                                       PeerConnection(receivingAgentsUUID: "SECONDPEERID", delegate: playMV)
                                       ]
         
         // Set: Peerconnections array
-        webRTCMV.peerConnections = existingPeerConnections
+        playMV.peerConnections = existingPeerConnections
         
         // Act: Call my API, using the filledJustConnectedUserObject created in the TestData.swift file.
-        await webRTCMV.receivedConnectedUser(justConnectedUser: filledJustConnectedUserObject)
+        await playMV.receivedConnectedUser(justConnectedUser: filledJustConnectedUserObject)
         
-        XCTAssertTrue(webRTCMV.peerConnections[2].receivingAgentsUUID == "BF73C8CF-8176-4E76-952B-3A20CD2EB21D")
+        XCTAssertTrue(playMV.peerConnections[2].receivingAgentsUUID == "BF73C8CF-8176-4E76-952B-3A20CD2EB21D")
     }
     
     
@@ -75,10 +75,10 @@ final class WebRTCViewModelTest: XCTestCase {
     func testErrorIfReceivedEmptyConnectedUserMessage() async throws {
         
         // Act: Call API
-        await webRTCMV.webSocket(didReceiveData: emptyConnectedUserUUIDData!)
+        await playMV.webSocket(didReceiveData: emptyConnectedUserUUIDData!)
         
         // Check:
-        XCTAssertNil(webRTCMV.peerConnections[0].receivingAgentsUUID)
+        XCTAssertNil(playMV.peerConnections[0].receivingAgentsUUID)
         
     }
     
@@ -87,10 +87,10 @@ final class WebRTCViewModelTest: XCTestCase {
     func testErrorIfReceivedEmptyDisconnectedUserMessage() async throws {
         
         // Act: Call my API
-        await webRTCMV.webSocket(didReceiveData: emptyDisconnectedUserUUID!)
+        await playMV.webSocket(didReceiveData: emptyDisconnectedUserUUID!)
         
         // Check:
-        XCTAssertNil(webRTCMV.peerConnections[0].receivingAgentsUUID)
+        XCTAssertNil(playMV.peerConnections[0].receivingAgentsUUID)
         
     }
     
@@ -100,7 +100,7 @@ final class WebRTCViewModelTest: XCTestCase {
         let expectation = XCTestExpectation(description: "Receive answer")
         expectation.expectedFulfillmentCount = 1
         
-        webRTCMV.processDataCompletion = { data in
+        playMV.processDataCompletion = { data in
             switch data {
             case "Received & Set SDP":
                 expectation.fulfill()
@@ -108,21 +108,21 @@ final class WebRTCViewModelTest: XCTestCase {
             }
         }
         
-        webRTCMV.peerConnections.append(PeerConnection(receivingAgentsUUID: "USER2", delegate: webRTCMV))
-        webRTCMV.peerConnections.append(PeerConnection(receivingAgentsUUID: "USER3", delegate: webRTCMV))
-        await webRTCMV.webSocket(didReceiveData: filledConnectedUserUUIDData!)
-        await webRTCMV.webSocket(didReceiveData: toThisUserSDPAnswerData[0]!)
+        playMV.peerConnections.append(PeerConnection(receivingAgentsUUID: "USER2", delegate: playMV))
+        playMV.peerConnections.append(PeerConnection(receivingAgentsUUID: "USER3", delegate: playMV))
+        await playMV.webSocket(didReceiveData: filledConnectedUserUUIDData!)
+        await playMV.webSocket(didReceiveData: toThisUserSDPAnswerData[0]!)
 
         await fulfillment(of: [expectation])
 
-        XCTAssertTrue(webRTCMV.peerConnections[0].receivingAgentsUUID == "USER1")
+        XCTAssertTrue(playMV.peerConnections[0].receivingAgentsUUID == "USER1")
     }
     
         
     // MARK: INTEGRATION TEST | CONNECTING & DISCONNECTING
     
     // This makes sure that a peer connection instance is removed properly everytime they disconnect.
-    // It also makes sure that new peer connection instances are added properly to webRTCMV even when the same agent reconnects.
+    // It also makes sure that new peer connection instances are added properly to playMV even when the same agent reconnects.
     
     func testReconnectingAfterDisconnecting() async throws {
         let expectation = XCTestExpectation(description: "Data processed in order")
@@ -130,28 +130,28 @@ final class WebRTCViewModelTest: XCTestCase {
 
         var cancellables: Set<AnyCancellable> = []
         
-        webRTCMV.$peerConnections
+        playMV.$peerConnections
                 .dropFirst()
                 .sink { _ in
                     expectation.fulfill()
                 }
                 .store(in: &cancellables)
         
-        await webRTCMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
-        await webRTCMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[1]!)
-        await webRTCMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
-        await webRTCMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[2]!)
-        await webRTCMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
-        await webRTCMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[3]!)
-        await webRTCMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
-        await webRTCMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[1]!)
-        await webRTCMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[2]!)
-        await webRTCMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[3]!)
+        await playMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
+        await playMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[1]!)
+        await playMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
+        await playMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[2]!)
+        await playMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[0]!)
+        await playMV.webSocket(didReceiveData: filledJustConnectedUserUUIDDataArray[3]!)
+        await playMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[0]!)
+        await playMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[1]!)
+        await playMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[2]!)
+        await playMV.webSocket(didReceiveData: filledJustDisconnectedUserUUIDDataArray[3]!)
         
         await fulfillment(of: [expectation])
         
-        XCTAssertTrue(webRTCMV.peerConnections.count == 1)
-        XCTAssertNil(webRTCMV.peerConnections[0].receivingAgentsUUID)
+        XCTAssertTrue(playMV.peerConnections.count == 1)
+        XCTAssertNil(playMV.peerConnections[0].receivingAgentsUUID)
     }
     
     // MARK: INTEGRATION TEST | RECEIVING SDP/CANDIDATE & ANSWERING
@@ -165,7 +165,7 @@ final class WebRTCViewModelTest: XCTestCase {
 
         var previousData = [Int]()
         
-        webRTCMV.processDataCompletion = { data in
+        playMV.processDataCompletion = { data in
             if data == "Received & Set SDP" {
                 previousData.append(0)
                 expectation.fulfill()
@@ -178,25 +178,25 @@ final class WebRTCViewModelTest: XCTestCase {
             }
         }
                 
-        await webRTCMV.webSocket(didReceiveData: toThisUserSDPOfferData[0]!)
-        XCTAssertTrue(webRTCMV.peerConnections[0].receivingAgentsUUID == "USER1")
-        await webRTCMV.webSocket(didReceiveData: user1CandidateData[0]!)
-        await webRTCMV.webSocket(didReceiveData: user1CandidateData[1]!)
-        await webRTCMV.webSocket(didReceiveData: toThisUserSDPOfferData[1]!)
-        XCTAssertTrue(webRTCMV.peerConnections[1].receivingAgentsUUID == "USER2")
-        await webRTCMV.webSocket(didReceiveData: toThisUserSDPOfferData[2]!)
-        XCTAssertTrue(webRTCMV.peerConnections[2].receivingAgentsUUID == "USER3")
-        await webRTCMV.webSocket(didReceiveData: toThisUserSDPOfferData[3]!)
-        XCTAssertTrue(webRTCMV.peerConnections[3].receivingAgentsUUID == "USER4")
-        await webRTCMV.webSocket(didReceiveData: user2CandidateData[0]!)
-        await webRTCMV.webSocket(didReceiveData: user1CandidateData[2]!)
-        await webRTCMV.webSocket(didReceiveData: user2CandidateData[1]!)
-        await webRTCMV.webSocket(didReceiveData: user1CandidateData[3]!)
-        await webRTCMV.webSocket(didReceiveData: user3CandidateData[0]!)
-        await webRTCMV.webSocket(didReceiveData: user4CandidateData[0]!)
-        await webRTCMV.webSocket(didReceiveData: user3CandidateData[1]!)
-        await webRTCMV.webSocket(didReceiveData: user1CandidateData[4]!)
-        await webRTCMV.webSocket(didReceiveData: user4CandidateData[1]!)
+        await playMV.webSocket(didReceiveData: toThisUserSDPOfferData[0]!)
+        XCTAssertTrue(playMV.peerConnections[0].receivingAgentsUUID == "USER1")
+        await playMV.webSocket(didReceiveData: user1CandidateData[0]!)
+        await playMV.webSocket(didReceiveData: user1CandidateData[1]!)
+        await playMV.webSocket(didReceiveData: toThisUserSDPOfferData[1]!)
+        XCTAssertTrue(playMV.peerConnections[1].receivingAgentsUUID == "USER2")
+        await playMV.webSocket(didReceiveData: toThisUserSDPOfferData[2]!)
+        XCTAssertTrue(playMV.peerConnections[2].receivingAgentsUUID == "USER3")
+        await playMV.webSocket(didReceiveData: toThisUserSDPOfferData[3]!)
+        XCTAssertTrue(playMV.peerConnections[3].receivingAgentsUUID == "USER4")
+        await playMV.webSocket(didReceiveData: user2CandidateData[0]!)
+        await playMV.webSocket(didReceiveData: user1CandidateData[2]!)
+        await playMV.webSocket(didReceiveData: user2CandidateData[1]!)
+        await playMV.webSocket(didReceiveData: user1CandidateData[3]!)
+        await playMV.webSocket(didReceiveData: user3CandidateData[0]!)
+        await playMV.webSocket(didReceiveData: user4CandidateData[0]!)
+        await playMV.webSocket(didReceiveData: user3CandidateData[1]!)
+        await playMV.webSocket(didReceiveData: user1CandidateData[4]!)
+        await playMV.webSocket(didReceiveData: user4CandidateData[1]!)
         
 
         XCTAssertTrue(previousData == [0,1,2,1,0,0,0,1,2,1,1,1,1,2,1,2,1,1,1])
