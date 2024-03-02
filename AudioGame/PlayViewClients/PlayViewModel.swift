@@ -10,7 +10,7 @@ import WebRTC
 
 //@Observable
 class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, ObservableObject {
-    
+
     @Published var peerConnections: [PeerConnection] = []
     @Published var roomCharacteristics: RoomCharacteristics?
     @Published var signalingConnected = false
@@ -56,6 +56,11 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
             self.disableTalkButton = true
             print("SUCCESS: Peer connections reset")
         }
+    }
+    
+    func didReceiveData(data: Data) {
+        print("NOTE: Received data from other user: \(String(data: data, encoding: .utf8))")
+        
     }
     
     func webSocket(didReceiveData data: Data) async {

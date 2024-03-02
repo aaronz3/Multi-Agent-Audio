@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		8D0588BC2B527CE500D77E7D /* PeerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0588BB2B527CE500D77E7D /* PeerConnection.swift */; };
 		8D18D62F2B5CD9E20019781C /* SignalingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D18D62E2B5CD9E20019781C /* SignalingTest.swift */; };
+		8D25708A2B91F0CB00E4047B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8D2570892B91F0CB00E4047B /* LaunchScreen.storyboard */; };
 		8D456E6F2B578D4B008EB384 /* WebRTCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D456E6E2B578D4B008EB384 /* WebRTCMessage.swift */; };
 		8D5F53F12B0C5C9500AE646E /* AudioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5F53F02B0C5C9500AE646E /* AudioApp.swift */; };
 		8D5F53F52B0C5C9600AE646E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D5F53F42B0C5C9600AE646E /* Assets.xcassets */; };
@@ -44,6 +45,7 @@
 /* Begin PBXFileReference section */
 		8D0588BB2B527CE500D77E7D /* PeerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerConnection.swift; sourceTree = "<group>"; };
 		8D18D62E2B5CD9E20019781C /* SignalingTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingTest.swift; sourceTree = "<group>"; };
+		8D2570892B91F0CB00E4047B /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8D456E6E2B578D4B008EB384 /* WebRTCMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCMessage.swift; sourceTree = "<group>"; };
 		8D5F53ED2B0C5C9500AE646E /* AudioGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D5F53F02B0C5C9500AE646E /* AudioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioApp.swift; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 				8DD180272B347F8D00441927 /* Info.plist */,
 				8D5F53F42B0C5C9600AE646E /* Assets.xcassets */,
 				8D5F53F62B0C5C9600AE646E /* Audio.entitlements */,
+				8D2570892B91F0CB00E4047B /* LaunchScreen.storyboard */,
 				8D5F53F02B0C5C9500AE646E /* AudioApp.swift */,
 				8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */,
 				8DAED04F2B70A7BB00F0837A /* Authentication */,
@@ -278,6 +281,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8D25708A2B91F0CB00E4047B /* LaunchScreen.storyboard in Resources */,
 				8D5F53F92B0C5C9600AE646E /* Preview Assets.xcassets in Resources */,
 				8D5F53F52B0C5C9600AE646E /* Assets.xcassets in Resources */,
 			);
@@ -468,6 +472,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AudioGame/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.role-playing-games";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera is not used in this app, but an external api utilizes this.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is used during gameplay.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -476,6 +481,7 @@
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -512,6 +518,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AudioGame/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.role-playing-games";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera is not used in this app, but an external api utilizes this.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is used during gameplay.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -520,6 +527,7 @@
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

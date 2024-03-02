@@ -11,8 +11,10 @@ import WebRTC
 protocol PeerConnectionDelegate: AnyObject {
     
     func didDiscoverLocalCandidate(sendToAgent: String, candidate: RTCIceCandidate)
+    func didReceiveData(data: Data)
     func webRTCClientConnected()
     func webRTCClientDisconnected()
+    
 }
 
 class PeerConnectionFactory {
@@ -31,7 +33,10 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
     @Published var receivingAgentsUUID: String?
     
     private let mediaConstrains = [kRTCMediaConstraintsOfferToReceiveAudio: kRTCMediaConstraintsValueTrue]
-    
+    private var remoteDataChannel: RTCDataChannel?
+    // Although this property seems useless, it is needed in order to send data.
+    private var localDataChannel: RTCDataChannel?
+
     var returnedSDP: Bool = false
     
     unowned var delegate: PeerConnectionDelegate
@@ -85,8 +90,29 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
         let audioTrack = PeerConnectionFactory.factory.audioTrack(with: audioSource, trackId: "audio0")
         
         self.peerConnection.add(audioTrack, streamIds: [streamId])
+
+        // Data
+        if let dataChannel = createDataChannel() {
+            dataChannel.delegate = self
+            self.localDataChannel = dataChannel
+        }
+    }
+    
+    // Create the data channel and provide it to the peer connection instance
+    func createDataChannel() -> RTCDataChannel? {
+        let config = RTCDataChannelConfiguration()
         
-        
+        guard let dataChannel = self.peerConnection.dataChannel(forLabel: "WebRTCData", configuration: config) else {
+            debugPrint("Warning: Couldn't create data channel.")
+            return nil
+        }
+        return dataChannel
+    }
+    
+    func sendData(_ data: Data) {
+        print("NOTE: Sent data \(data)")
+        let buffer = RTCDataBuffer(data: data, isBinary: true)
+        self.remoteDataChannel?.sendData(buffer)
     }
     
     // MARK: SIGNALING
@@ -136,11 +162,13 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
     
     func setTrackEnabled<T: RTCMediaStreamTrack>(_ type: T.Type, isEnabled: Bool) {
         peerConnection.transceivers
-            .compactMap { return $0.sender.track as? T }
-            .forEach { $0.isEnabled = isEnabled }
+            .compactMap { $0.sender.track as? T }
+            .forEach { mediaStreamTrack in
+                mediaStreamTrack.isEnabled = isEnabled
+            }
+        
+        sendData("\(isEnabled)".data(using: .utf8)!)
     }
-    
-    
 }
 
 
@@ -267,6 +295,18 @@ extension PeerConnection: RTCPeerConnectionDelegate {
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didOpen dataChannel: RTCDataChannel) {
-        print("peerConnection did open data channel")
+        print("NOTE: PeerConnection did open data channel")
+        self.remoteDataChannel = dataChannel
     }
 }
+
+extension PeerConnection: RTCDataChannelDelegate {
+    func dataChannelDidChangeState(_ dataChannel: RTCDataChannel) {
+        debugPrint("NOTE: DataChannel did change state: \(dataChannel.readyState)")
+    }
+    
+    func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
+        self.delegate.didReceiveData(data: buffer.data)
+    }
+}
+

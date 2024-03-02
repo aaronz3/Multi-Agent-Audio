@@ -82,13 +82,14 @@ struct AuthenticationView: View {
                 
             } catch AuthenticationError.serverError {
                 serverDown = true
-            } catch let error as URLError where error.code == .notConnectedToInternet {
+            } catch let error as URLError {
                 // Show a view with the option to retry authentication or quit the app
                 // If the retried authentication fails, redisplay the view
                 noInternet = true
             } catch {
                 // Handle all other errors
                 print("DEBUG:", error.localizedDescription)
+                fatalError()
             }
         }
     }

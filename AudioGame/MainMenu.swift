@@ -35,6 +35,7 @@ struct MainMenu: View {
                     isProcessingPlayTask = true
                     self.playVM.signalingClient.setCurrentUserUUID(uuid: GKLocalPlayer.local.playerID)
                     await self.playVM.signalingClient.connect()
+                    
                     isProcessingPlayTask = false
                 }
             }

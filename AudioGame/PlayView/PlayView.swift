@@ -13,7 +13,7 @@ struct PlayView: View {
     @EnvironmentObject var authenticationVM: AuthenticationViewModel
     @EnvironmentObject var playVM: PlayViewModel
     @EnvironmentObject var networkMonitor: NetworkMonitor
-    
+        
     var body: some View {
         
         VStack {
