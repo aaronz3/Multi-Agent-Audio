@@ -11,7 +11,7 @@ import WebRTC
 protocol PeerConnectionDelegate: AnyObject {
     
     func didDiscoverLocalCandidate(sendToAgent: String, candidate: RTCIceCandidate)
-    func didReceiveData(data: Data)
+    func didReceiveData()
     func webRTCClientConnected()
     func webRTCClientDisconnected()
     
@@ -29,14 +29,16 @@ class PeerConnectionFactory {
 //@Observable
 class PeerConnection: NSObject, Identifiable, ObservableObject {
     
-    @Published private var peerConnection: RTCPeerConnection
     @Published var receivingAgentsUUID: String?
+    @Published var receivingAudioLevel: Float = 0.0
     
+    private var peerConnection: RTCPeerConnection
     private let mediaConstrains = [kRTCMediaConstraintsOfferToReceiveAudio: kRTCMediaConstraintsValueTrue]
     private var remoteDataChannel: RTCDataChannel?
     // Although this property seems useless, it is needed in order to send data.
     private var localDataChannel: RTCDataChannel?
-
+    private var monitorAudio = MonitorAudio()
+    
     var returnedSDP: Bool = false
     
     unowned var delegate: PeerConnectionDelegate
@@ -73,6 +75,12 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
         super.init()
         self.createMediaSenders()
         self.peerConnection.delegate = self
+        
+        do {
+            try monitorAudio.setupAudioRecorder()
+        } catch {
+            print("DEBUG: Setup audio recorder was not possible")
+        }
     }
     
     deinit {
@@ -154,10 +162,25 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
     
     func muteAudio() {
         setTrackEnabled(RTCAudioTrack.self, isEnabled: false)
+        
+        do {
+            try monitorAudio.stopMonitoringAudioLevel()
+        } catch {
+            print("DEBUG: Unable to stop monitoring audio level \(error.localizedDescription)")
+        }
     }
     
     func unmuteAudio() {
         setTrackEnabled(RTCAudioTrack.self, isEnabled: true)
+        
+        do {
+            try monitorAudio.startMonitoringAudioLevel { [weak self] audioLevel in
+                self?.sendData("\(audioLevel)".data(using: .utf8)!)
+            }
+        } catch {
+            print("DEBUG: Unable to stop monitoring audio level \(error.localizedDescription)")
+        }
+        
     }
     
     func setTrackEnabled<T: RTCMediaStreamTrack>(_ type: T.Type, isEnabled: Bool) {
@@ -166,8 +189,6 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
             .forEach { mediaStreamTrack in
                 mediaStreamTrack.isEnabled = isEnabled
             }
-        
-        sendData("\(isEnabled)".data(using: .utf8)!)
     }
 }
 
@@ -306,7 +327,18 @@ extension PeerConnection: RTCDataChannelDelegate {
     }
     
     func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
-        self.delegate.didReceiveData(data: buffer.data)
+        
+        guard let stringAudioLevel = String(data: buffer.data, encoding: .utf8) else { return }
+        
+        let floatAudioLevel = (stringAudioLevel as NSString).floatValue
+        
+        DispatchQueue.main.async {
+            self.receivingAudioLevel = floatAudioLevel
+            print("NOTE: receivingAudioLevel is \(self.receivingAudioLevel)")
+        }
+        
+        delegate.didReceiveData()
+
     }
 }
 

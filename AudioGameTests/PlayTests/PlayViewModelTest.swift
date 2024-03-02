@@ -1,6 +1,6 @@
 //
-//  WebRTCViewModelTest.swift
-//  WebRTCViewModelTest
+//  PlayViewModelTest.swift
+//  PlayViewModelTest
 //
 //  Created by Aaron Zheng on 1/20/24.
 //
@@ -9,7 +9,7 @@ import XCTest
 import Combine
 @testable import AudioGame
 
-final class WebRTCViewModelTest: XCTestCase {
+final class PlayViewModelTest: XCTestCase {
     
     var playMV: PlayViewModel! = nil
     var websocket: MockNetworkSocket! = nil

@@ -14,7 +14,7 @@ struct MenuBarView: View {
     @EnvironmentObject var authenticationVM: AuthenticationViewModel
 
     @State private var isLongPressed = false
-    
+
     var body: some View {
         HStack {
             talk()
@@ -27,18 +27,25 @@ struct MenuBarView: View {
             .onLongPressGesture(
                 perform: {},
                 onPressingChanged: { pressed in
-                    if pressed {
-                        self.playVM.unmuteAudio()
-                        isLongPressed.toggle()
-                    } else {
-                        self.playVM.muteAudio()
-                        isLongPressed.toggle()
-                    }
+                    handlePressedTalk(pressed: pressed)
                 }
             )
             .disabled(playVM.disableTalkButton)
     }
 
+    func handlePressedTalk(pressed: Bool) {
+        do {
+            if pressed {
+                self.playVM.unmuteAudio()
+                isLongPressed.toggle()
+            } else {
+                self.playVM.muteAudio()
+                isLongPressed.toggle()
+            }
+        } catch {
+            print("DEBUG: Error in handlePressedTalk \(error.localizedDescription)")
+        }
+    }
 }
 
 //#Preview {

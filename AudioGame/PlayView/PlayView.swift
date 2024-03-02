@@ -26,14 +26,18 @@ struct PlayView: View {
             
             Text("Current user UUID: " + (GKLocalPlayer.local.playerID))
                 .padding(20)
-            
-            Text("Connected via websockets:" + (playVM.signalingConnected ? "✅" : "❌"))
-                .padding(20)
-            
+
             if playVM.signalingConnected {
                 List {
                     ForEach(playVM.peerConnections) {pC in
-                        Text("PC Receiving Agent's UUID:" + (pC.receivingAgentsUUID ?? "nil"))
+                        HStack {
+                            Text("PC Receiving Agent's UUID:" + (pC.receivingAgentsUUID ?? "nil"))
+                            
+                            Rectangle()
+                                .fill(Color.green) // Set the background color of the rectangle to green.
+                                .frame(width: 20, height: 40 * CGFloat(pC.receivingAudioLevel), alignment: .bottom)
+                                
+                        }
                     }
                 }
                 .padding(20)

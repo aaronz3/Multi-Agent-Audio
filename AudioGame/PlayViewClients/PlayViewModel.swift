@@ -57,10 +57,12 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
             print("SUCCESS: Peer connections reset")
         }
     }
-    
-    func didReceiveData(data: Data) {
-        print("NOTE: Received data from other user: \(String(data: data, encoding: .utf8))")
-        
+
+    func didReceiveData() {
+        // We need to trigger an update so we need to remap the array
+        DispatchQueue.main.async {
+            self.peerConnections = self.peerConnections.map { $0 }
+        }
     }
     
     func webSocket(didReceiveData data: Data) async {
@@ -325,7 +327,6 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
     func unmuteAudio() {
         
         print("NOTE: Unmuted audio. There are \(self.peerConnections.count) peer connections")
-        
         for pC in self.peerConnections {
             pC.unmuteAudio()
         }
