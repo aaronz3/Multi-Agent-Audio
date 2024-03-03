@@ -118,7 +118,7 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
     }
     
     func sendData(_ data: Data) {
-        print("NOTE: Sent data \(data)")
+        print("NOTE: Sent audio level data")
         let buffer = RTCDataBuffer(data: data, isBinary: true)
         self.remoteDataChannel?.sendData(buffer)
     }
@@ -164,7 +164,9 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
         setTrackEnabled(RTCAudioTrack.self, isEnabled: false)
         
         do {
-            try monitorAudio.stopMonitoringAudioLevel()
+            try monitorAudio.stopMonitoringAudioLevel { [weak self] in
+                self?.sendData("stop".data(using: .utf8)!)
+            }
         } catch {
             print("DEBUG: Unable to stop monitoring audio level \(error.localizedDescription)")
         }
@@ -330,13 +332,19 @@ extension PeerConnection: RTCDataChannelDelegate {
         
         guard let stringAudioLevel = String(data: buffer.data, encoding: .utf8) else { return }
         
-        let floatAudioLevel = (stringAudioLevel as NSString).floatValue
-        
-        DispatchQueue.main.async {
-            self.receivingAudioLevel = floatAudioLevel
-            print("NOTE: receivingAudioLevel is \(self.receivingAudioLevel)")
+        if stringAudioLevel == "stop" {
+            
+            receivingAudioLevel = 0.0
+            
+        } else {
+            let floatAudioLevel = (stringAudioLevel as NSString).floatValue
+            
+            DispatchQueue.main.async {
+                self.receivingAudioLevel = floatAudioLevel
+                print("NOTE: receivingAudioLevel is \(self.receivingAudioLevel)")
+            }
         }
-        
+            
         delegate.didReceiveData()
 
     }

@@ -33,9 +33,17 @@ struct PlayView: View {
                         HStack {
                             Text("PC Receiving Agent's UUID:" + (pC.receivingAgentsUUID ?? "nil"))
                             
-                            Rectangle()
-                                .fill(Color.green) // Set the background color of the rectangle to green.
-                                .frame(width: 20, height: 40 * CGFloat(pC.receivingAudioLevel), alignment: .bottom)
+                            Spacer()
+                            
+                            VStack {
+                                
+                                Rectangle()
+                                    .fill(Color.green) // Set the background color of the rectangle to green.
+                                    .frame(width: 20, height: 40 * CGFloat(pC.receivingAudioLevel), alignment: .bottom)
+                                
+                            }
+                            
+                            Spacer()
                                 
                         }
                     }

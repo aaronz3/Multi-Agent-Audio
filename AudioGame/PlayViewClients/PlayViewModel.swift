@@ -59,7 +59,7 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
     }
 
     func didReceiveData() {
-        // We need to trigger an update so we need to remap the array
+        // We need to trigger an update to ths UI so we need to remap the array
         DispatchQueue.main.async {
             self.peerConnections = self.peerConnections.map { $0 }
         }

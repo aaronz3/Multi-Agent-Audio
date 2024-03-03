@@ -40,17 +40,18 @@ class MonitorAudio {
             if self.audioRecorder!.isRecording {
                 audioRecorder!.updateMeters()
                 let averagePower = audioRecorder!.averagePower(forChannel: 0)
-                let normalizedPower = (averagePower + 160.0) / 160.0
+                let normalizedPower = (averagePower + 96.0) / 96.0
                 callback(normalizedPower)
             }
         }
         
     }
     
-    func stopMonitoringAudioLevel() throws {
+    func stopMonitoringAudioLevel(callback: @escaping () -> ()) throws {
         guard audioRecorder != nil else { throw NSError() }
 
         audioRecorder!.stop()
+        callback()
     }
 
 }
