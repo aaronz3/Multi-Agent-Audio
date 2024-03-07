@@ -136,8 +136,8 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
                 }
                 
                 let sdp = try await pC.answer()
-                
-                try await self.signalingClient.send(toUUID: iceCandidate.fromUUID, message: .sdp(sdp))
+                let sdpMessage = SessionDescription(fromUUID: signalingClient.currentUserUUID, toUUID: iceCandidate.fromUUID, data: sdp)
+                try await self.signalingClient.send(message: .sdp(sdpMessage))
                 
                 // TODO: Only for testing purposes
                 self.processDataCompletion?("Answer \(iceCandidate.fromUUID)")
@@ -222,8 +222,8 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
                 }
                 
                 let sdp = try await self.peerConnections[0].offer()
-                
-                try await self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
+                let sdpMessage = SessionDescription(fromUUID: signalingClient.currentUserUUID, toUUID: justConnectedUser.userUUID, data: sdp)
+                try await self.signalingClient.send(message: .sdp(sdpMessage))
                 
                 self.peerConnections[0].returnedSDP = true
                 
@@ -236,8 +236,8 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
                 }
                 
                 let sdp = try await pC.offer()
-                
-                try await self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
+                let sdpMessage = SessionDescription(fromUUID: signalingClient.currentUserUUID, toUUID: justConnectedUser.userUUID, data: sdp)
+                try await self.signalingClient.send(message: .sdp(sdpMessage))
                 
                 self.peerConnections[0].returnedSDP = true
             
@@ -294,7 +294,8 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
     func didDiscoverLocalCandidate(sendToAgent: String, candidate: RTCIceCandidate) {
         print("NOTE: Discovered local candidate. Send candidate to: \(sendToAgent).")
         Task {
-            try await self.signalingClient.send(toUUID: sendToAgent, message: .candidate(candidate))
+            let candidateMessage = IceCandidate(fromUUID: signalingClient.currentUserUUID, toUUID: sendToAgent, from: candidate)
+            try await self.signalingClient.send(message: .candidate(candidateMessage))
         }
     }
     

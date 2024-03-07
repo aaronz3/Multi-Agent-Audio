@@ -84,6 +84,11 @@ async function handleWSMessage(room: Room, message: string, incomingClient: WebS
 
 		switch (parsedMessage.type) {
 
+			case "StartGame":
+
+
+			case "EndGame":
+
 			case "JustConnectedUser":
 				const incomingClientUUID: string = parsedMessage.payload["userUUID"];
 				await receivedJustConnectedUser(room, Buffer.from(message), incomingClient, incomingClientUUID);
@@ -102,7 +107,7 @@ async function handleWSMessage(room: Room, message: string, incomingClient: WebS
 				break;
 
 			default:
-				console.log("Unknown message type:", parsedMessage.type);
+				console.log(`${getCurrentTime()} [Room ${room.roomID}] Unknown message type: ${parsedMessage.type}`);
 		}
 
 	} catch (error) {

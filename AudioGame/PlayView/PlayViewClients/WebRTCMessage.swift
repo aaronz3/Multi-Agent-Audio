@@ -8,15 +8,17 @@
 import Foundation
 import WebRTC
 
+// Mainly for encoding and decoding messages
 enum WebRTCMessage {
     case roomCharacteristic(RoomCharacteristics)
     
+    case justConnectedUser(JustConnectedUser)
+    // Only receive this message and never send it
+    case justDisconnectedUser(DisconnectedUser)
+    case startGame
+    case endGame
     case sdp(SessionDescription)
     case candidate(IceCandidate)
-    case justConnectedUser(JustConnectedUser)
-    case justDisconnectedUser(DisconnectedUser)
-    
-    case ping
 }
 
 extension WebRTCMessage: Codable {
@@ -56,8 +58,11 @@ extension WebRTCMessage: Codable {
         case .justDisconnectedUser(let disconnectedUser):
             try container.encode(disconnectedUser, forKey: .payload)
             try container.encode(String(describing: DisconnectedUser.self), forKey: .type)
-        case .ping:
-            try container.encode(String(describing: Ping.self), forKey: .type)
+        case .startGame:
+            try container.encode("StartGame", forKey: .type)
+        case .endGame:
+            try container.encode("EndGame", forKey: .type)
+        // Only for testing purposes, can be deleted in production
         case .roomCharacteristic(_):
             print("DEBUG: Encoding room characteristic")
         }
@@ -83,8 +88,6 @@ struct JustConnectedUser: Codable {
 struct DisconnectedUser: Codable {
     let userUUID: String
 }
-
-struct Ping: Codable { }
 
 struct IceCandidate: Codable {
     let fromUUID: String

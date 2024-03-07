@@ -39,10 +39,7 @@ struct AuthenticationView: View {
                     .onAppear(perform: HandleAudioSession.checkAudioPermission)
                     
             } else if serverDown {
-                Text("Server Down")
-                    .font(.title)
-                    .scaleEffect(1)
-            
+                handleServerDownView()
             } else if noInternet || networkMonitor.previousNetwork == nil {
                 handleNoInternetView()
                 
@@ -53,6 +50,18 @@ struct AuthenticationView: View {
         .onAppear {
             networkMonitor.start()
             handleOnAppear()
+        }
+    }
+    
+    func handleServerDownView() -> some View {
+        VStack {
+            Text("Server Down")
+                .font(.title)
+                .scaleEffect(1)
+            
+            Button("Retry") {
+                handleOnAppear()
+            }
         }
     }
     
@@ -86,7 +95,12 @@ struct AuthenticationView: View {
             } catch let error as URLError {
                 // Show a view with the option to retry authentication or quit the app
                 // If the retried authentication fails, redisplay the view
-                noInternet = true
+                if error.errorCode == -1004 {
+                    serverDown = true
+                } else {
+                    noInternet = true
+                }
+
             } catch {
                 // Handle all other errors
                 print("DEBUG:", error.localizedDescription)

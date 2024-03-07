@@ -15,13 +15,6 @@ protocol WebSocketProviderDelegate: AnyObject {
     func webSocket(didReceiveData data: Data) async
 }
 
-enum SendMessageType {
-    case sdp(RTCSessionDescription)
-    case candidate(RTCIceCandidate)
-    case justConnectedUser(String)
-    case disconnectedUser(String)
-}
-
 class SignalingClient: NSObject {
     
     let url: URL
@@ -72,7 +65,8 @@ class SignalingClient: NSObject {
         self.webSocket?.resume()
                 
         // Send the "JustConnectedUser" message to the server
-        try await self.send(toUUID: nil, message: .justConnectedUser(self.currentUserUUID))
+        let justConnectedUser = JustConnectedUser(userUUID: self.currentUserUUID)
+        try await self.send(message: .justConnectedUser(justConnectedUser))
         
         // Alert the data model that a websocket connection has been established
         self.delegate?.webSocketDidConnect()
@@ -108,47 +102,34 @@ class SignalingClient: NSObject {
         
     }
     
-    func send(toUUID: String?, message: SendMessageType) async throws {
+    func send(message: WebRTCMessage) async throws {
         
-        var sendMessageContext: WebRTCMessage
         var printMessageType: String
         
         switch message {
-        case .sdp(let sdp):
-            guard let toUUID else {
-                print("DEBUG: No final destination user id")
-                throw URLError(.unknown)
-            }
+        case .sdp: printMessageType = "SDP"
             
-            sendMessageContext = WebRTCMessage.sdp(SessionDescription(fromUUID: self.currentUserUUID, toUUID: toUUID, data: sdp))
-            printMessageType = "SDP"
+        case .candidate: printMessageType = "candidate"
             
-        case .candidate(let iceCandidate):
-            guard let toUUID else {
-                print("DEBUG: No final destination user id")
-                throw URLError(.unknown)
-            }
+        case .justConnectedUser: printMessageType = "current connected agent's UUID"
             
-            sendMessageContext = WebRTCMessage.candidate(IceCandidate(fromUUID: self.currentUserUUID, toUUID: toUUID, from: iceCandidate))
-            printMessageType = "candidate"
+        case .justDisconnectedUser: printMessageType = "current disconnected agent's UUID"
+        
+        case .startGame: printMessageType = "start game"
             
-        case .justConnectedUser(let uuid):
-            
-            sendMessageContext = WebRTCMessage.justConnectedUser(JustConnectedUser(userUUID: uuid))
-            printMessageType = "current connected agent's UUID"
-            
-        case .disconnectedUser(let uuid) :
-            
-            sendMessageContext = WebRTCMessage.justDisconnectedUser(DisconnectedUser(userUUID: uuid))
-            printMessageType = "current disconnected agent's UUID"
+        case .endGame: printMessageType = "end game"
+
+        default: 
+            printMessageType = "unknown message"
+            print("DEBUG: Sending unknown object.")
         }
         
-        try await encodeToSend(sendMessageContext: sendMessageContext, printMessageType: printMessageType)
+        try await encodeToSend(message: message, printMessage: printMessageType)
     }
     
     
-    func encodeToSend(sendMessageContext: WebRTCMessage, printMessageType: String) async throws {
-        let dataMessage = try self.encoder.encode(sendMessageContext)
+    func encodeToSend(message: WebRTCMessage, printMessage: String) async throws {
+        let dataMessage = try self.encoder.encode(message)
         
         guard self.webSocket != nil else {
             print("NOTE: Websocket object in signaling class is nil.")
@@ -157,7 +138,7 @@ class SignalingClient: NSObject {
         
         try await self.webSocket?.send(.data(dataMessage))
         
-        print("SUCCESS: Successfully sent \(printMessageType)")
+        print("SUCCESS: Successfully sent \(printMessage)")
     }
     
     func disconnect() {

@@ -28,7 +28,13 @@ struct MenuBarView: View {
     
     func gameState() -> some View {
         Button("Start Game") {
-            // Tell server to 
+            Task {
+                do {
+                    try await playVM.signalingClient.send(message: .startGame)
+                } catch {
+                    print("DEBUG: Failed to send start game")
+                }
+            }
         }
     }
     
