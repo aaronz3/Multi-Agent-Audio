@@ -15,7 +15,7 @@ class AccessUserDataDynamoDB {
     constructor(region) {
         this.client = new client_dynamodb_1.DynamoDBClient({ region: region });
     }
-    getData(userID) {
+    getUserData(userID) {
         return __awaiter(this, void 0, void 0, function* () {
             const input = {
                 "Key": {
@@ -36,19 +36,19 @@ class AccessUserDataDynamoDB {
                 }
             }
             catch (e) {
-                throw new Error(`DEBUG: Error in getData ${e}`);
+                throw new Error(`DEBUG: Error in getUserData ${e}`);
             }
         });
     }
-    putKeyItemInUserData(userID, itemkey, keyvalue) {
+    putKeyItemInUserData(userID, key, value) {
         return __awaiter(this, void 0, void 0, function* () {
             const input = {
                 "Item": {
                     "User-ID": {
                         "S": `${userID}`
                     },
-                    [itemkey]: {
-                        "S": `${keyvalue}`
+                    [key]: {
+                        "S": `${value}`
                     }
                 },
                 "TableName": "User-Data"
@@ -59,6 +59,34 @@ class AccessUserDataDynamoDB {
             }
             catch (e) {
                 throw new Error(`DEBUG: Error in putKeyItemInUserData ${e}`);
+            }
+        });
+    }
+    updateItemInUserData(userID, key, value) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const params = {
+                TableName: "User-Data",
+                Key: {
+                    "User-ID": {
+                        "S": `${userID}`
+                    }
+                },
+                UpdateExpression: "SET #key = :value",
+                ExpressionAttributeNames: {
+                    "#key": key
+                },
+                ExpressionAttributeValues: {
+                    ":value": {
+                        S: value
+                    }
+                }
+            };
+            const command = new client_dynamodb_1.UpdateItemCommand(params);
+            try {
+                yield this.client.send(command);
+            }
+            catch (e) {
+                throw new Error(`DEBUG: Error in updateItemInUserData ${e}`);
             }
         });
     }

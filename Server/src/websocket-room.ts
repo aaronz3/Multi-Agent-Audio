@@ -1,6 +1,13 @@
 import WebSocket from "ws";
 import { roomsContainer, getCurrentTime, type Room, Message } from "./global-properties";
 import { IncomingMessage } from "http";
+import { AccessUserDataDynamoDB } from "./access-dynamodb";
+
+require("dotenv").config({ path: '../.env' });
+const databaseRegion = process.env.DYNAMODB_BUCKET_REGION!;
+
+const accessDB = new AccessUserDataDynamoDB(databaseRegion)
+
 // SECTION: MODIFY ROOM PROPERTIES
 // -----------------------
 
@@ -16,8 +23,8 @@ export function modifyRoom(room: Room) {
 		// Initialize the 'isAlive' property for the new client
 		room.clientIsAliveMap.set(incomingClient, true);
 
-		// Handle message
-		incomingClient.on("message", (message) => {
+		// Send the message to other users
+		incomingClient.on("message", async (message) => {
 			
 			// Ensure message is treated as a string regardless of its original type
 			let messageAsString: string;
@@ -28,7 +35,7 @@ export function modifyRoom(room: Room) {
 				return;
 			}
 
-			handleWSMessage(room, messageAsString, incomingClient);
+			await handleWSMessage(room, messageAsString, incomingClient);
 		});
 
 		// Handle websocket closure
@@ -71,17 +78,15 @@ export function modifyRoom(room: Room) {
 // SECTION: HANDLE WEBSOCKET MESSAGE EVENT
 // -----------------------
 
-function handleWSMessage(room: Room, message: string, incomingClient: WebSocket) {
+async function handleWSMessage(room: Room, message: string, incomingClient: WebSocket) {
 	try {
 		const parsedMessage: Message = JSON.parse(message);
 
 		switch (parsedMessage.type) {
 
 			case "JustConnectedUser":
-
-				// This is the current user's UUID
 				const incomingClientUUID: string = parsedMessage.payload["userUUID"];
-				receivedJustConnectedUser(room, Buffer.from(message), incomingClient, incomingClientUUID);
+				await receivedJustConnectedUser(room, Buffer.from(message), incomingClient, incomingClientUUID);
 				break;
 
 			case "SessionDescription":
@@ -92,7 +97,6 @@ function handleWSMessage(room: Room, message: string, incomingClient: WebSocket)
 
 			case "IceCandidate":
 				const forwardingAddressForICECandidate: string = parsedMessage.payload["toUUID"];
-
 				console.log(`${getCurrentTime()} [Room ${room.roomID}] Sent candidate to ${forwardingAddressForICECandidate}`);
 				sendTo(room, forwardingAddressForICECandidate, Buffer.from(message));
 				break;
@@ -109,7 +113,7 @@ function handleWSMessage(room: Room, message: string, incomingClient: WebSocket)
 // SECTION: RECEVIED MESSAGE TYPES
 // -----------------------
 
-export function receivedJustConnectedUser(room: Room, message: Buffer, incomingClient: WebSocket, incomingClientUUID: string) {
+export async function receivedJustConnectedUser(room: Room, message: Buffer, incomingClient: WebSocket, incomingClientUUID: string) {
 
 	// If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance.
 	// The is important for when a user disconnects from the internet and reconnects to the internet and to the server.
@@ -127,6 +131,10 @@ export function receivedJustConnectedUser(room: Room, message: Buffer, incomingC
 	// Send the agent's UUID to agents that previously connected
 	sendToAllButSelf(room, message, incomingClient, incomingClientUUID);
 
+	// Save the room id onto the user's previous room property on the database
+	await accessDB.updateItemInUserData(incomingClientUUID, "Previous-Room", room.roomID)
+
+	// FOR TESTING PURPOSES:
 	// Send the room id to the agent that connected
 	const roomID: string = JSON.stringify({ type: "RoomCharacteristics", payload: { roomID: room.roomID } });
 	sendTo(room, incomingClientUUID, Buffer.from(roomID))
@@ -163,16 +171,15 @@ export function handleWSClosure(room: Room, incomingClient: WebSocket) {
 
 	const disconnectedUserUUID = deleteKeyValuePairAndReturnKey(room.agentUUIDConnection, incomingClient);
 
-	if (disconnectedUserUUID === undefined) {
-		console.log(`${getCurrentTime()} [Room ${room.roomID}] DEBUG: The server tried to delete a client that was not in agentUUIDConnection array`);
-
-	} else {
+	if (disconnectedUserUUID) {
 		console.log(`${getCurrentTime()} [Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
 		console.log(`${getCurrentTime()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
 
 		// Let the other agents know that an user has disconnected from the server
 		const disconnectionUserMessage: string = JSON.stringify({ type: "DisconnectedUser", payload: { userUUID: disconnectedUserUUID } });
 		sendToAllButSelf(room, Buffer.from(disconnectionUserMessage), incomingClient, disconnectedUserUUID);
+	} else {
+		console.log(`${getCurrentTime()} [Room ${room.roomID}] DEBUG: The server tried to delete a client that was not in agentUUIDConnection array`);
 	}
 
 	if (room.agentUUIDConnection.size == 0) {

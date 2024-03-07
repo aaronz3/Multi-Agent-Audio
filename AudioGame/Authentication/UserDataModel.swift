@@ -13,14 +13,20 @@ struct User: Codable {
     var name: String
 }
 
-// Downloading user data
-struct AttributeValue: Codable {
-    let S: String?
-}
-
 struct UserRecord: Codable {
     var userName: String
     var userId: String
+    let previousRoom: String? = nil
+    
+    enum CodingKeys: String, CodingKey {
+        case userName = "User-Name"
+        case userId = "User-ID"
+        case previousRoom = "Previous-Room"
+    }
+    
+    struct AttributeValue: Codable {
+        let S: String?
+    }
     
     init(userName: String, userId: String) {
         self.userName = userName
@@ -32,16 +38,13 @@ struct UserRecord: Codable {
         let userNameAttribute = try container.decode(AttributeValue.self, forKey: .userName)
         let userIdAttribute = try container.decode(AttributeValue.self, forKey: .userId)
         
-        guard let userName = userNameAttribute.S, let userId = userIdAttribute.S else {
+        guard let userName = userNameAttribute.S,
+              let userId = userIdAttribute.S
+        else {
             throw DecodingError.dataCorruptedError(forKey: .userName, in: container, debugDescription: "Expected String value")
         }
         
         self.userName = userName
         self.userId = userId
-    }
-    
-    enum CodingKeys: String, CodingKey {
-        case userName = "User-Name"
-        case userId = "User-ID"
     }
 }

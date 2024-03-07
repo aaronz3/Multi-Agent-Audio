@@ -17,8 +17,7 @@ final class PlayViewModelTest: XCTestCase {
     
     override func setUp() {
         websocket = MockNetworkSocket()
-        signalingClient = SignalingClient(url: defaultSignalingServerUrl, websocket: websocket)
-        signalingClient.setCurrentUserUUID(uuid: "THISUSER")
+        signalingClient = SignalingClient(url: defaultSignalingServerUrl, currentUserUUID: "THISUSER", websocket: websocket)
         playMV = PlayViewModel(signalingClient: signalingClient)
     }
     

@@ -25,6 +25,7 @@ enum SendMessageType {
 class SignalingClient: NSObject {
     
     let url: URL
+    var currentUserUUID: String
     var webSocket: NetworkSocket?
     
     var delegate: WebSocketProviderDelegate?
@@ -32,11 +33,17 @@ class SignalingClient: NSObject {
     let decoder = JSONDecoder()
     let encoder = JSONEncoder()
     
-    var currentUserUUID: String?
-    
-    init(url: URL, websocket: NetworkSocket? = nil) {
+    init(url: URL, currentUserUUID: String, websocket: NetworkSocket? = nil) {
         
-        self.url = url
+        // Create url components to send the current agent's uuid to the server
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+
+        // Create a query item and append it to url components
+        let queryItemUUID = URLQueryItem(name: "uuid", value: currentUserUUID)
+        components.queryItems = [queryItemUUID]
+        
+        self.currentUserUUID = currentUserUUID
+        self.url = components.url!
         super.init()
         
         handleWebsocketForTesting(websocket: websocket)
@@ -44,10 +51,6 @@ class SignalingClient: NSObject {
     
     deinit {
         print("NOTE: Signaling Client deinitialized")
-    }
-    
-    func setCurrentUserUUID(uuid: String) {
-        self.currentUserUUID = uuid
     }
     
     func handleWebsocketForTesting(websocket: NetworkSocket?) {
@@ -62,32 +65,26 @@ class SignalingClient: NSObject {
         }
     }
     
-    func connect(websocket: NetworkSocket? = nil) async {
+    func connect(websocket: NetworkSocket? = nil) async throws {
         
         handleWebsocketForTesting(websocket: websocket)
         
         self.webSocket?.resume()
-        
-        // Send over the current agent's UUID to other agents
-        guard let uuid = self.currentUserUUID else {
-            print("DEBUG: No UUID")
-            return
-        }
-        
+                
         // Send the "JustConnectedUser" message to the server
-        await self.send(toUUID: nil, message: .justConnectedUser(uuid))
+        try await self.send(toUUID: nil, message: .justConnectedUser(self.currentUserUUID))
         
         // Alert the data model that a websocket connection has been established
         self.delegate?.webSocketDidConnect()
         
         // Start receiving messages from the server in a separate task
         Task {
-            await self.readMessage()
+            try await self.readMessage()
         }
     }
     
     
-    func readMessage() async {
+    func readMessage() async throws {
         do {
             let message = try await self.webSocket?.receive()
             
@@ -95,7 +92,7 @@ class SignalingClient: NSObject {
             case .data(let data):
                 await self.delegate?.webSocket(didReceiveData: data)
                 
-                await readMessage() // recursively calling readMessage
+                try await readMessage() // recursively calling readMessage
                 
             case .string(let string):
                 print("DEBUG: Got string", string)
@@ -106,16 +103,12 @@ class SignalingClient: NSObject {
             
         } catch {
             print("DEBUG: Error in readMessage block.", error.localizedDescription)
+            throw URLError(.unknown)
         }
         
     }
     
-    func send(toUUID: String?, message: SendMessageType) async {
-        
-        guard let userUUID = self.currentUserUUID else {
-            print("DEBUG: No current user id")
-            return
-        }
+    func send(toUUID: String?, message: SendMessageType) async throws {
         
         var sendMessageContext: WebRTCMessage
         var printMessageType: String
@@ -124,19 +117,19 @@ class SignalingClient: NSObject {
         case .sdp(let sdp):
             guard let toUUID else {
                 print("DEBUG: No final destination user id")
-                return
+                throw URLError(.unknown)
             }
             
-            sendMessageContext = WebRTCMessage.sdp(SessionDescription(fromUUID: userUUID, toUUID: toUUID, data: sdp))
+            sendMessageContext = WebRTCMessage.sdp(SessionDescription(fromUUID: self.currentUserUUID, toUUID: toUUID, data: sdp))
             printMessageType = "SDP"
             
         case .candidate(let iceCandidate):
             guard let toUUID else {
                 print("DEBUG: No final destination user id")
-                return
+                throw URLError(.unknown)
             }
             
-            sendMessageContext = WebRTCMessage.candidate(IceCandidate(fromUUID: userUUID, toUUID: toUUID, from: iceCandidate))
+            sendMessageContext = WebRTCMessage.candidate(IceCandidate(fromUUID: self.currentUserUUID, toUUID: toUUID, from: iceCandidate))
             printMessageType = "candidate"
             
         case .justConnectedUser(let uuid):
@@ -150,27 +143,21 @@ class SignalingClient: NSObject {
             printMessageType = "current disconnected agent's UUID"
         }
         
-        await encodeToSend(sendMessageContext: sendMessageContext, printMessageType: printMessageType)
+        try await encodeToSend(sendMessageContext: sendMessageContext, printMessageType: printMessageType)
     }
     
     
-    func encodeToSend(sendMessageContext: WebRTCMessage, printMessageType: String) async {
-        do {
-            let dataMessage = try self.encoder.encode(sendMessageContext)
-            
-            guard self.webSocket != nil else {
-                print("NOTE: Websocket object in signaling class is nil.")
-                return
-            }
-            
-            try await self.webSocket?.send(.data(dataMessage))
-            
-            print("SUCCESS: Successfully sent \(printMessageType)")
-            
+    func encodeToSend(sendMessageContext: WebRTCMessage, printMessageType: String) async throws {
+        let dataMessage = try self.encoder.encode(sendMessageContext)
+        
+        guard self.webSocket != nil else {
+            print("NOTE: Websocket object in signaling class is nil.")
+            throw URLError(.badServerResponse)
         }
-        catch {
-            print("DEBUG: Error in encodeToSend. Could not encode \(printMessageType) or failed to send data.", error.localizedDescription)
-        }
+        
+        try await self.webSocket?.send(.data(dataMessage))
+        
+        print("SUCCESS: Successfully sent \(printMessageType)")
     }
     
     func disconnect() {

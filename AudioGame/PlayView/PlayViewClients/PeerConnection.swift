@@ -37,6 +37,7 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
     private var remoteDataChannel: RTCDataChannel?
     // Although this property seems useless, it is needed in order to send data.
     private var localDataChannel: RTCDataChannel?
+    private var audioConnectionConfirmation: Bool = false
     private var monitorAudio = MonitorAudio()
     
     var returnedSDP: Bool = false
@@ -52,14 +53,13 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
         
         config.continualGatheringPolicy = .gatherContinually
         
-        
         let constraints = RTCMediaConstraints(mandatoryConstraints: nil,
                                               optionalConstraints: nil)
         
         guard let peerConnection = PeerConnectionFactory.factory.peerConnection(with: config, constraints: constraints, delegate: nil) else {
             fatalError("Could not create new RTCPeerConnection")
         }
-        
+
         self.peerConnection = peerConnection
         
         /* The class that takes this delegate will manage the PeerConnectionDelegate functions */
@@ -165,7 +165,7 @@ class PeerConnection: NSObject, Identifiable, ObservableObject {
         
         do {
             try monitorAudio.stopMonitoringAudioLevel { [weak self] in
-                self?.sendData("stop".data(using: .utf8)!)
+                self?.sendData("Stop Audio".data(using: .utf8)!)
             }
         } catch {
             print("DEBUG: Unable to stop monitoring audio level \(error.localizedDescription)")
@@ -330,14 +330,14 @@ extension PeerConnection: RTCDataChannelDelegate {
     
     func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
         
-        guard let stringAudioLevel = String(data: buffer.data, encoding: .utf8) else { return }
+        guard let dataString = String(data: buffer.data, encoding: .utf8) else { return }
         
-        if stringAudioLevel == "stop" {
+        if dataString == "Stop Audio" {
             
             receivingAudioLevel = 0.0
             
         } else {
-            let floatAudioLevel = (stringAudioLevel as NSString).floatValue
+            let floatAudioLevel = (dataString as NSString).floatValue
             
             DispatchQueue.main.async {
                 self.receivingAudioLevel = floatAudioLevel

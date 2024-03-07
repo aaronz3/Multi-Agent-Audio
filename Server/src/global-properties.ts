@@ -8,6 +8,15 @@ export const roomsContainer = {
 	addRoom: (room: Room) => { rooms.push(room); },
 	setRooms: (newRooms: Room[]) => { rooms = newRooms; },
 	getRoomsLength: (): number => { return rooms.length; },
+	// Helper function to get a room given the room id
+	getRoom: (roomUUID: string): Room | undefined => { 
+		for (const room of rooms) {
+			if (room.roomID == roomUUID) {
+				return room
+			}
+		}
+		return undefined
+	},
 	// Helper function to delete the room from the global rooms array if there are no players in the room
 	deleteRoomFromRooms: (roomToRemove: Room) => {
 		// Find the index of the room to remove
@@ -24,7 +33,7 @@ export const roomsContainer = {
 		let noRoomsAvailable = true;
 	
 		for (const room of rooms) {
-			if (room.agentUUIDConnection.size > 0 && room.agentUUIDConnection.size < maxNumberOfPlayers) {
+			if (0 < room.agentUUIDConnection.size && room.agentUUIDConnection.size < maxNumberOfPlayers) {
 				noRoomsAvailable = false;
 				// Exit the loop as soon as an available room is found
 				break;  
@@ -37,7 +46,7 @@ export const roomsContainer = {
 };
 
 // Every room can only have these many players
-export const maxNumberOfPlayers = 6;
+export const maxNumberOfPlayers = 2;
 
 // Structure of an instance of a room will be as follows 
 export class Room {

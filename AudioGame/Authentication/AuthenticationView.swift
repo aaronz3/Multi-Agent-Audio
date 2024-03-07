@@ -35,7 +35,8 @@ struct AuthenticationView: View {
                 && networkMonitor.previousNetwork != nil {
                 
                 // Display the main menu
-                MainMenu()
+                MainMenuView()
+                    .onAppear(perform: HandleAudioSession.checkAudioPermission)
                     
             } else if serverDown {
                 Text("Server Down")

@@ -21,8 +21,7 @@ final class SignalingTest: XCTestCase {
               //  URL(string: "ws://172.20.10.7:3000")!
         
         websocket = MockNetworkSocket()
-        signalingClient = SignalingClient(url: url, websocket: websocket)
-        signalingClient.setCurrentUserUUID(uuid: "THISUSER")
+        signalingClient = SignalingClient(url: url, currentUserUUID: "THISUSER", websocket: websocket)
     }
     
     override func tearDown() {
@@ -60,7 +59,7 @@ final class SignalingTest: XCTestCase {
             }
         }
         
-        await signalingClient.connect(websocket: websocket)
+        try await signalingClient.connect(websocket: websocket)
 
         signalingClient.disconnect()
 

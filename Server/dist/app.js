@@ -36,13 +36,20 @@ const port = process.env.PORT;
 // SECTION: ADDING WEBSOCKETS TO HTTP(S)
 // -----------------------
 // Upgrade the HTTP(S) server to a WebSocket server on '/play' route
-server.on("upgrade", (request, socket, head) => {
+server.on("upgrade", (request, socket, head) => __awaiter(void 0, void 0, void 0, function* () {
     // Check if request.url and request.headers.host is defined
     if (request.url && request.headers.host) {
-        const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
+        const url = new URL(request.url, `http://${request.headers.host}`);
+        const pathname = url.pathname;
         // Handle the play path 
         if (pathname === "/play") {
-            (0, matchmaking_1.handlePlay)(request, socket, head);
+            try {
+                yield (0, matchmaking_1.handlePlay)(request, socket, head, url);
+            }
+            catch (_a) {
+                console.log("DEBUG: Error in upgrading to /play");
+                return;
+            }
         }
         // Handle other paths here
     }
@@ -52,18 +59,19 @@ server.on("upgrade", (request, socket, head) => {
         console.log("DEBUG: some part of request was undefined");
         socket.destroy();
     }
-});
+}));
 // SECTION: USER ID DATA UPLOADED TO SERVER
 // -----------------------
-// Get necessary user details when login
+// Get necessary user details when login and respond to client
 app.get("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // User data may return undefined to specifically signal that the user data does not exist
         const data = yield (0, authentication_1.handleGetUserData)(req.query);
         if (data) {
             res.json(data);
         }
         else {
-            // No data found for userID, send a 404 Not Found response
+            // No data found for userID, send a 404 response
             res.status(404).json({ message: "User data not found" });
         }
     }
@@ -71,7 +79,7 @@ app.get("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void
         res.status(500).send(e);
     }
 }));
-// Update the database
+// Update the database and respond to client
 app.post("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield (0, authentication_1.handleSetUserData)(req.body);

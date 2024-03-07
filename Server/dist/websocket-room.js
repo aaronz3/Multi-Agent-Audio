@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -6,6 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteKeyValuePairAndReturnKey = exports.handleWSClosure = exports.receivedJustConnectedUser = exports.modifyRoom = void 0;
 const ws_1 = __importDefault(require("ws"));
 const global_properties_1 = require("./global-properties");
+const access_dynamodb_1 = require("./access-dynamodb");
+require("dotenv").config({ path: '../.env' });
+const databaseRegion = process.env.DYNAMODB_BUCKET_REGION;
+const accessDB = new access_dynamodb_1.AccessUserDataDynamoDB(databaseRegion);
 // SECTION: MODIFY ROOM PROPERTIES
 // -----------------------
 // Update agentUUIDConnection of room
@@ -16,8 +29,8 @@ function modifyRoom(room) {
         console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] Client connected from IP: ${req.socket.remoteAddress}. Total connected clients: ${wss.clients.size}.`);
         // Initialize the 'isAlive' property for the new client
         room.clientIsAliveMap.set(incomingClient, true);
-        // Handle message
-        incomingClient.on("message", (message) => {
+        // Send the message to other users
+        incomingClient.on("message", (message) => __awaiter(this, void 0, void 0, function* () {
             // Ensure message is treated as a string regardless of its original type
             let messageAsString;
             if (Buffer.isBuffer(message)) {
@@ -27,8 +40,8 @@ function modifyRoom(room) {
                 console.log(`DEBUG: Unhandled message type ${message}`);
                 return;
             }
-            handleWSMessage(room, messageAsString, incomingClient);
-        });
+            yield handleWSMessage(room, messageAsString, incomingClient);
+        }));
         // Handle websocket closure
         incomingClient.on("close", () => {
             handleWSClosure(room, incomingClient);
@@ -64,50 +77,62 @@ exports.modifyRoom = modifyRoom;
 // SECTION: HANDLE WEBSOCKET MESSAGE EVENT
 // -----------------------
 function handleWSMessage(room, message, incomingClient) {
-    try {
-        const parsedMessage = JSON.parse(message);
-        switch (parsedMessage.type) {
-            case "JustConnectedUser":
-                // This is the current user's UUID
-                const incomingClientUUID = parsedMessage.payload["userUUID"];
-                receivedJustConnectedUser(room, Buffer.from(message), incomingClient, incomingClientUUID);
-                break;
-            case "SessionDescription":
-                const forwardingAddressForSDP = parsedMessage.payload["toUUID"];
-                console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] Sent SDP to ${forwardingAddressForSDP}`);
-                sendTo(room, forwardingAddressForSDP, Buffer.from(message));
-                break;
-            case "IceCandidate":
-                const forwardingAddressForICECandidate = parsedMessage.payload["toUUID"];
-                console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] Sent candidate to ${forwardingAddressForICECandidate}`);
-                sendTo(room, forwardingAddressForICECandidate, Buffer.from(message));
-                break;
-            default:
-                console.log("Unknown message type:", parsedMessage.type);
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const parsedMessage = JSON.parse(message);
+            switch (parsedMessage.type) {
+                case "JustConnectedUser":
+                    // This is the current user's UUID
+                    const incomingClientUUID = parsedMessage.payload["userUUID"];
+                    try {
+                        yield receivedJustConnectedUser(room, Buffer.from(message), incomingClient, incomingClientUUID);
+                    }
+                    catch (_a) {
+                        console.log("DEBUG: Error in receivedJustConnectedUser");
+                    }
+                    break;
+                case "SessionDescription":
+                    const forwardingAddressForSDP = parsedMessage.payload["toUUID"];
+                    console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] Sent SDP to ${forwardingAddressForSDP}`);
+                    sendTo(room, forwardingAddressForSDP, Buffer.from(message));
+                    break;
+                case "IceCandidate":
+                    const forwardingAddressForICECandidate = parsedMessage.payload["toUUID"];
+                    console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] Sent candidate to ${forwardingAddressForICECandidate}`);
+                    sendTo(room, forwardingAddressForICECandidate, Buffer.from(message));
+                    break;
+                default:
+                    console.log("Unknown message type:", parsedMessage.type);
+            }
         }
-    }
-    catch (error) {
-        console.error("Error parsing message:", error);
-    }
+        catch (error) {
+            console.error("Error parsing message:", error);
+        }
+    });
 }
 // SECTION: RECEVIED MESSAGE TYPES
 // -----------------------
 function receivedJustConnectedUser(room, message, incomingClient, incomingClientUUID) {
-    // If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance.
-    // The is important for when a user disconnects from the internet and reconnects to the internet and to the server.
-    if (room.agentUUIDConnection.has(incomingClientUUID)) {
-        const agentWebsocket = room.agentUUIDConnection.get(incomingClientUUID);
-        handleWSClosure(room, agentWebsocket);
-        console.log(`NOTE: Deleted ${incomingClientUUID} client from room.agentUUIDConnection.`);
-    }
-    // Save current user's UUID into a dictionary on the server
-    room.agentUUIDConnection.set(incomingClientUUID, incomingClient);
-    console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
-    // Send the agent's UUID to agents that previously connected
-    sendToAllButSelf(room, message, incomingClient, incomingClientUUID);
-    // Send the room id to the agent that connected
-    const roomID = JSON.stringify({ type: "RoomCharacteristics", payload: { roomID: room.roomID } });
-    sendTo(room, incomingClientUUID, Buffer.from(roomID));
+    return __awaiter(this, void 0, void 0, function* () {
+        // If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance.
+        // The is important for when a user disconnects from the internet and reconnects to the internet and to the server.
+        if (room.agentUUIDConnection.has(incomingClientUUID)) {
+            const agentWebsocket = room.agentUUIDConnection.get(incomingClientUUID);
+            handleWSClosure(room, agentWebsocket);
+            console.log(`NOTE: Deleted ${incomingClientUUID} client from room.agentUUIDConnection.`);
+        }
+        // Save current user's UUID into a dictionary on the server
+        room.agentUUIDConnection.set(incomingClientUUID, incomingClient);
+        console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
+        // Send the agent's UUID to agents that previously connected
+        sendToAllButSelf(room, message, incomingClient, incomingClientUUID);
+        // Save the room id onto the user's previous room property on the database
+        yield accessDB.updateItemInUserData(incomingClientUUID, "Previous-Room", room.roomID);
+        // FOR TESTING PURPOSES:
+        // Send the room id to the agent that connected
+        const roomID = JSON.stringify({ type: "RoomCharacteristics", payload: { roomID: room.roomID } });
+        sendTo(room, incomingClientUUID, Buffer.from(roomID));
+    });
 }
 exports.receivedJustConnectedUser = receivedJustConnectedUser;
 // SECTION: HELPERS TO RELAY MESSAGES 

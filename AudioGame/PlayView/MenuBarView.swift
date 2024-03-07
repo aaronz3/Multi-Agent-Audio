@@ -14,10 +14,21 @@ struct MenuBarView: View {
     @EnvironmentObject var authenticationVM: AuthenticationViewModel
 
     @State private var isLongPressed = false
-
+    
+    
     var body: some View {
         HStack {
+            
+            gameState()
+            
             talk()
+            
+        }
+    }
+    
+    func gameState() -> some View {
+        Button("Start Game") {
+            // Tell server to 
         }
     }
     

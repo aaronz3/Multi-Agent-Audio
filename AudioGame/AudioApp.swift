@@ -34,6 +34,7 @@ let port = "3000"
 let loginUrl = URL(string: "http://\(hostAddress):\(port)/login")!
 
 let defaultSignalingServerUrl = URL(string: "ws://\(hostAddress):\(port)/play")!
+
 //let defaultSignalingServerUrl = URL(string: "ws://172.20.10.7:3000/play")!
 
 let defaultIceServers = ["stun:stun.l.google.com:19302",

@@ -15,16 +15,18 @@ export async function handleGetUserData(requestQuery: ParsedQs): Promise<Record<
     }
     
     try {
-        return await accessDB.getData(requestQuery.uuid)
+        return await accessDB.getUserData(requestQuery.uuid)
     } catch(e) {
         throw new Error(`DEBUG: Error in handleGetUserData ${e}`)
     }
 }
 
-// Set the user data
+// Set the user data 
 export async function handleSetUserData(requestBody: UserData) {
     try {
+        // Set the user name to whatever is provided by the client
         await accessDB.putKeyItemInUserData(requestBody.id, "User-Name", requestBody.name)
+
     } catch(e) {
         throw new Error(`DEBUG: Error in handleSetUserData ${e}`)
     }

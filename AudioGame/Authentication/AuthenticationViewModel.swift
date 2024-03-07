@@ -86,12 +86,13 @@ class AuthenticationViewModel: ObservableObject {
             return
         }
         
+        print(String(data: data, encoding: .utf8)!)
+        
         do {
-            let userRecord = try JSONDecoder().decode(UserRecord.self, from: data)
-            self.userData = userRecord
+            self.userData = try JSONDecoder().decode(UserRecord.self, from: data)
             
         } catch {
-            print("DEBUG: Error in getUserData \(error.localizedDescription)")
+            print("DEBUG: Error in decoding user data \(error.localizedDescription)")
             throw AuthenticationError.decodingError
         }
     }
@@ -106,7 +107,7 @@ class AuthenticationViewModel: ObservableObject {
             throw AuthenticationError.httpResponseError
         }
         
-        // If the user data is not found
+        // If the user data is not found, create a new user
         if httpResponse.statusCode == 404 {
             try await handleNewUserOnboarding(data: data)
             // If there is a server error
@@ -131,7 +132,7 @@ class AuthenticationViewModel: ObservableObject {
         
         if let message = jsonResponse["message"], message == "User data not found" {
             
-            // Send default values to server
+            // Set a random username for a user and send it to the server
             let randomName = getRandomUsername()
             try await sendUserData(name: randomName)
             
@@ -172,7 +173,7 @@ class AuthenticationViewModel: ObservableObject {
         }
         
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await URLSession.shared.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                 print("DEBUG: HTTP Request failed")

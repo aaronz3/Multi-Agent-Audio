@@ -18,8 +18,24 @@ struct PlayView: View {
         
         VStack {
             Spacer()
-            Text("Room number: " + (playVM.roomCharacteristics?.roomID ?? "Unavaliable"))
-                .padding(20)
+            HStack {
+                
+                Button("", systemImage: "chevron.backward") {
+                    playVM.signalingClient.disconnect()
+                    playVM.webSocketDidDisconnect()
+                }
+                
+                Spacer()
+                
+                Text("Room: " + (playVM.roomCharacteristics?.roomID ?? "Unavaliable"))
+                    .padding(20)
+                    .frame(alignment: .center)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            
+            
             
             Text("Current user name: " + (authenticationVM.userData?.userName)!)
                 .padding(20)
@@ -27,29 +43,27 @@ struct PlayView: View {
             Text("Current user UUID: " + (GKLocalPlayer.local.playerID))
                 .padding(20)
 
-            if playVM.signalingConnected {
-                List {
-                    ForEach(playVM.peerConnections) {pC in
-                        HStack {
-                            Text("PC Receiving Agent's UUID:" + (pC.receivingAgentsUUID ?? "nil"))
+            List {
+                ForEach(playVM.peerConnections) {pC in
+                    HStack {
+                        Text("PC Receiving Agent's UUID:" + (pC.receivingAgentsUUID ?? "nil"))
+                        
+                        Spacer()
+                        
+                        VStack {
                             
-                            Spacer()
+                            Rectangle()
+                                .fill(Color.green) // Set the background color of the rectangle to green.
+                                .frame(width: 20, height: 40 * CGFloat(pC.receivingAudioLevel), alignment: .bottom)
                             
-                            VStack {
-                                
-                                Rectangle()
-                                    .fill(Color.green) // Set the background color of the rectangle to green.
-                                    .frame(width: 20, height: 40 * CGFloat(pC.receivingAudioLevel), alignment: .bottom)
-                                
-                            }
-                            
-                            Spacer()
-                                
                         }
+                        
+                        Spacer()
+                            
                     }
                 }
-                .padding(20)
             }
+            .padding(20)
             
             MenuBarView()
             Spacer()
@@ -57,12 +71,9 @@ struct PlayView: View {
         .padding(20)
         .onAppear {
             networkMonitor.start()
-            HandleAudioSession.checkAudioPermission()
             HandleAudioSession.speakerOn()
         }
         
     }
-    
-    
 }
 

@@ -18,7 +18,7 @@
 		8D6515492B5C0E6D00B6843A /* PlayViewModelTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6515482B5C0E6D00B6843A /* PlayViewModelTest.swift */; };
 		8D6515502B5C0F1C00B6843A /* TestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D65154F2B5C0F1C00B6843A /* TestData.swift */; };
 		8D6D26182B5A205B00BB5891 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */; };
-		8DAE8FD22B9185BF00F36131 /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAE8FD12B9185BF00F36131 /* MainMenu.swift */; };
+		8DAE8FD22B9185BF00F36131 /* MainMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAE8FD12B9185BF00F36131 /* MainMenuView.swift */; };
 		8DAED04C2B70A79600F0837A /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAED04B2B70A79600F0837A /* AuthenticationView.swift */; };
 		8DAED04E2B70A7B700F0837A /* AuthenticationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAED04D2B70A7B700F0837A /* AuthenticationViewModel.swift */; };
 		8DB166F62B528D9A003E6AB5 /* SignalingClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB166F52B528D9A003E6AB5 /* SignalingClient.swift */; };
@@ -59,7 +59,7 @@
 		8D6515482B5C0E6D00B6843A /* PlayViewModelTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayViewModelTest.swift; sourceTree = "<group>"; };
 		8D65154F2B5C0F1C00B6843A /* TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestData.swift; sourceTree = "<group>"; };
 		8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
-		8DAE8FD12B9185BF00F36131 /* MainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
+		8DAE8FD12B9185BF00F36131 /* MainMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuView.swift; sourceTree = "<group>"; };
 		8DAED04B2B70A79600F0837A /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
 		8DAED04D2B70A7B700F0837A /* AuthenticationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationViewModel.swift; sourceTree = "<group>"; };
 		8DB166F52B528D9A003E6AB5 /* SignalingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingClient.swift; sourceTree = "<group>"; };
@@ -133,9 +133,8 @@
 				8D5F53F02B0C5C9500AE646E /* AudioApp.swift */,
 				8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */,
 				8DAED04F2B70A7BB00F0837A /* Authentication */,
-				8DAE8FD12B9185BF00F36131 /* MainMenu.swift */,
+				8DAE8FD12B9185BF00F36131 /* MainMenuView.swift */,
 				8DCE11162B55750500E0AC8A /* PlayView */,
-				8DEEDEBE2B4BA80800ECA1A5 /* PlayViewClients */,
 				8D5F53F72B0C5C9600AE646E /* Preview Content */,
 			);
 			path = AudioGame;
@@ -182,6 +181,7 @@
 			children = (
 				8DEEDEBC2B4BA80300ECA1A5 /* PlayView.swift */,
 				8DDD3F632B54F98D00DFFA31 /* MenuBarView.swift */,
+				8DEEDEBE2B4BA80800ECA1A5 /* PlayViewClients */,
 			);
 			path = PlayView;
 			sourceTree = "<group>";
@@ -317,7 +317,7 @@
 				8D0588BC2B527CE500D77E7D /* PeerConnection.swift in Sources */,
 				8DAED04C2B70A79600F0837A /* AuthenticationView.swift in Sources */,
 				8D6D26182B5A205B00BB5891 /* NetworkMonitor.swift in Sources */,
-				8DAE8FD22B9185BF00F36131 /* MainMenu.swift in Sources */,
+				8DAE8FD22B9185BF00F36131 /* MainMenuView.swift in Sources */,
 				8D5FC6292B66058200276752 /* MockURLSessionWebSocketTask.swift in Sources */,
 				8DDD3F622B54CA0200DFFA31 /* AudioControls.swift in Sources */,
 				8DEB383B2B80583700C6FF97 /* UserDataModel.swift in Sources */,

@@ -137,7 +137,7 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
                 
                 let sdp = try await pC.answer()
                 
-                await self.signalingClient.send(toUUID: iceCandidate.fromUUID, message: .sdp(sdp))
+                try await self.signalingClient.send(toUUID: iceCandidate.fromUUID, message: .sdp(sdp))
                 
                 // TODO: Only for testing purposes
                 self.processDataCompletion?("Answer \(iceCandidate.fromUUID)")
@@ -194,7 +194,7 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
                 
             } else {
                 print("DEBUG: UUID fell through everything")
-                return
+                fatalError()
             }
             
             // TODO: Only for testing purposes
@@ -223,7 +223,7 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
                 
                 let sdp = try await self.peerConnections[0].offer()
                 
-                await self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
+                try await self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
                 
                 self.peerConnections[0].returnedSDP = true
                 
@@ -237,14 +237,14 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
                 
                 let sdp = try await pC.offer()
                 
-                await self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
+                try await self.signalingClient.send(toUUID: justConnectedUser.userUUID, message: .sdp(sdp))
                 
                 self.peerConnections[0].returnedSDP = true
             
             
             } else {
                 print("DEBUG: Fell through everything")
-                return
+                fatalError()
             }
             
             print("SUCCESS: Received UUID from \(justConnectedUser.userUUID) and OFFERED sdp")
@@ -294,7 +294,7 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
     func didDiscoverLocalCandidate(sendToAgent: String, candidate: RTCIceCandidate) {
         print("NOTE: Discovered local candidate. Send candidate to: \(sendToAgent).")
         Task {
-            await self.signalingClient.send(toUUID: sendToAgent, message: .candidate(candidate))
+            try await self.signalingClient.send(toUUID: sendToAgent, message: .candidate(candidate))
         }
     }
     
