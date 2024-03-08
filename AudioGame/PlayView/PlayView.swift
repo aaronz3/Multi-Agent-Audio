@@ -26,7 +26,7 @@ struct PlayView: View {
             Text("Current user UUID: " + (GKLocalPlayer.local.playerID))
                 .padding(20)
             
-            Text("Current game state: " + ((playVM.roomCharacteristics?.gameState.rawValue) ?? "unknown"))
+            Text("Current game state: " + ((playVM.roomCharacteristics.gameState?.rawValue) ?? "unknown"))
             
             handleListingAgentsView()
             
@@ -45,7 +45,7 @@ struct PlayView: View {
         List {
             ForEach(playVM.peerConnections) {pC in
                 HStack {
-                    if let hostUUID = playVM.roomCharacteristics?.hostUUID,
+                    if let hostUUID = playVM.roomCharacteristics.hostUUID,
                        let agentUUID = pC.receivingAgentsUUID,
                         agentUUID == hostUUID {
                         Image(systemName: "star.fill")
@@ -78,7 +78,7 @@ struct PlayView: View {
             Button("", systemImage: "chevron.backward") {
                 Task {
                     do {
-                        let leaveMessage = DisconnectedUser(userUUID: playVM.signalingClient.currentUserUUID)
+                        let leaveMessage = DisconnectedUser(userUUID: playVM.signalingClient.currentUserUUID, newHost: nil)
                         try await playVM.signalingClient.send(message: .justDisconnectedUser(leaveMessage))
                         playVM.signalingClient.disconnect()
                         playVM.webSocketDidDisconnect()
@@ -90,7 +90,7 @@ struct PlayView: View {
             
             Spacer()
             
-            Text("Room: " + (playVM.roomCharacteristics?.roomID ?? "Unavaliable"))
+            Text("Room: " + (playVM.roomCharacteristics.roomID ?? "Unavailable"))
                 .padding(20)
                 .frame(alignment: .center)
             

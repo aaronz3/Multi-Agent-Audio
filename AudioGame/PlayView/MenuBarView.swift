@@ -18,7 +18,7 @@ struct MenuBarView: View {
     
     var body: some View {
         HStack {
-            if let hostUUID = playVM.roomCharacteristics?.hostUUID,
+            if let hostUUID = playVM.roomCharacteristics.hostUUID,
                 hostUUID == playVM.signalingClient.currentUserUUID {
                 gameState()
             }
@@ -33,13 +33,13 @@ struct MenuBarView: View {
             Task {
                 do {
                     try await playVM.signalingClient.send(message: .startGame)
-                    playVM.roomCharacteristics?.gameState = .InGame
+                    playVM.roomCharacteristics.gameState = .InGame
                 } catch {
                     print("DEBUG: Failed to send start game")
                 }
             }
         }
-        .disabled(playVM.roomCharacteristics?.gameState == .InGame)
+        .disabled(playVM.roomCharacteristics.gameState == .InGame)
     }
     
     func talk() -> some View {

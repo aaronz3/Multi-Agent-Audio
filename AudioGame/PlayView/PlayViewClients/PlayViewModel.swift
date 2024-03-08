@@ -289,6 +289,13 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
         }
         
         print("NOTE: Sucessfully removed and appended new peer connection instance. There are \(self.peerConnections.count) peerconnection instances")
+        
+        // If the user that disconnected is the host, set the hostUUID to the new host
+        if let newHost = disconnectedUser.newHost {
+            await MainActor.run {
+                roomCharacteristics.hostUUID = newHost
+            }
+        }
     }
     
     func returnAllReceivingAgentsUUID() -> [String] {

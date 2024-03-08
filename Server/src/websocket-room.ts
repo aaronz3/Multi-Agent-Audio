@@ -130,34 +130,14 @@ async function receivedLeaveGame(room: Room, incomingClient: WebSocket, incoming
 	// Other clients should know about the disconnection
 	handleWSClosure(room, incomingClient)
 
-	// Check if the disconnected user is the host
-	const roomData = await accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID)
-
-	if (roomData === undefined) {
-		throw new Error("DEBUG: Roomdata not defined")
-	}
-
-	const host = roomData["Host"].S
-	const users = roomData["Users"].SS
-
-	// If incoming user is the host
-	if (users && host && incomingClientUUID === host) {
-		// Find a user that is not the host
-		for (const user of users) {
-			if (user !== incomingClientUUID) {
-				// Update the host to some user
-				await accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Host", user)
-			}
-		}
-	}
-
 	// Delete the client from the Users attribute
 	await accessDB.deleteItemsInSSInTable("Room-Data", "Room-ID", room.roomID, "Users", [incomingClientUUID])
 }
 
 async function receivedEndGame(room: Room) {
 	
-	// Delete the previous room entry for all users in the room
+	// Delete the previous room entry in User-Data for all users in the room.
+	// This allows users to join other rooms when they leave since the game has terminated.
 	const roomData = await accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID)
 	
 	if (roomData === undefined) {
@@ -171,9 +151,9 @@ async function receivedEndGame(room: Room) {
 			await accessDB.deleteItemInColumnInTable("User-Data", "User-ID", user, "Previous-Room")
 		}
 	}
-	
-	// Delete the room entry
-	await accessDB.deleteItemInTable("Room-Data", "Room-ID", room.roomID)
+
+	// Update the room database about the room's status
+	await accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Game-State", "InLobby")
 }
 
 async function receivedStartGame(room: Room, incomingClient: WebSocket) {
@@ -213,7 +193,7 @@ async function receivedStartGame(room: Room, incomingClient: WebSocket) {
 export async function receivedJustConnectedUser(room: Room, message: Buffer, incomingClient: WebSocket, incomingClientUUID: string) {
 
 	// If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance.
-	// The is important for when a user disconnects from the internet and reconnects to the internet and to the server.
+	// This is important for when a user disconnects from the internet and reconnects to the internet and to the server.
 	if (room.agentUUIDConnection.has(incomingClientUUID)) {
 		const agentWebsocket: WebSocket = room.agentUUIDConnection.get(incomingClientUUID)!
 		
@@ -281,7 +261,7 @@ function sendTo(room: Room, agent: string, message: Buffer) {
 // -----------------------
 
 // (1) Tell other users that a user is disconnecting (2) Delete the user from the room
-export function handleWSClosure(room: Room, incomingClient: WebSocket) {
+export async function handleWSClosure(room: Room, incomingClient: WebSocket) {
 
 	// Given the websocket client and the room, return the UUID of the disconnected user.
 	const disconnectedUserUUID = deleteKeyValuePairAndReturnKey(room.agentUUIDConnection, incomingClient);
@@ -291,10 +271,40 @@ export function handleWSClosure(room: Room, incomingClient: WebSocket) {
 		console.log(`${getCurrentTime()} [Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
 		console.log(`${getCurrentTime()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
 
+		const roomData = await accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID)
+		if (roomData === undefined) {
+			throw new Error("DEBUG: Unable to get room data")
+		}
+
+		const host = roomData["Host"].S
+		const users = roomData["Users"].SS
+		if (users === undefined || host === undefined) {
+			throw new Error("DEBUG: Some part of room data is undefined")
+		}
+
+		let disconnectedMessagePayload
+
+		// If the host has disconnected
+		if (disconnectedUserUUID === host) {
+
+			// Find a user that is not the host
+			for (const user of users) {
+				if (user !== disconnectedUserUUID) {
+
+					disconnectedMessagePayload = { userUUID: disconnectedUserUUID, newHost: user }	
+					// Update the host to some user
+					await accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Host", user)
+					break
+				}
+			}			
+		} else {
+			disconnectedMessagePayload = { userUUID: disconnectedUserUUID }
+		}
+					
 		// Let the other agents know that an user has disconnected from the server
-		const disconnectionUserMessage: string = JSON.stringify({ type: "DisconnectedUser", payload: { userUUID: disconnectedUserUUID } });
+		const disconnectionUserMessage: string = JSON.stringify({ type: "DisconnectedUser", payload: disconnectedMessagePayload });
 		sendToAllButSelf(room, Buffer.from(disconnectionUserMessage), incomingClient, disconnectedUserUUID);
-	
+		
 	// If the uuid does not exist within the room
 	} else {
 		console.log(`${getCurrentTime()} [Room ${room.roomID}] DEBUG: The server tried to delete a client that was not in agentUUIDConnection array`);
@@ -303,6 +313,9 @@ export function handleWSClosure(room: Room, incomingClient: WebSocket) {
 	if (room.agentUUIDConnection.size === 0) {
 		// Handle deleting the room here. If the room does not exist, no errors are thrown
 		roomsContainer.deleteRoomFromRooms(room);
+
+		// Delete the room entry
+		await accessDB.deleteItemInTable("Room-Data", "Room-ID", room.roomID)
 	}
 }
 

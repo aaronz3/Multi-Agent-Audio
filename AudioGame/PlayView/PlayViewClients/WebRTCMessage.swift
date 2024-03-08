@@ -95,6 +95,7 @@ struct JustConnectedUser: Codable {
 
 struct DisconnectedUser: Codable {
     let userUUID: String
+    let newHost: String?
 }
 
 struct IceCandidate: Codable {

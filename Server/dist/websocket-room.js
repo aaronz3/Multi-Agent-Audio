@@ -120,30 +120,14 @@ function receivedLeaveGame(room, incomingClient, incomingClientUUID) {
     return __awaiter(this, void 0, void 0, function* () {
         // Other clients should know about the disconnection
         handleWSClosure(room, incomingClient);
-        // Check if the disconnected user is the host
-        const roomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
-        if (roomData === undefined) {
-            throw new Error("DEBUG: Roomdata not defined");
-        }
-        const host = roomData["Host"].S;
-        const users = roomData["Users"].SS;
-        // If incoming user is the host
-        if (users && host && incomingClientUUID === host) {
-            // Find a user that is not the host
-            for (const user of users) {
-                if (user !== incomingClientUUID) {
-                    // Update the host to some user
-                    yield accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Host", user);
-                }
-            }
-        }
         // Delete the client from the Users attribute
         yield accessDB.deleteItemsInSSInTable("Room-Data", "Room-ID", room.roomID, "Users", [incomingClientUUID]);
     });
 }
 function receivedEndGame(room) {
     return __awaiter(this, void 0, void 0, function* () {
-        // Delete the previous room entry for all users in the room
+        // Delete the previous room entry in User-Data for all users in the room.
+        // This allows users to join other rooms when they leave since the game has terminated.
         const roomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
         if (roomData === undefined) {
             throw new Error("DEBUG: Roomdata not defined");
@@ -154,8 +138,8 @@ function receivedEndGame(room) {
                 yield accessDB.deleteItemInColumnInTable("User-Data", "User-ID", user, "Previous-Room");
             }
         }
-        // Delete the room entry
-        yield accessDB.deleteItemInTable("Room-Data", "Room-ID", room.roomID);
+        // Update the room database about the room's status
+        yield accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Game-State", "InLobby");
     });
 }
 function receivedStartGame(room, incomingClient) {
@@ -188,7 +172,7 @@ function receivedStartGame(room, incomingClient) {
 function receivedJustConnectedUser(room, message, incomingClient, incomingClientUUID) {
     return __awaiter(this, void 0, void 0, function* () {
         // If the incoming client already exists in room.agentUUIDConnection, terminate the previous instance.
-        // The is important for when a user disconnects from the internet and reconnects to the internet and to the server.
+        // This is important for when a user disconnects from the internet and reconnects to the internet and to the server.
         if (room.agentUUIDConnection.has(incomingClientUUID)) {
             const agentWebsocket = room.agentUUIDConnection.get(incomingClientUUID);
             handleWSClosure(room, agentWebsocket);
@@ -243,24 +227,53 @@ function sendTo(room, agent, message) {
 // -----------------------
 // (1) Tell other users that a user is disconnecting (2) Delete the user from the room
 function handleWSClosure(room, incomingClient) {
-    // Given the websocket client and the room, return the UUID of the disconnected user.
-    const disconnectedUserUUID = deleteKeyValuePairAndReturnKey(room.agentUUIDConnection, incomingClient);
-    // If the uuid exists within the room
-    if (disconnectedUserUUID) {
-        console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
-        console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
-        // Let the other agents know that an user has disconnected from the server
-        const disconnectionUserMessage = JSON.stringify({ type: "DisconnectedUser", payload: { userUUID: disconnectedUserUUID } });
-        sendToAllButSelf(room, Buffer.from(disconnectionUserMessage), incomingClient, disconnectedUserUUID);
-        // If the uuid does not exist within the room
-    }
-    else {
-        console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] DEBUG: The server tried to delete a client that was not in agentUUIDConnection array`);
-    }
-    if (room.agentUUIDConnection.size === 0) {
-        // Handle deleting the room here. If the room does not exist, no errors are thrown
-        global_properties_1.roomsContainer.deleteRoomFromRooms(room);
-    }
+    return __awaiter(this, void 0, void 0, function* () {
+        // Given the websocket client and the room, return the UUID of the disconnected user.
+        const disconnectedUserUUID = deleteKeyValuePairAndReturnKey(room.agentUUIDConnection, incomingClient);
+        // If the uuid exists within the room
+        if (disconnectedUserUUID) {
+            console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
+            console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
+            const roomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
+            if (roomData === undefined) {
+                throw new Error("DEBUG: Unable to get room data");
+            }
+            const host = roomData["Host"].S;
+            const users = roomData["Users"].SS;
+            if (users === undefined || host === undefined) {
+                throw new Error("DEBUG: Some part of room data is undefined");
+            }
+            let disconnectedMessagePayload;
+            // If the host has disconnected
+            if (disconnectedUserUUID === host) {
+                // Find a user that is not the host
+                for (const user of users) {
+                    if (user !== disconnectedUserUUID) {
+                        disconnectedMessagePayload = { userUUID: disconnectedUserUUID, newHost: user };
+                        // Update the host to some user
+                        yield accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Host", user);
+                        break;
+                    }
+                }
+            }
+            else {
+                disconnectedMessagePayload = { userUUID: disconnectedUserUUID };
+            }
+            // Let the other agents know that an user has disconnected from the server
+            const disconnectionUserMessage = JSON.stringify({ type: "DisconnectedUser", payload: disconnectedMessagePayload });
+            sendToAllButSelf(room, Buffer.from(disconnectionUserMessage), incomingClient, disconnectedUserUUID);
+            // If the uuid does not exist within the room
+        }
+        else {
+            console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] DEBUG: The server tried to delete a client that was not in agentUUIDConnection array`);
+        }
+        if (room.agentUUIDConnection.size === 0) {
+            // Handle deleting the room here. If the room does not exist, no errors are thrown
+            global_properties_1.roomsContainer.deleteRoomFromRooms(room);
+            // Delete the room entry
+            yield accessDB.deleteItemInTable("Room-Data", "Room-ID", room.roomID);
+        }
+    });
 }
 exports.handleWSClosure = handleWSClosure;
 // Helper function to delete the user that left the room
