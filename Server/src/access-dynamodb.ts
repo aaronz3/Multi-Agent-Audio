@@ -1,4 +1,9 @@
-import { AttributeValue, DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { AttributeValue, DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
+
+// Define a type that describes the structure of your object
+type DynamoItem = {
+	[key: string]: { "S": string } | { "SS": string[] }; // Add other types as needed
+};
 
 export class AccessUserDataDynamoDB {
 
@@ -8,21 +13,23 @@ export class AccessUserDataDynamoDB {
 		this.client = new DynamoDBClient({ region: region });
 	}
 
-	async getUserData(userID: string): Promise<Record<string, AttributeValue> | undefined> {
+	async getDataInTable(tableName: string, partitionKey: string, partitionValue: string): Promise<Record<string, AttributeValue> | undefined> {
 
 		const input = {
 			"Key": {
-				"User-ID": {
-					"S": `${userID}`
+				[partitionKey]: {
+					"S": `${partitionValue}`
 				}
 			},
-			"TableName": "User-Data",
+			"TableName": tableName,
 		};
 
 		const command = new GetItemCommand(input);
 
 		try {
 			const results = await this.client.send(command);
+			
+			console.log(`Get in ${tableName}`)
 
 			if (results.Item) {
 				return results.Item;
@@ -30,40 +37,79 @@ export class AccessUserDataDynamoDB {
 				return undefined;
 			}
 		} catch (e) {
-			throw new Error(`DEBUG: Error in getUserData ${e}`);
+			throw new Error(`DEBUG: Error in getDataInTable ${e}`);
 		}
 	}
 
-	async putKeyItemInUserData(userID: string, key: string, value: string) {
+	async putItemInTable(tableName: string, partitionKey: string, partitionValue: string, item: DynamoItem) {
+
+		// const input = {
+		// 	"Item": {
+		// 		[partitionKey]: {
+		// 			"S": partitionValue
+		// 		},
+		// 		[key]: {
+		// 			"S": value
+		// 		}
+		// 	},
+		// 	"TableName": tableName
+		// };
+
+		// Prepare the item for DynamoDB format
+		const dynamoItem: DynamoItem = {};
+
+		// Set the partition key's value 
+		dynamoItem[partitionKey] = { "S": partitionValue }
+
+		// Set the other values
+		for (const key in item) {
+			dynamoItem[key] = item[key]; // Assuming all values are strings for simplicity
+		}
 
 		const input = {
-			"Item": {
-				"User-ID": {
-					"S": `${userID}`
-				},
-				[key]: {
-					"S": `${value}`
-				}
-			},
-			"TableName": "User-Data"
+			"TableName": tableName,
+			"Item": dynamoItem
 		};
 
 		const command = new PutItemCommand(input);
 
 		try {
-			await this.client.send(command);
+			await this.client.send(command).then(() => { console.log(`Putted in ${tableName}`) });
 		} catch (e) {
-			throw new Error(`DEBUG: Error in putKeyItemInUserData ${e}`);
+			throw new Error(`DEBUG: Error in putItemInTable ${e}`);
 		}
 	}
 
-	async updateItemInUserData(userID: string, key: string, value: string) {
+	async putItemsInTable(tableName: string, partitionKey: string, partitionValue: string, key: string, values: [string]) {
+
+		const input = {
+			"Item": {
+				[partitionKey]: {
+					"S": partitionValue
+				},
+				[key]: {
+					"SS": values
+				}
+			},
+			"TableName": tableName
+		};
+
+		const command = new PutItemCommand(input);
+
+		try {
+			await this.client.send(command).then(() => { console.log(`Putted ${tableName}'s ${key} to ${values}`) });
+		} catch (e) {
+			throw new Error(`DEBUG: Error in putItemsInTable ${e}`);
+		}
+	}
+
+	async updateItemInTable(tableName: string, partitionKey: string, partitionValue: string, key: string, value: string) {
 
 		const params = {
-			TableName: "User-Data",
+			TableName: tableName,
 			Key: {
-				"User-ID": {
-					"S": `${userID}`
+				[partitionKey]: {
+					"S": partitionValue
 				}
 			},
 			UpdateExpression: "SET #key = :value",
@@ -81,9 +127,118 @@ export class AccessUserDataDynamoDB {
 		const command = new UpdateItemCommand(params);
 
 		try {
-			await this.client.send(command);
+			await this.client.send(command).then(() => { console.log(`Updated ${tableName}'s ${key} to ${value}`) })
 		} catch (e) {
-			throw new Error(`DEBUG: Error in updateItemInUserData ${e}`);
+			throw new Error(`DEBUG: Error in updateItemInTable ${e}`);
+		}
+	}
+
+	async updateItemsInTable(tableName: string, partitionKey: string, partitionValue: string, key: string, values: [string]) {
+
+		const params = {
+			TableName: tableName,
+			Key: {
+				[partitionKey]: {
+					"S": partitionValue
+				}
+			},
+			UpdateExpression: "ADD #key :value",
+			ExpressionAttributeNames: {
+				"#key": key
+			},
+			ExpressionAttributeValues: {
+				":value": {
+					SS: values
+				}
+			}
+		};
+
+		const command = new UpdateItemCommand(params);
+
+		try {
+			await this.client.send(command).then(() => { console.log(`Added ${tableName}'s ${key} to ${values}`) });
+		} catch (e) {
+			throw new Error(`DEBUG: Error in updateItemsInTable ${e}`);
+		}
+	}
+
+	async deleteItemInTable(tableName: string, partitionKey: string, partitionValue: string) {
+		// Set the parameters
+		const params = {
+			TableName: tableName,
+			Key: {
+				[partitionKey]: {
+					"S": partitionValue
+				}
+			}
+		};
+
+		try {
+			// Create a DeleteItemCommand with the specified parameters
+			const command = new DeleteItemCommand(params);
+
+			// Send the DeleteItemCommand using the DynamoDB client
+			await this.client.send(command).then(() => { console.log(`Deleted ${tableName}'s entry ${partitionValue}`) });
+
+		} catch (e) {
+			throw new Error(`DEBUG: Error in deleteItemInTable ${e}`);
+		}
+	}
+
+	async deleteItemInColumnInTable(tableName: string, partitionKey: string, partitionValue: string, key: string) {
+		// Set the parameters
+		const params = {
+			TableName: tableName,
+			Key: {
+				[partitionKey]: {
+					S: partitionValue
+				}
+			},
+			UpdateExpression: "REMOVE #key",
+			ExpressionAttributeNames: {
+				"#key": key
+			}
+		};
+
+		try {
+			// Create a DeleteItemCommand with the specified parameters
+			const command = new UpdateItemCommand(params);
+
+			// Send the DeleteItemCommand using the DynamoDB client
+			await this.client.send(command).then(() => { console.log(`Deleted ${tableName}'s cell ${key}`) });
+
+		} catch (e) {
+			throw new Error(`DEBUG: Error in deleteItemInTable ${e}`);
+		}
+	}
+
+	async deleteItemsInSSInTable(tableName: string, partitionKey: string, partitionValue: string, key: string, values: [string]) {
+
+		const params = {
+			TableName: tableName,
+			Key: {
+				[partitionKey]: {
+					"S": partitionValue
+				}
+			},
+			UpdateExpression: "DELETE #key :value",
+			ExpressionAttributeNames: {
+				"#key": key
+			},
+			ExpressionAttributeValues: {
+				":value": {
+					SS: values
+				}
+			}
+
+		};
+
+		const command = new UpdateItemCommand(params);
+
+		try {
+			await this.client.send(command).then(() => { console.log(`Deleted ${tableName}'s ${key} to ${values}`) });
+		} catch (e) {
+			throw new Error(`DEBUG: Error in updateItemsInTable ${e}`);
 		}
 	}
 }

@@ -13,7 +13,6 @@ enum WebRTCMessage {
     case roomCharacteristic(RoomCharacteristics)
     
     case justConnectedUser(JustConnectedUser)
-    // Only receive this message and never send it
     case justDisconnectedUser(DisconnectedUser)
     case startGame
     case endGame
@@ -37,6 +36,8 @@ extension WebRTCMessage: Codable {
             self = .justConnectedUser(try container.decode(JustConnectedUser.self, forKey: .payload))
         case String(describing: DisconnectedUser.self):
             self = .justDisconnectedUser(try container.decode(DisconnectedUser.self, forKey: .payload))
+        case "StartGame":
+            self = .startGame
         default:
             print("DEBUG: Got type a message from the server of type:", type)
             throw DecodeError.unknownType
@@ -78,7 +79,14 @@ extension WebRTCMessage: Codable {
 }
 
 struct RoomCharacteristics: Codable {
-    let roomID: String
+    var roomID: String?
+    var hostUUID: String?
+    var gameState: GameState?
+}
+
+enum GameState: String, Codable {
+    case InGame
+    case InLobby
 }
 
 struct JustConnectedUser: Codable {

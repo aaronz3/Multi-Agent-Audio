@@ -11,7 +11,7 @@ export const roomsContainer = {
 	// Helper function to get a room given the room id
 	getRoom: (roomUUID: string): Room | undefined => { 
 		for (const room of rooms) {
-			if (room.roomID == roomUUID) {
+			if (room.roomID === roomUUID) {
 				return room
 			}
 		}

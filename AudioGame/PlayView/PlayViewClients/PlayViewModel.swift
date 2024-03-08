@@ -12,9 +12,10 @@ import WebRTC
 class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, ObservableObject {
 
     @Published var peerConnections: [PeerConnection] = []
-    @Published var roomCharacteristics: RoomCharacteristics?
+    @Published var roomCharacteristics = RoomCharacteristics(roomID: nil, hostUUID: nil, gameState: nil)
     @Published var signalingConnected = false
     @Published var disableTalkButton = true
+    
     
     var signalingClient: SignalingClient
     
@@ -84,6 +85,8 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
         case .justDisconnectedUser(let disconnectedUser): await self.receivedDisconnectedUser(disconnectedUser: disconnectedUser)
         
         case .roomCharacteristic(let roomCharacteristic): self.receivedRoomData(room: roomCharacteristic)
+        
+        case .startGame: self.receivedStartGame()
             
         default :
             print("DEBUG: Got an unknown message.")
@@ -100,10 +103,19 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
         }
     }
     
+    func receivedStartGame() {
+        DispatchQueue.main.async {
+            self.roomCharacteristics.gameState = .InGame
+        }
+    }
+    
     func receivedRoomData(room: RoomCharacteristics) {
         print("NOTE: room.roomID \(room.roomID)")
         DispatchQueue.main.async {
-            self.roomCharacteristics = RoomCharacteristics(roomID: room.roomID)
+            print("NOTE: receivedRoomData Room data:", room)
+            self.roomCharacteristics.roomID = room.roomID
+            self.roomCharacteristics.hostUUID = room.hostUUID
+            self.roomCharacteristics.gameState = room.gameState            
         }
     }
     

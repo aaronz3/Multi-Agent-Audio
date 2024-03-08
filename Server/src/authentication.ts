@@ -15,7 +15,7 @@ export async function handleGetUserData(requestQuery: ParsedQs): Promise<Record<
     }
     
     try {
-        return await accessDB.getUserData(requestQuery.uuid)
+        return await accessDB.getDataInTable("User-Data", "User-ID", requestQuery.uuid)
     } catch(e) {
         throw new Error(`DEBUG: Error in handleGetUserData ${e}`)
     }
@@ -24,8 +24,14 @@ export async function handleGetUserData(requestQuery: ParsedQs): Promise<Record<
 // Set the user data 
 export async function handleSetUserData(requestBody: UserData) {
     try {
+        
+        // Format of the data to update the database
+        const userNameItem = {
+            "User-Name" : { "S" : requestBody.name }
+        }
+
         // Set the user name to whatever is provided by the client
-        await accessDB.putKeyItemInUserData(requestBody.id, "User-Name", requestBody.name)
+        await accessDB.putItemInTable("User-Data", "User-ID", requestBody.id, userNameItem)
 
     } catch(e) {
         throw new Error(`DEBUG: Error in handleSetUserData ${e}`)

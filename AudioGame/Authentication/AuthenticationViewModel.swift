@@ -85,9 +85,7 @@ class AuthenticationViewModel: ObservableObject {
             try await handleAbnormalGetResponse(data: data, response: response)
             return
         }
-        
-        print(String(data: data, encoding: .utf8)!)
-        
+                
         do {
             self.userData = try JSONDecoder().decode(UserRecord.self, from: data)
             

@@ -43,13 +43,13 @@ export async function handlePlay(request: http.IncomingMessage, socket: internal
 }
 
 // Update rooms array and return a websocket server 
-export async function updateRoomReturnWebSocketServer(uuid: string): Promise<WebSocket.Server | undefined> {
+export async function updateRoomReturnWebSocketServer(uuid: string): Promise<WebSocket.Server> {
 	
 	let userData: Record<string, AttributeValue>
 	
 	// Check the database to see if the user was previously in a game
 	try {
-		const data = await accessDB.getUserData(uuid)
+		const data = await accessDB.getDataInTable("User-Data", "User-ID", uuid)
 		
 		// Returned data object must be defined
 		if (data) {
@@ -65,23 +65,51 @@ export async function updateRoomReturnWebSocketServer(uuid: string): Promise<Web
 	}
 
 	// IF USER WAS IN A GAME 
-	if (userData["Previous-Room"]?.S !== undefined) {
-		const previousRoom = userData["Previous-Room"]?.S!
-		const room = roomsContainer.getRoom(previousRoom)
+	const previousRoomUUID = userData["Previous-Room"]?.S // The previous room string exists
+	if (previousRoomUUID) {
+		const room = roomsContainer.getRoom(previousRoomUUID) // The server still has a record of the room
 		
 		// If the room is still available, return its websocket server, else consider the room disband
-		return (room != undefined ? room.websocketServer : handleUserNotInGame())
+		if (room) {
+			return room.websocketServer
+		} else {
+			return await handleUserNotInGame(uuid)
+		}
 
 	// IF USER WAS NOT IN A GAME OR GAME DOES NOT EXIST
 	} else {
-		return handleUserNotInGame()
+		return await handleUserNotInGame(uuid)
 	}
 }
 
-function handleUserNotInGame(): WebSocket.Server | undefined {
-	// If no rooms exists or all rooms are currently full, create a new room
+async function handleUserNotInGame(uuid: string): Promise<WebSocket.Server> {
+	// If no rooms exists or all rooms are currently full
 	if (roomsContainer.getRoomsLength() == 0 || roomsContainer.roomIsNotAvailable()) {
+		
+		return await returnNewRoom(uuid)
 
+	// If a room exists or some room still has space
+	} else {
+		
+		// Return the most suitable room
+		const suitableRoom = returnMostSuitableRoomAndUpdateRoomProperty()
+
+		if (suitableRoom) {
+			
+			// Update the Users attribute in Room-Data table
+			await accessDB.updateItemsInTable("Room-Data", "Room-ID", suitableRoom.roomID, "Users", [uuid])
+
+			return suitableRoom.websocketServer;
+		
+		// If for some reason no suitable room was found 
+		} else {
+			return await returnNewRoom(uuid)
+		}
+	}
+}
+
+async function returnNewRoom(uuid: string): Promise<WebSocket.Server> {
+		// Create a new room
 		const roomUUID = crypto.randomUUID();
 		const wss = new WebSocket.Server({ noServer: true });
 		const room = new Room(roomUUID, wss);
@@ -89,37 +117,36 @@ function handleUserNotInGame(): WebSocket.Server | undefined {
 		// Modify the properties of a room instance when a user connects, sends a message, etc.
 		modifyRoom(room);
 		
+		const putDataIntoRoom = {
+			"Users": { "SS": [uuid] },
+			"Host": { "S": uuid },
+			"Game-State": { "S": "InLobby"}
+		}
+
+		// Update the users attribute in Room-Data table
+		await accessDB.putItemInTable("Room-Data", "Room-ID", roomUUID, putDataIntoRoom)
+
 		// Add the newly created room into the rooms array.
 		roomsContainer.addRoom(room);
 		
 		return wss
-
-	// Else join the room that is about to be filled.
-	} else {
-		const suitableRoom = returnMostSuitableRoomAndUpdateRoomProperty()
-		if (suitableRoom) {
-			return suitableRoom;
-		} else {
-			return undefined
-		}
-	}
 }
 
 
 // Algorithm to put the user in an available room with the most people
-export function returnMostSuitableRoomAndUpdateRoomProperty(): (WebSocket.Server | undefined) {
+export function returnMostSuitableRoomAndUpdateRoomProperty(): (Room | undefined) {
 	let numberOfPlayersInPreviousRoom = 0;
 	let returnRoom: Room | undefined;
     
 	for (const room of rooms) {
-		if (room.agentUUIDConnection.size > numberOfPlayersInPreviousRoom && room.agentUUIDConnection.size < maxNumberOfPlayers) {
+		if (numberOfPlayersInPreviousRoom < room.agentUUIDConnection.size && room.agentUUIDConnection.size < maxNumberOfPlayers) {
 			numberOfPlayersInPreviousRoom = room.agentUUIDConnection.size;
 			returnRoom = room;
 		}
 	}
 
 	if (returnRoom) {
-        return returnRoom.websocketServer;
+        return returnRoom;
     } else {
         return undefined; 
     }
