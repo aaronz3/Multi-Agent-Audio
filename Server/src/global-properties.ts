@@ -52,6 +52,7 @@ export const maxNumberOfPlayers = 2;
 export class Room {
 
 	roomID: string;
+	gameState: string = "InLobby";
 	agentUUIDConnection = new Map<string, WebSocket>();
 	websocketServer: WebSocket.Server;
 	clientIsAliveMap = new Map<WebSocket, boolean>();

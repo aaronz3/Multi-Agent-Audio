@@ -40,6 +40,7 @@ struct AuthenticationView: View {
                     
             } else if serverDown {
                 handleServerDownView()
+                
             } else if noInternet || networkMonitor.previousNetwork == nil {
                 handleNoInternetView()
                 
@@ -58,6 +59,7 @@ struct AuthenticationView: View {
             Text("Server Down")
                 .font(.title)
                 .scaleEffect(1)
+                .padding(50)
             
             Button("Retry") {
                 handleOnAppear()

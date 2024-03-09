@@ -33,7 +33,7 @@ class AccessUserDataDynamoDB {
                     return results.Item;
                 }
                 else {
-                    return undefined;
+                    throw new Error("DEBUG: User data does not exist");
                 }
             }
             catch (e) {
@@ -43,17 +43,6 @@ class AccessUserDataDynamoDB {
     }
     putItemInTable(tableName, partitionKey, partitionValue, item) {
         return __awaiter(this, void 0, void 0, function* () {
-            // const input = {
-            // 	"Item": {
-            // 		[partitionKey]: {
-            // 			"S": partitionValue
-            // 		},
-            // 		[key]: {
-            // 			"S": value
-            // 		}
-            // 	},
-            // 	"TableName": tableName
-            // };
             // Prepare the item for DynamoDB format
             const dynamoItem = {};
             // Set the partition key's value 
@@ -168,7 +157,7 @@ class AccessUserDataDynamoDB {
                 // Create a DeleteItemCommand with the specified parameters
                 const command = new client_dynamodb_1.DeleteItemCommand(params);
                 // Send the DeleteItemCommand using the DynamoDB client
-                yield this.client.send(command).then(() => { console.log(`Deleted ${tableName}'s entry ${partitionValue}`); });
+                yield this.client.send(command).then(() => { console.log(`Deleted ${tableName}'s entire row ${partitionValue}`); });
             }
             catch (e) {
                 throw new Error(`DEBUG: Error in deleteItemInTable ${e}`);

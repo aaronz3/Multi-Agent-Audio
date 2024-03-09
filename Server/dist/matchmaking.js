@@ -35,15 +35,9 @@ function handlePlay(request, socket, head, url) {
             userUUID = url.searchParams.get('uuid');
         }
         const wss = yield updateRoomReturnWebSocketServer(userUUID);
-        if (wss) {
-            wss.handleUpgrade(request, socket, head, (incomingClient) => {
-                wss.emit("connection", incomingClient, request);
-            });
-        }
-        else {
-            // Send an error to the client
-            console.log("DEBUG: Suitable room was not found");
-        }
+        wss.handleUpgrade(request, socket, head, (incomingClient) => {
+            wss.emit("connection", incomingClient, request);
+        });
         console.log(`Number of rooms: ${global_properties_1.roomsContainer.getRoomsLength()}`);
     });
 }
@@ -52,35 +46,17 @@ exports.handlePlay = handlePlay;
 function updateRoomReturnWebSocketServer(uuid) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        let userData;
-        // Check the database to see if the user was previously in a game
-        try {
-            const data = yield accessDB.getDataInTable("User-Data", "User-ID", uuid);
-            // Returned data object must be defined
-            if (data) {
-                userData = data;
-                // If user's data is not avaliable, which should never be the case at this stage
-            }
-            else {
-                throw new Error("DEBUG: User data does not exist");
-            }
-            // Get user data must not return an error
-        }
-        catch (_b) {
-            throw new Error("DEBUG: Error in updateRoomReturnWebSocketServer getting user data");
+        const userData = yield accessDB.getDataInTable("User-Data", "User-ID", uuid);
+        const previousRoomUUID = (_a = userData["Previous-Room"]) === null || _a === void 0 ? void 0 : _a.S; // The previous room string exists
+        // IF USER WAS NOT IN A GAME OR GAME DOES NOT EXIST
+        if (previousRoomUUID === undefined) {
+            return yield handleUserNotInGame(uuid);
         }
         // IF USER WAS IN A GAME 
-        const previousRoomUUID = (_a = userData["Previous-Room"]) === null || _a === void 0 ? void 0 : _a.S; // The previous room string exists
-        if (previousRoomUUID) {
-            const room = global_properties_1.roomsContainer.getRoom(previousRoomUUID); // The server still has a record of the room
-            // If the room is still available, return its websocket server, else consider the room disband
-            if (room) {
-                return room.websocketServer;
-            }
-            else {
-                return yield handleUserNotInGame(uuid);
-            }
-            // IF USER WAS NOT IN A GAME OR GAME DOES NOT EXIST
+        const room = global_properties_1.roomsContainer.getRoom(previousRoomUUID); // The server still has a record of the room
+        // If the room is still available, return its websocket server, else consider the room disband
+        if (room) {
+            return room.websocketServer;
         }
         else {
             return yield handleUserNotInGame(uuid);
@@ -90,23 +66,20 @@ function updateRoomReturnWebSocketServer(uuid) {
 exports.updateRoomReturnWebSocketServer = updateRoomReturnWebSocketServer;
 function handleUserNotInGame(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
-        // If no rooms exists or all rooms are currently full
+        // If no rooms exists or all rooms are currently full, create a new room
         if (global_properties_1.roomsContainer.getRoomsLength() == 0 || global_properties_1.roomsContainer.roomIsNotAvailable()) {
             return yield returnNewRoom(uuid);
-            // If a room exists or some room still has space
+        }
+        // If a room exists or some room still has space, return the most suitable room
+        const suitableRoom = returnMostSuitableRoomAndUpdateRoomProperty();
+        if (suitableRoom) {
+            // Update the Users attribute in Room-Data table
+            yield accessDB.updateItemsInTable("Room-Data", "Room-ID", suitableRoom.roomID, "Users", [uuid]);
+            return suitableRoom.websocketServer;
+            // If for some reason no suitable room was found 
         }
         else {
-            // Return the most suitable room
-            const suitableRoom = returnMostSuitableRoomAndUpdateRoomProperty();
-            if (suitableRoom) {
-                // Update the Users attribute in Room-Data table
-                yield accessDB.updateItemsInTable("Room-Data", "Room-ID", suitableRoom.roomID, "Users", [uuid]);
-                return suitableRoom.websocketServer;
-                // If for some reason no suitable room was found 
-            }
-            else {
-                return yield returnNewRoom(uuid);
-            }
+            return yield returnNewRoom(uuid);
         }
     });
 }
@@ -121,6 +94,7 @@ function returnNewRoom(uuid) {
         const putDataIntoRoom = {
             "Users": { "SS": [uuid] },
             "Host": { "S": uuid },
+            "Created": { "S": (0, global_properties_1.getCurrentTime)() },
             "Game-State": { "S": "InLobby" }
         };
         // Update the users attribute in Room-Data table
@@ -135,7 +109,9 @@ function returnMostSuitableRoomAndUpdateRoomProperty() {
     let numberOfPlayersInPreviousRoom = 0;
     let returnRoom;
     for (const room of global_properties_1.rooms) {
-        if (numberOfPlayersInPreviousRoom < room.agentUUIDConnection.size && room.agentUUIDConnection.size < global_properties_1.maxNumberOfPlayers) {
+        if (numberOfPlayersInPreviousRoom < room.agentUUIDConnection.size
+            && room.agentUUIDConnection.size < global_properties_1.maxNumberOfPlayers
+            && room.gameState === "InLobby") {
             numberOfPlayersInPreviousRoom = room.agentUUIDConnection.size;
             returnRoom = room;
         }

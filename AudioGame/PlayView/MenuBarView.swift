@@ -29,17 +29,17 @@ struct MenuBarView: View {
     }
     
     func gameState() -> some View {
-        Button("Start Game") {
+        let inLobby = playVM.roomCharacteristics.gameState == .InLobby
+        return Button(inLobby ? "Start Game" : "End Game") {
             Task {
                 do {
-                    try await playVM.signalingClient.send(message: .startGame)
-                    playVM.roomCharacteristics.gameState = .InGame
+                    try await playVM.signalingClient.send(message: inLobby ? .startGame : .endGame)
                 } catch {
                     print("DEBUG: Failed to send start game")
                 }
             }
         }
-        .disabled(playVM.roomCharacteristics.gameState == .InGame)
+        
     }
     
     func talk() -> some View {

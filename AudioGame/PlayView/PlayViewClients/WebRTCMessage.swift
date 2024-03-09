@@ -38,6 +38,8 @@ extension WebRTCMessage: Codable {
             self = .justDisconnectedUser(try container.decode(DisconnectedUser.self, forKey: .payload))
         case "StartGame":
             self = .startGame
+        case "EndGame":
+            self = .endGame
         default:
             print("DEBUG: Got type a message from the server of type:", type)
             throw DecodeError.unknownType

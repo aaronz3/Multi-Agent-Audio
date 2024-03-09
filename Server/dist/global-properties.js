@@ -45,6 +45,7 @@ exports.maxNumberOfPlayers = 2;
 // Structure of an instance of a room will be as follows 
 class Room {
     constructor(roomID, websocketServer) {
+        this.gameState = "InLobby";
         this.agentUUIDConnection = new Map();
         this.clientIsAliveMap = new Map();
         this.roomID = roomID;

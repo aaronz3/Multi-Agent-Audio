@@ -13,7 +13,7 @@ export class AccessUserDataDynamoDB {
 		this.client = new DynamoDBClient({ region: region });
 	}
 
-	async getDataInTable(tableName: string, partitionKey: string, partitionValue: string): Promise<Record<string, AttributeValue> | undefined> {
+	async getDataInTable(tableName: string, partitionKey: string, partitionValue: string): Promise<Record<string, AttributeValue>> {
 
 		const input = {
 			"Key": {
@@ -34,7 +34,7 @@ export class AccessUserDataDynamoDB {
 			if (results.Item) {
 				return results.Item;
 			} else {
-				return undefined;
+				throw new Error("DEBUG: User data does not exist")
 			}
 		} catch (e) {
 			throw new Error(`DEBUG: Error in getDataInTable ${e}`);
@@ -42,18 +42,6 @@ export class AccessUserDataDynamoDB {
 	}
 
 	async putItemInTable(tableName: string, partitionKey: string, partitionValue: string, item: DynamoItem) {
-
-		// const input = {
-		// 	"Item": {
-		// 		[partitionKey]: {
-		// 			"S": partitionValue
-		// 		},
-		// 		[key]: {
-		// 			"S": value
-		// 		}
-		// 	},
-		// 	"TableName": tableName
-		// };
 
 		// Prepare the item for DynamoDB format
 		const dynamoItem: DynamoItem = {};
@@ -178,7 +166,7 @@ export class AccessUserDataDynamoDB {
 			const command = new DeleteItemCommand(params);
 
 			// Send the DeleteItemCommand using the DynamoDB client
-			await this.client.send(command).then(() => { console.log(`Deleted ${tableName}'s entry ${partitionValue}`) });
+			await this.client.send(command).then(() => { console.log(`Deleted ${tableName}'s entire row ${partitionValue}`) });
 
 		} catch (e) {
 			throw new Error(`DEBUG: Error in deleteItemInTable ${e}`);

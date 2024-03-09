@@ -88,6 +88,8 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
         
         case .startGame: self.receivedStartGame()
             
+        case .endGame: self.receivedEndGame()
+            
         default :
             print("DEBUG: Got an unknown message.")
             
@@ -100,6 +102,12 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
         } catch {
             print("DEBUG: Error in decodeReceivedData. \(error.localizedDescription)")
             return nil
+        }
+    }
+    
+    func receivedEndGame() {
+        DispatchQueue.main.async {
+            self.roomCharacteristics.gameState = .InLobby
         }
     }
     

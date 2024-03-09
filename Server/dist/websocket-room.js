@@ -82,7 +82,7 @@ function handleWSMessage(room, message, incomingClient) {
             const parsedMessage = JSON.parse(message);
             switch (parsedMessage.type) {
                 case "StartGame":
-                    yield receivedStartGame(room, incomingClient);
+                    yield receivedStartGame(room);
                     break;
                 case "EndGame":
                     yield receivedEndGame(room);
@@ -118,10 +118,12 @@ function handleWSMessage(room, message, incomingClient) {
 // -----------------------
 function receivedLeaveGame(room, incomingClient, incomingClientUUID) {
     return __awaiter(this, void 0, void 0, function* () {
-        // Other clients should know about the disconnection
+        // Other clients should know about a user leaving the game
         handleWSClosure(room, incomingClient);
         // Delete the client from the Users attribute
         yield accessDB.deleteItemsInSSInTable("Room-Data", "Room-ID", room.roomID, "Users", [incomingClientUUID]);
+        // Delete the previous room attribute so that the user doesn't reconnect to the previous room
+        yield accessDB.deleteItemInColumnInTable("User-Data", "User-ID", incomingClientUUID, "Previous-Room");
     });
 }
 function receivedEndGame(room) {
@@ -129,9 +131,6 @@ function receivedEndGame(room) {
         // Delete the previous room entry in User-Data for all users in the room.
         // This allows users to join other rooms when they leave since the game has terminated.
         const roomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
-        if (roomData === undefined) {
-            throw new Error("DEBUG: Roomdata not defined");
-        }
         const users = roomData["Users"].SS;
         if (users) {
             for (const user of users) {
@@ -140,33 +139,37 @@ function receivedEndGame(room) {
         }
         // Update the room database about the room's status
         yield accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Game-State", "InLobby");
+        // INTERNAL DATA
+        room.gameState = "InLobby";
+        // Let all users know that the game has ended
+        const startMessage = JSON.stringify({ type: "EndGame" });
+        sendToAll(room, Buffer.from(startMessage));
     });
 }
-function receivedStartGame(room, incomingClient) {
+function receivedStartGame(room) {
     return __awaiter(this, void 0, void 0, function* () {
+        // AWS DYNAMODB
         const roomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
-        // Guard against an undefined roomdata
-        if (roomData === undefined) {
-            throw new Error("DEBUG: Unable to get room data");
-        }
         const users = roomData["Users"].SS;
         const host = roomData["Host"].S;
         if (users === undefined || host === undefined) {
             throw new Error("DEBUG: Some part of room data is undefined");
         }
-        // Update each user's previous room property
-        // If the users array is defined
-        if (users.length == global_properties_1.maxNumberOfPlayers) {
-            // Update the previous room attribute of each player
-            for (const user of users) {
-                yield accessDB.updateItemInTable("User-Data", "User-ID", user, "Previous-Room", room.roomID);
-            }
+        // If the number of users in the room is enough to start the game
+        if (users.length < global_properties_1.maxNumberOfPlayers) {
+            throw new Error("NOTE: Number of players in room is not enough to start a game");
         }
-        // Update the room database about the room's status
+        // Update the previous room attribute of each player
+        for (const user of users) {
+            yield accessDB.updateItemInTable("User-Data", "User-ID", user, "Previous-Room", room.roomID);
+        }
+        // Update the Room table about the room's status
         yield accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Game-State", "InGame");
-        // Let other users know that the game is starting
+        // INTERNAL DATA
+        room.gameState = "InGame";
+        // Let all users know that the game is starting
         const startMessage = JSON.stringify({ type: "StartGame" });
-        sendToAllButSelf(room, Buffer.from(startMessage), incomingClient, host);
+        sendToAll(room, Buffer.from(startMessage), host);
     });
 }
 function receivedJustConnectedUser(room, message, incomingClient, incomingClientUUID) {
@@ -185,9 +188,6 @@ function receivedJustConnectedUser(room, message, incomingClient, incomingClient
         sendToAllButSelf(room, message, incomingClient, incomingClientUUID);
         // SEND DATA BACK TO THE CONNECTED USER
         const receivedRoomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
-        if (receivedRoomData === undefined) {
-            throw new Error("DEBUG: Unable to get room data");
-        }
         const host = receivedRoomData["Host"].S;
         const gameState = receivedRoomData["Game-State"].S;
         if (host === undefined || gameState === undefined) {
@@ -206,12 +206,19 @@ function receivedJustConnectedUser(room, message, incomingClient, incomingClient
 exports.receivedJustConnectedUser = receivedJustConnectedUser;
 // SECTION: HELPERS TO RELAY MESSAGES 
 // -----------------------
+function sendToAll(room, message, incomingClientUUID) {
+    // The agent must belong in room.agentUUIDConnection
+    room.agentUUIDConnection.forEach((client) => {
+        client.send(message);
+        // console.log(`${getCurrentTime()} [Room ${room.roomID}] User ${incomingClientUUID} sent message to 1 other users`);
+    });
+}
 function sendToAllButSelf(room, message, incomingClient, incomingClientUUID) {
     // The agent must belong in room.agentUUIDConnection
     room.agentUUIDConnection.forEach((client) => {
         if (client !== incomingClient && client.readyState === ws_1.default.OPEN) {
             client.send(message);
-            console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] User ${incomingClientUUID} sent message to 1 other users`);
+            // console.log(`${getCurrentTime()} [Room ${room.roomID}] User ${incomingClientUUID} sent message to 1 other users`);
         }
     });
 }
@@ -235,9 +242,6 @@ function handleWSClosure(room, incomingClient) {
             console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
             console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
             const roomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
-            if (roomData === undefined) {
-                throw new Error("DEBUG: Unable to get room data");
-            }
             const host = roomData["Host"].S;
             const users = roomData["Users"].SS;
             if (users === undefined || host === undefined) {
