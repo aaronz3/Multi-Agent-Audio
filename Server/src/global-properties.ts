@@ -27,22 +27,7 @@ export const roomsContainer = {
 			rooms.splice(index, 1);
 		}
 		console.log(`Number of rooms: ${rooms.length}`);
-	},
-	// Helper function to determine if any rooms are available to join
-	roomIsNotAvailable: (): boolean => {
-		let noRoomsAvailable = true;
-	
-		for (const room of rooms) {
-			if (0 < room.agentUUIDConnection.size && room.agentUUIDConnection.size < maxNumberOfPlayers) {
-				noRoomsAvailable = false;
-				// Exit the loop as soon as an available room is found
-				break;  
-			}
-		}
-		
-		return noRoomsAvailable;
 	}
-
 };
 
 // Every room can only have these many players
@@ -53,13 +38,16 @@ export class Room {
 
 	roomID: string;
 	gameState: string = "InLobby";
-	agentUUIDConnection = new Map<string, WebSocket>();
+	host: string;
+	created = getCurrentTime();
+	agentUUIDConnection = new Map<string, (WebSocket | undefined)>();
 	websocketServer: WebSocket.Server;
 	clientIsAliveMap = new Map<WebSocket, boolean>();
 
-	constructor(roomID: string, websocketServer: WebSocket.Server) {
+	constructor(roomID: string, websocketServer: WebSocket.Server, host: string) {
 		this.roomID = roomID;
 		this.websocketServer = websocketServer;
+		this.host = host
 	}
 }
 

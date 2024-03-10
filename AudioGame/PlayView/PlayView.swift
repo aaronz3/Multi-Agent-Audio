@@ -76,6 +76,8 @@ struct PlayView: View {
         HStack {
             
             Button("", systemImage: "chevron.backward") {
+                playVM.startGameResult = nil
+                
                 Task {
                     do {
                         let leaveMessage = DisconnectedUser(userUUID: playVM.signalingClient.currentUserUUID, newHost: nil)

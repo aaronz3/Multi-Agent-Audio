@@ -42,12 +42,8 @@ server.on("upgrade", async (request: http.IncomingMessage, socket: internal.Dupl
 
         // Handle the play path 
         if (pathname === "/play") {
-            try {
-                await handlePlay(request, socket, head, url);
-            } catch {
-                console.log("DEBUG: Error in upgrading to /play")
-                return
-            }
+            connectionQueue.push({ request, socket, head, url });
+            await processNextConnection();
         }
 
         // Handle other paths here
@@ -59,6 +55,51 @@ server.on("upgrade", async (request: http.IncomingMessage, socket: internal.Dupl
         socket.destroy();
     }
 });
+
+// Define a type for the queue items
+type ConnectionQueueItem = {
+    request: http.IncomingMessage;
+    socket: internal.Duplex;
+    head: Buffer;
+    url: URL;
+};
+
+// Queue to hold the connections
+const connectionQueue: ConnectionQueueItem[] = [];
+
+// Flag to indicate if a connection is currently being processed
+let isProcessing = false;
+
+// Recursive function to process the next item in the queue
+async function processNextConnection() {
+    
+    // If the queue is currently processing or finished processing queue, exit the function
+    if (isProcessing || connectionQueue.length === 0) {
+        return;
+    }
+
+    isProcessing = true;
+    const connectionItem = connectionQueue.shift();
+
+    if (connectionItem) {
+        const { request, socket, head, url } = connectionItem;
+        
+        try {
+            await handlePlay(request, socket, head, url);
+        } catch (error) {
+            console.log("DEBUG: Error in upgrading to /play", error);
+            // Optionally handle error, for example, by closing the socket
+            socket.destroy();
+        // Trigger processing the next item
+        } finally {
+            isProcessing = false;
+            processNextConnection();
+        }
+    } else {
+        // Ensure processing flag is reset if no item was found
+        isProcessing = false;
+    }
+}
 
 // SECTION: USER ID DATA UPLOADED TO SERVER
 // -----------------------

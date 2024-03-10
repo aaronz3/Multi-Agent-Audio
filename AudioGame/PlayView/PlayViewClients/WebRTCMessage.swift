@@ -15,6 +15,7 @@ enum WebRTCMessage {
     case justConnectedUser(JustConnectedUser)
     case justDisconnectedUser(DisconnectedUser)
     case startGame
+    case startGameResult(StartGameResult)
     case endGame
     case sdp(SessionDescription)
     case candidate(IceCandidate)
@@ -40,6 +41,8 @@ extension WebRTCMessage: Codable {
             self = .startGame
         case "EndGame":
             self = .endGame
+        case String(describing: StartGameResult.self):
+            self = .startGameResult(try container.decode(StartGameResult.self, forKey: .payload))
         default:
             print("DEBUG: Got type a message from the server of type:", type)
             throw DecodeError.unknownType
@@ -68,6 +71,8 @@ extension WebRTCMessage: Codable {
         // Only for testing purposes, can be deleted in production
         case .roomCharacteristic(_):
             print("DEBUG: Encoding room characteristic")
+        case .startGameResult(_):
+            print("DEBUG: Encoding start game error characteristic")
         }
     }
     
@@ -89,6 +94,10 @@ struct RoomCharacteristics: Codable {
 enum GameState: String, Codable {
     case InGame
     case InLobby
+}
+
+struct StartGameResult: Codable {
+    let result: String
 }
 
 struct JustConnectedUser: Codable {

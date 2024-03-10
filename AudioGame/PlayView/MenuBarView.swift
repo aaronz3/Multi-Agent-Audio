@@ -14,13 +14,22 @@ struct MenuBarView: View {
     @EnvironmentObject var authenticationVM: AuthenticationViewModel
 
     @State private var isLongPressed = false
-    
+    @State private var showStartGameResult = false
     
     var body: some View {
         HStack {
+            // Only show the play button and the result if the client is the host
             if let hostUUID = playVM.roomCharacteristics.hostUUID,
                 hostUUID == playVM.signalingClient.currentUserUUID {
-                gameState()
+                VStack {
+                    gameState()
+                    
+                    if let result = playVM.startGameResult {
+                        startGameResult(result: result)
+                    }
+
+                }
+                
             }
 
             talk()
@@ -34,11 +43,30 @@ struct MenuBarView: View {
             Task {
                 do {
                     try await playVM.signalingClient.send(message: inLobby ? .startGame : .endGame)
+                    
                 } catch {
                     print("DEBUG: Failed to send start game")
                 }
             }
         }
+        
+    }
+    
+    func startGameResult(result: String) -> some View {
+
+        Text(result)
+            .onAppear {
+                showStartGameResult.toggle()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                    showStartGameResult.toggle()
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 4.4) {
+                    playVM.startGameResult = nil
+                }
+            }
+            .opacity(showStartGameResult ? 1 : 0)
+            .offset(y: showStartGameResult ? 0 : -20)
+            .animation(.spring(duration:0.4, bounce:0.4), value: showStartGameResult)
         
     }
     

@@ -14,7 +14,7 @@ describe('Matchmaking tests', () => {
     })
     
     test('add a room to rooms if no rooms exist', () => {
-        updateRoomReturnWebSocketServer()
+        updateRoomReturnWebSocketServer("room1")
 
         expect(roomsContainer.getRoomsLength()).toBe(1)
     });
@@ -29,7 +29,7 @@ describe('Matchmaking tests', () => {
 
         roomsContainer.addRoom(room)
 
-        updateRoomReturnWebSocketServer()
+        updateRoomReturnWebSocketServer(room.roomID)
 
         expect(roomsContainer.getRoomsLength()).toBe(2)
     });

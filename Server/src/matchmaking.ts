@@ -4,7 +4,7 @@ import WebSocket from 'ws';
 import http from "http";
 import internal from "stream";
 
-import { rooms, roomsContainer, getCurrentTime, Room, maxNumberOfPlayers } from "./global-properties";
+import { rooms, roomsContainer, Room, maxNumberOfPlayers } from "./global-properties";
 import { modifyRoom } from "./websocket-room";
 import { AccessUserDataDynamoDB } from "./access-dynamodb";
 
@@ -44,7 +44,7 @@ export async function updateRoomReturnWebSocketServer(uuid: string): Promise<Web
 
 	// IF USER WAS NOT IN A GAME OR GAME DOES NOT EXIST
 	if (previousRoomUUID === undefined) {
-		return await handleUserNotInGame(uuid)
+		return handleUserNotInGame(uuid)
 	}
 
 	// IF USER WAS IN A GAME 
@@ -52,53 +52,41 @@ export async function updateRoomReturnWebSocketServer(uuid: string): Promise<Web
 
 	// If the room is still available, return its websocket server, else consider the room disband
 	if (room) {
+		// Add the user to the room
+		room.agentUUIDConnection.set(uuid, undefined)
+
 		return room.websocketServer
 	} else {
-		return await handleUserNotInGame(uuid)
+		return handleUserNotInGame(uuid)
 	}
 }
 
-async function handleUserNotInGame(uuid: string): Promise<WebSocket.Server> {
-
-	// If no rooms exists or all rooms are currently full, create a new room
-	if (roomsContainer.getRoomsLength() == 0 || roomsContainer.roomIsNotAvailable()) {
-		return await returnNewRoom(uuid)
-	}
-
+function handleUserNotInGame(uuid: string): WebSocket.Server {
+	
 	// If a room exists or some room still has space, return the most suitable room
 	const suitableRoom = returnMostSuitableRoomAndUpdateRoomProperty()
-
+	
 	if (suitableRoom) {
-
-		// Update the Users attribute in Room-Data table
-		await accessDB.updateItemsInTable("Room-Data", "Room-ID", suitableRoom.roomID, "Users", [uuid])
-
+		// Add the user to the room 
+		suitableRoom.agentUUIDConnection.set(uuid, undefined)
+		
+		// Return the room
 		return suitableRoom.websocketServer;
 
-		// If for some reason no suitable room was found 
+	// If for some reason no suitable room was found 
 	} else {
-		return await returnNewRoom(uuid)
+		return returnNewRoom(uuid)
 	}
 }
 
-async function returnNewRoom(uuid: string): Promise<WebSocket.Server> {
+function returnNewRoom(uuid: string): WebSocket.Server {
 	// Create a new room
 	const roomUUID = crypto.randomUUID();
 	const wss = new WebSocket.Server({ noServer: true });
-	const room = new Room(roomUUID, wss);
-
+	const room = new Room(roomUUID, wss, uuid);
+	
 	// Modify the properties of a room instance when a user connects, sends a message, etc.
 	modifyRoom(room);
-
-	const putDataIntoRoom = {
-		"Users": { "SS": [uuid] },
-		"Host": { "S": uuid },
-		"Created": { "S": getCurrentTime() },
-		"Game-State": { "S": "InLobby" }
-	}
-
-	// Update the users attribute in Room-Data table
-	await accessDB.putItemInTable("Room-Data", "Room-ID", roomUUID, putDataIntoRoom)
 
 	// Add the newly created room into the rooms array.
 	roomsContainer.addRoom(room);

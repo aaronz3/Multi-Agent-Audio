@@ -43,13 +43,8 @@ server.on("upgrade", (request, socket, head) => __awaiter(void 0, void 0, void 0
         const pathname = url.pathname;
         // Handle the play path 
         if (pathname === "/play") {
-            try {
-                yield (0, matchmaking_1.handlePlay)(request, socket, head, url);
-            }
-            catch (_a) {
-                console.log("DEBUG: Error in upgrading to /play");
-                return;
-            }
+            connectionQueue.push({ request, socket, head, url });
+            yield processNextConnection();
         }
         // Handle other paths here
     }
@@ -60,6 +55,41 @@ server.on("upgrade", (request, socket, head) => __awaiter(void 0, void 0, void 0
         socket.destroy();
     }
 }));
+// Queue to hold the connections
+const connectionQueue = [];
+// Flag to indicate if a connection is currently being processed
+let isProcessing = false;
+// Recursive function to process the next item in the queue
+function processNextConnection() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // If the queue is currently processing or finished processing queue, exit the function
+        if (isProcessing || connectionQueue.length === 0) {
+            return;
+        }
+        isProcessing = true;
+        const connectionItem = connectionQueue.shift();
+        if (connectionItem) {
+            const { request, socket, head, url } = connectionItem;
+            try {
+                yield (0, matchmaking_1.handlePlay)(request, socket, head, url);
+            }
+            catch (error) {
+                console.log("DEBUG: Error in upgrading to /play", error);
+                // Optionally handle error, for example, by closing the socket
+                socket.destroy();
+                // Trigger processing the next item
+            }
+            finally {
+                isProcessing = false;
+                processNextConnection();
+            }
+        }
+        else {
+            // Ensure processing flag is reset if no item was found
+            isProcessing = false;
+        }
+    });
+}
 // SECTION: USER ID DATA UPLOADED TO SERVER
 // -----------------------
 // Get necessary user details when login and respond to client

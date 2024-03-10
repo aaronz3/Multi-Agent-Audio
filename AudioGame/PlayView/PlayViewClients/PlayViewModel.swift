@@ -13,6 +13,7 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
 
     @Published var peerConnections: [PeerConnection] = []
     @Published var roomCharacteristics = RoomCharacteristics(roomID: nil, hostUUID: nil, gameState: nil)
+    @Published var startGameResult: String?
     @Published var signalingConnected = false
     @Published var disableTalkButton = true
     
@@ -85,11 +86,10 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
         case .justDisconnectedUser(let disconnectedUser): await self.receivedDisconnectedUser(disconnectedUser: disconnectedUser)
         
         case .roomCharacteristic(let roomCharacteristic): self.receivedRoomData(room: roomCharacteristic)
-        
         case .startGame: self.receivedStartGame()
-            
+        case .startGameResult(let resultObject): self.receivedStartGameResult(result: resultObject.result)
         case .endGame: self.receivedEndGame()
-            
+        
         default :
             print("DEBUG: Got an unknown message.")
             
@@ -114,6 +114,12 @@ class PlayViewModel: WebSocketProviderDelegate, PeerConnectionDelegate, Observab
     func receivedStartGame() {
         DispatchQueue.main.async {
             self.roomCharacteristics.gameState = .InGame
+        }
+    }
+    
+    func receivedStartGameResult(result: String) {
+        DispatchQueue.main.async {
+            self.startGameResult = result
         }
     }
     

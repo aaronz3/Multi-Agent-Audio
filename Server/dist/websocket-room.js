@@ -120,56 +120,48 @@ function receivedLeaveGame(room, incomingClient, incomingClientUUID) {
     return __awaiter(this, void 0, void 0, function* () {
         // Other clients should know about a user leaving the game
         handleWSClosure(room, incomingClient);
-        // Delete the client from the Users attribute
-        yield accessDB.deleteItemsInSSInTable("Room-Data", "Room-ID", room.roomID, "Users", [incomingClientUUID]);
         // Delete the previous room attribute so that the user doesn't reconnect to the previous room
         yield accessDB.deleteItemInColumnInTable("User-Data", "User-ID", incomingClientUUID, "Previous-Room");
+        // // Only access the database if the user leaves during a game
+        // if (room.gameState === "InGame") {
+        // }
     });
 }
 function receivedEndGame(room) {
     return __awaiter(this, void 0, void 0, function* () {
         // Delete the previous room entry in User-Data for all users in the room.
         // This allows users to join other rooms when they leave since the game has terminated.
-        const roomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
-        const users = roomData["Users"].SS;
-        if (users) {
-            for (const user of users) {
-                yield accessDB.deleteItemInColumnInTable("User-Data", "User-ID", user, "Previous-Room");
-            }
+        for (const user of room.agentUUIDConnection.keys()) {
+            yield accessDB.deleteItemInColumnInTable("User-Data", "User-ID", user, "Previous-Room");
         }
-        // Update the room database about the room's status
-        yield accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Game-State", "InLobby");
-        // INTERNAL DATA
+        // Set the game state of the room
         room.gameState = "InLobby";
         // Let all users know that the game has ended
-        const startMessage = JSON.stringify({ type: "EndGame" });
-        sendToAll(room, Buffer.from(startMessage));
+        const endMessage = JSON.stringify({ type: "EndGame" });
+        sendToAll(room, Buffer.from(endMessage));
     });
 }
 function receivedStartGame(room) {
     return __awaiter(this, void 0, void 0, function* () {
-        // AWS DYNAMODB
-        const roomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
-        const users = roomData["Users"].SS;
-        const host = roomData["Host"].S;
-        if (users === undefined || host === undefined) {
-            throw new Error("DEBUG: Some part of room data is undefined");
-        }
-        // If the number of users in the room is enough to start the game
-        if (users.length < global_properties_1.maxNumberOfPlayers) {
+        // If the number of users in the room is not enough to start the game
+        if (room.agentUUIDConnection.size < global_properties_1.maxNumberOfPlayers) {
+            // Let the host know why they can't start the game
+            const errorMessage = JSON.stringify({ type: "StartGameResult", payload: { result: "Player count not met" } });
+            sendTo(room, room.host, Buffer.from(errorMessage));
             throw new Error("NOTE: Number of players in room is not enough to start a game");
         }
         // Update the previous room attribute of each player
-        for (const user of users) {
+        for (const user of room.agentUUIDConnection.keys()) {
             yield accessDB.updateItemInTable("User-Data", "User-ID", user, "Previous-Room", room.roomID);
         }
-        // Update the Room table about the room's status
-        yield accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Game-State", "InGame");
-        // INTERNAL DATA
+        // Set the game state of the room
         room.gameState = "InGame";
+        // Let the host know that they successfully started the game
+        const errorMessage = JSON.stringify({ type: "StartGameResult", payload: { result: "Success" } });
+        sendTo(room, room.host, Buffer.from(errorMessage));
         // Let all users know that the game is starting
         const startMessage = JSON.stringify({ type: "StartGame" });
-        sendToAll(room, Buffer.from(startMessage), host);
+        sendToAll(room, Buffer.from(startMessage), room.host);
     });
 }
 function receivedJustConnectedUser(room, message, incomingClient, incomingClientUUID) {
@@ -186,19 +178,13 @@ function receivedJustConnectedUser(room, message, incomingClient, incomingClient
         console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
         // Send the agent's UUID to agents that previously connected
         sendToAllButSelf(room, message, incomingClient, incomingClientUUID);
-        // SEND DATA BACK TO THE CONNECTED USER
-        const receivedRoomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
-        const host = receivedRoomData["Host"].S;
-        const gameState = receivedRoomData["Game-State"].S;
-        if (host === undefined || gameState === undefined) {
-            throw new Error("DEBUG: Some part of room data is undefined");
-        }
+        // Send data back to the connecting user
         const sendRoomData = {
-            // FOR TESTING PURPOSES:
             roomID: room.roomID,
-            hostUUID: host,
-            gameState: gameState
+            hostUUID: room.host,
+            gameState: room.gameState
         };
+        // Send the status of the room to the connecting user
         const roomID = JSON.stringify({ type: "RoomCharacteristics", payload: sendRoomData });
         sendTo(room, incomingClientUUID, Buffer.from(roomID));
     });
@@ -209,14 +195,16 @@ exports.receivedJustConnectedUser = receivedJustConnectedUser;
 function sendToAll(room, message, incomingClientUUID) {
     // The agent must belong in room.agentUUIDConnection
     room.agentUUIDConnection.forEach((client) => {
-        client.send(message);
+        if (client) {
+            client.send(message);
+        }
         // console.log(`${getCurrentTime()} [Room ${room.roomID}] User ${incomingClientUUID} sent message to 1 other users`);
     });
 }
 function sendToAllButSelf(room, message, incomingClient, incomingClientUUID) {
     // The agent must belong in room.agentUUIDConnection
     room.agentUUIDConnection.forEach((client) => {
-        if (client !== incomingClient && client.readyState === ws_1.default.OPEN) {
+        if (client && client !== incomingClient && client.readyState === ws_1.default.OPEN) {
             client.send(message);
             // console.log(`${getCurrentTime()} [Room ${room.roomID}] User ${incomingClientUUID} sent message to 1 other users`);
         }
@@ -225,7 +213,7 @@ function sendToAllButSelf(room, message, incomingClient, incomingClientUUID) {
 function sendTo(room, agent, message) {
     // The agent must belong in room.agentUUIDConnection
     room.agentUUIDConnection.forEach((client) => {
-        if (client === room.agentUUIDConnection.get(agent) && client.readyState === ws_1.default.OPEN) {
+        if (client && client === room.agentUUIDConnection.get(agent) && client.readyState === ws_1.default.OPEN) {
             client.send(message);
         }
     });
@@ -241,21 +229,16 @@ function handleWSClosure(room, incomingClient) {
         if (disconnectedUserUUID) {
             console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] DisconnectedUserUUID: ${disconnectedUserUUID}`);
             console.log(`${(0, global_properties_1.getCurrentTime)()} [Room ${room.roomID}] All collected keys are: ${Array.from(room.agentUUIDConnection.keys())}`);
-            const roomData = yield accessDB.getDataInTable("Room-Data", "Room-ID", room.roomID);
-            const host = roomData["Host"].S;
-            const users = roomData["Users"].SS;
-            if (users === undefined || host === undefined) {
-                throw new Error("DEBUG: Some part of room data is undefined");
-            }
+            // Create a payload to send to other users
             let disconnectedMessagePayload;
             // If the host has disconnected
-            if (disconnectedUserUUID === host) {
+            if (disconnectedUserUUID === room.host) {
                 // Find a user that is not the host
-                for (const user of users) {
+                for (const user of room.agentUUIDConnection.keys()) {
                     if (user !== disconnectedUserUUID) {
                         disconnectedMessagePayload = { userUUID: disconnectedUserUUID, newHost: user };
                         // Update the host to some user
-                        yield accessDB.updateItemInTable("Room-Data", "Room-ID", room.roomID, "Host", user);
+                        room.host = user;
                         break;
                     }
                 }
@@ -274,8 +257,6 @@ function handleWSClosure(room, incomingClient) {
         if (room.agentUUIDConnection.size === 0) {
             // Handle deleting the room here. If the room does not exist, no errors are thrown
             global_properties_1.roomsContainer.deleteRoomFromRooms(room);
-            // Delete the room entry
-            yield accessDB.deleteItemInTable("Room-Data", "Room-ID", room.roomID);
         }
     });
 }
@@ -283,7 +264,7 @@ exports.handleWSClosure = handleWSClosure;
 // Helper function to delete the user that left the room
 function deleteKeyValuePairAndReturnKey(obj, targetValue) {
     for (const [key, value] of obj.entries()) {
-        if (value === targetValue) {
+        if (value && value === targetValue) {
             // Delete the matching entry
             obj.delete(key);
             // Immediately return the key. 

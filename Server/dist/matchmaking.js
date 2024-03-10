@@ -50,59 +50,46 @@ function updateRoomReturnWebSocketServer(uuid) {
         const previousRoomUUID = (_a = userData["Previous-Room"]) === null || _a === void 0 ? void 0 : _a.S; // The previous room string exists
         // IF USER WAS NOT IN A GAME OR GAME DOES NOT EXIST
         if (previousRoomUUID === undefined) {
-            return yield handleUserNotInGame(uuid);
+            return handleUserNotInGame(uuid);
         }
         // IF USER WAS IN A GAME 
         const room = global_properties_1.roomsContainer.getRoom(previousRoomUUID); // The server still has a record of the room
         // If the room is still available, return its websocket server, else consider the room disband
         if (room) {
+            // Add the user to the room
+            room.agentUUIDConnection.set(uuid, undefined);
             return room.websocketServer;
         }
         else {
-            return yield handleUserNotInGame(uuid);
+            return handleUserNotInGame(uuid);
         }
     });
 }
 exports.updateRoomReturnWebSocketServer = updateRoomReturnWebSocketServer;
 function handleUserNotInGame(uuid) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // If no rooms exists or all rooms are currently full, create a new room
-        if (global_properties_1.roomsContainer.getRoomsLength() == 0 || global_properties_1.roomsContainer.roomIsNotAvailable()) {
-            return yield returnNewRoom(uuid);
-        }
-        // If a room exists or some room still has space, return the most suitable room
-        const suitableRoom = returnMostSuitableRoomAndUpdateRoomProperty();
-        if (suitableRoom) {
-            // Update the Users attribute in Room-Data table
-            yield accessDB.updateItemsInTable("Room-Data", "Room-ID", suitableRoom.roomID, "Users", [uuid]);
-            return suitableRoom.websocketServer;
-            // If for some reason no suitable room was found 
-        }
-        else {
-            return yield returnNewRoom(uuid);
-        }
-    });
+    // If a room exists or some room still has space, return the most suitable room
+    const suitableRoom = returnMostSuitableRoomAndUpdateRoomProperty();
+    if (suitableRoom) {
+        // Add the user to the room 
+        suitableRoom.agentUUIDConnection.set(uuid, undefined);
+        // Return the room
+        return suitableRoom.websocketServer;
+        // If for some reason no suitable room was found 
+    }
+    else {
+        return returnNewRoom(uuid);
+    }
 }
 function returnNewRoom(uuid) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // Create a new room
-        const roomUUID = crypto_1.default.randomUUID();
-        const wss = new ws_1.default.Server({ noServer: true });
-        const room = new global_properties_1.Room(roomUUID, wss);
-        // Modify the properties of a room instance when a user connects, sends a message, etc.
-        (0, websocket_room_1.modifyRoom)(room);
-        const putDataIntoRoom = {
-            "Users": { "SS": [uuid] },
-            "Host": { "S": uuid },
-            "Created": { "S": (0, global_properties_1.getCurrentTime)() },
-            "Game-State": { "S": "InLobby" }
-        };
-        // Update the users attribute in Room-Data table
-        yield accessDB.putItemInTable("Room-Data", "Room-ID", roomUUID, putDataIntoRoom);
-        // Add the newly created room into the rooms array.
-        global_properties_1.roomsContainer.addRoom(room);
-        return wss;
-    });
+    // Create a new room
+    const roomUUID = crypto_1.default.randomUUID();
+    const wss = new ws_1.default.Server({ noServer: true });
+    const room = new global_properties_1.Room(roomUUID, wss, uuid);
+    // Modify the properties of a room instance when a user connects, sends a message, etc.
+    (0, websocket_room_1.modifyRoom)(room);
+    // Add the newly created room into the rooms array.
+    global_properties_1.roomsContainer.addRoom(room);
+    return wss;
 }
 // Algorithm to put the user in an available room with the most people
 function returnMostSuitableRoomAndUpdateRoomProperty() {
