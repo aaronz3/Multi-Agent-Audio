@@ -28,9 +28,32 @@ class AccessUserDataDynamoDB {
             const command = new client_dynamodb_1.GetItemCommand(input);
             try {
                 const results = yield this.client.send(command);
-                console.log(`Get in ${tableName}`);
                 if (results.Item) {
                     return results.Item;
+                }
+                else {
+                    throw new Error("DEBUG: User data does not exist");
+                }
+            }
+            catch (e) {
+                throw new Error(`DEBUG: Error in getDataInTable ${e}`);
+            }
+        });
+    }
+    scanPlayerStatus() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Set up the scan command with a filter expression
+            const params = {
+                TableName: "User-Data",
+                FilterExpression: "attribute_exists(Player-Status)",
+                ProjectionExpression: "User-ID, Player-Status"
+            };
+            const command = new client_dynamodb_1.ScanCommand(params);
+            try {
+                const results = yield this.client.send(command);
+                console.log(`Got results ${results}`);
+                if (results.Items) {
+                    return results.Items;
                 }
                 else {
                     throw new Error("DEBUG: User data does not exist");

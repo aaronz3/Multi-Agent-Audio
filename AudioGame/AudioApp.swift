@@ -32,7 +32,7 @@ let hostAddress = "43.203.40.34"
 let port = "3000"
 
 let loginUrl = URL(string: "http://\(hostAddress):\(port)/login")!
-
+let userStatusUrl = URL(string: "http://\(hostAddress):\(port)/status")!
 let defaultSignalingServerUrl = URL(string: "ws://\(hostAddress):\(port)/play")!
 
 //let defaultSignalingServerUrl = URL(string: "ws://172.20.10.7:3000/play")!

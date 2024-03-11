@@ -11,7 +11,6 @@ import GameKit
 class AuthenticationViewModel: ObservableObject {
     
     @Published var userName: String?
-    
     @Published var userData: UserRecord?
     
     private var isContinuationCalled = false
@@ -66,11 +65,6 @@ class AuthenticationViewModel: ObservableObject {
     func getUserData() async throws {
         var components = URLComponents(url: loginUrl, resolvingAgainstBaseURL: true)
         
-        guard GKLocalPlayer.local.playerID != "" else {
-            print("DEBUG: UUID Error")
-            throw AuthenticationError.uuidError
-        }
-        
         components?.queryItems = [
             URLQueryItem(name: "uuid", value: GKLocalPlayer.local.playerID)
         ]
@@ -122,10 +116,7 @@ class AuthenticationViewModel: ObservableObject {
     
     @MainActor
     func handleNewUserOnboarding(data: Data) async throws {
-        guard GKLocalPlayer.local.playerID != "" else {
-            throw AuthenticationError.uuidError
-        }
-        
+
         let jsonResponse = try JSONDecoder().decode([String: String].self, from: data)
         
         if let message = jsonResponse["message"], message == "User data not found" {
@@ -150,16 +141,21 @@ class AuthenticationViewModel: ObservableObject {
     // MARK: Send user data to server
     
     func sendUserData(name: String) async throws {
-        guard GKLocalPlayer.local.playerID != "" else {
-            throw AuthenticationError.uuidError
-        }
-        
-        var request = URLRequest(url: loginUrl)
+        var data = User(id: GKLocalPlayer.local.playerID, name: name)
+        try await postRequest(data: data, endpoint: loginUrl)
+    }
+    
+    func sendUserStatus(status: String) async throws {
+        var data = UserStatus(id: GKLocalPlayer.local.playerID, status: status)
+        try await postRequest(data: data, endpoint: userStatusUrl)
+    }
+    
+    func postRequest(data: Encodable, endpoint: URL) async throws {
+        var request = URLRequest(url: endpoint)
         
         do {
             // Send the block of user data to the server.
-            let body = User(id: GKLocalPlayer.local.playerID, name: name)
-            let bodyData = try JSONEncoder().encode(body)
+            let bodyData = try JSONEncoder().encode(data)
             
             
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -179,11 +175,10 @@ class AuthenticationViewModel: ObservableObject {
             }
             
         } catch {
-            print("DEBUG: Error in sendUserData \(error.localizedDescription)")
+            print("DEBUG: Error in postRequest \(error.localizedDescription)")
             throw AuthenticationError.postRequestError
         }
     }
-    
 }
 
 enum AuthenticationError : Error {

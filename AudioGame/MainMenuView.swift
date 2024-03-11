@@ -15,7 +15,9 @@ struct MainMenuView: View {
     @StateObject var playVM = PlayViewModel(signalingClient:
                                                 SignalingClient(url: defaultSignalingServerUrl, currentUserUUID: GKLocalPlayer.local.playerID))
     
-    @State var isProcessingPlayTask = false
+    @StateObject var globalPlayersVM = GlobalPlayersViewModel(url: userStatusUrl)
+    
+    @State var isProcessing = false
     @State var loadingError = false
     
     var body: some View {
@@ -28,7 +30,7 @@ struct MainMenuView: View {
                 .environmentObject(playVM)
         
         // If still processing the play task load the progress view
-        } else if isProcessingPlayTask {
+        } else if isProcessing {
 
             ProgressView()
         
@@ -54,19 +56,36 @@ struct MainMenuView: View {
             Text("Current user UUID: " + (GKLocalPlayer.local.playerID))
                 .padding(20)
             
-            Button("PLAY") {
-                Task {
-                    isProcessingPlayTask = true
-                    
-                    do {
-                        try await self.playVM.signalingClient.connect()
-                    } catch {
-                        loadingError = true
+            HStack {
+                Button("PLAY") {
+                    Task {
+                        isProcessing = true
+                        
+                        do {
+                            try await self.playVM.signalingClient.connect()
+                        } catch {
+                            loadingError = true
+                        }
+                        
+                        isProcessing = false
                     }
-                    
-                    isProcessingPlayTask = false
+                }
+                
+                Button("PLAYERS") {
+                    Task {
+                        isProcessing = true
+                        
+                        do {
+                            try await self.globalPlayersVM.getUserStatus()
+                        } catch {
+                            loadingError = true
+                        }
+                        
+                        isProcessing = false
+                    }
                 }
             }
+            
         }
     }
 }

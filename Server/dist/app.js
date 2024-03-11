@@ -43,10 +43,9 @@ server.on("upgrade", (request, socket, head) => __awaiter(void 0, void 0, void 0
         const pathname = url.pathname;
         // Handle the play path 
         if (pathname === "/play") {
-            connectionQueue.push({ request, socket, head, url });
-            yield processNextConnection();
+            playConnectionQueue.push({ request, socket, head, url });
+            yield processNextPlayConnection();
         }
-        // Handle other paths here
     }
     else {
         // Handle the case where request.url is undefined
@@ -56,18 +55,18 @@ server.on("upgrade", (request, socket, head) => __awaiter(void 0, void 0, void 0
     }
 }));
 // Queue to hold the connections
-const connectionQueue = [];
+const playConnectionQueue = [];
 // Flag to indicate if a connection is currently being processed
-let isProcessing = false;
+let isPlayConnectionProcessing = false;
 // Recursive function to process the next item in the queue
-function processNextConnection() {
+function processNextPlayConnection() {
     return __awaiter(this, void 0, void 0, function* () {
         // If the queue is currently processing or finished processing queue, exit the function
-        if (isProcessing || connectionQueue.length === 0) {
+        if (isPlayConnectionProcessing || playConnectionQueue.length === 0) {
             return;
         }
-        isProcessing = true;
-        const connectionItem = connectionQueue.shift();
+        isPlayConnectionProcessing = true;
+        const connectionItem = playConnectionQueue.shift();
         if (connectionItem) {
             const { request, socket, head, url } = connectionItem;
             try {
@@ -80,13 +79,13 @@ function processNextConnection() {
                 // Trigger processing the next item
             }
             finally {
-                isProcessing = false;
-                processNextConnection();
+                isPlayConnectionProcessing = false;
+                processNextPlayConnection();
             }
         }
         else {
             // Ensure processing flag is reset if no item was found
-            isProcessing = false;
+            isPlayConnectionProcessing = false;
         }
     });
 }
@@ -109,10 +108,37 @@ app.get("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void
         res.status(500).send(e);
     }
 }));
-// Update the database and respond to client
+// Update the player data and respond to client
 app.post("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield (0, authentication_1.handleSetUserData)(req.body);
+        res.status(200).send("Data Received");
+    }
+    catch (e) {
+        res.status(500).send(e);
+    }
+}));
+// Get all users status and respond to client
+app.get("/status", express_1.default.json(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // User data may return undefined to specifically signal that the user data does not exist
+        const data = yield (0, authentication_1.handleScanUsersStatus)();
+        if (data) {
+            res.json(data);
+        }
+        else {
+            // No data found for userID, send a 404 response
+            res.status(404).json({ message: "User data not found" });
+        }
+    }
+    catch (e) {
+        res.status(500).send(e);
+    }
+}));
+// Update the player status and respond to client
+app.post("/status", express_1.default.json(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield (0, authentication_1.handleSetUserStatus)(req.body);
         res.status(200).send("Data Received");
     }
     catch (e) {

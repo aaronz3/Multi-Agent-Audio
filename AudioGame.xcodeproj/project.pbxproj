@@ -26,6 +26,8 @@
 		8DDD3F602B53BD0D00DFFA31 /* PlayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDD3F5F2B53BD0D00DFFA31 /* PlayViewModel.swift */; };
 		8DDD3F622B54CA0200DFFA31 /* AudioControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDD3F612B54CA0200DFFA31 /* AudioControls.swift */; };
 		8DDD3F642B54F98D00DFFA31 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDD3F632B54F98D00DFFA31 /* MenuBarView.swift */; };
+		8DDFCE032B9EAA3100947062 /* GlobalPlayersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDFCE022B9EAA3100947062 /* GlobalPlayersView.swift */; };
+		8DDFCE052B9EAA5B00947062 /* GlobalPlayersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDFCE042B9EAA5B00947062 /* GlobalPlayersViewModel.swift */; };
 		8DEB38392B804E2C00C6FF97 /* AuthenticationVMTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEB38382B804E2C00C6FF97 /* AuthenticationVMTest.swift */; };
 		8DEB383B2B80583700C6FF97 /* UserDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEB383A2B80583700C6FF97 /* UserDataModel.swift */; };
 		8DEEDEBD2B4BA80300ECA1A5 /* PlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEEDEBC2B4BA80300ECA1A5 /* PlayView.swift */; };
@@ -67,6 +69,8 @@
 		8DDD3F5F2B53BD0D00DFFA31 /* PlayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayViewModel.swift; sourceTree = "<group>"; };
 		8DDD3F612B54CA0200DFFA31 /* AudioControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioControls.swift; sourceTree = "<group>"; };
 		8DDD3F632B54F98D00DFFA31 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		8DDFCE022B9EAA3100947062 /* GlobalPlayersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalPlayersView.swift; sourceTree = "<group>"; };
+		8DDFCE042B9EAA5B00947062 /* GlobalPlayersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalPlayersViewModel.swift; sourceTree = "<group>"; };
 		8DEB38382B804E2C00C6FF97 /* AuthenticationVMTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationVMTest.swift; sourceTree = "<group>"; };
 		8DEB383A2B80583700C6FF97 /* UserDataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataModel.swift; sourceTree = "<group>"; };
 		8DEEDEBC2B4BA80300ECA1A5 /* PlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayView.swift; sourceTree = "<group>"; };
@@ -132,9 +136,11 @@
 				8D2570892B91F0CB00E4047B /* LaunchScreen.storyboard */,
 				8D5F53F02B0C5C9500AE646E /* AudioApp.swift */,
 				8D6D26172B5A205B00BB5891 /* NetworkMonitor.swift */,
+				8DEB383A2B80583700C6FF97 /* UserDataModel.swift */,
 				8DAED04F2B70A7BB00F0837A /* Authentication */,
 				8DAE8FD12B9185BF00F36131 /* MainMenuView.swift */,
-				8DCE11162B55750500E0AC8A /* PlayView */,
+				8DDFCE062B9EAA6300947062 /* GlobalPlayers */,
+				8DCE11162B55750500E0AC8A /* Play */,
 				8D5F53F72B0C5C9600AE646E /* Preview Content */,
 			);
 			path = AudioGame;
@@ -171,19 +177,27 @@
 			children = (
 				8DAED04B2B70A79600F0837A /* AuthenticationView.swift */,
 				8DAED04D2B70A7B700F0837A /* AuthenticationViewModel.swift */,
-				8DEB383A2B80583700C6FF97 /* UserDataModel.swift */,
 			);
 			path = Authentication;
 			sourceTree = "<group>";
 		};
-		8DCE11162B55750500E0AC8A /* PlayView */ = {
+		8DCE11162B55750500E0AC8A /* Play */ = {
 			isa = PBXGroup;
 			children = (
 				8DEEDEBC2B4BA80300ECA1A5 /* PlayView.swift */,
 				8DDD3F632B54F98D00DFFA31 /* MenuBarView.swift */,
 				8DEEDEBE2B4BA80800ECA1A5 /* PlayViewClients */,
 			);
-			path = PlayView;
+			path = Play;
+			sourceTree = "<group>";
+		};
+		8DDFCE062B9EAA6300947062 /* GlobalPlayers */ = {
+			isa = PBXGroup;
+			children = (
+				8DDFCE022B9EAA3100947062 /* GlobalPlayersView.swift */,
+				8DDFCE042B9EAA5B00947062 /* GlobalPlayersViewModel.swift */,
+			);
+			path = GlobalPlayers;
 			sourceTree = "<group>";
 		};
 		8DEEDEBE2B4BA80800ECA1A5 /* PlayViewClients */ = {
@@ -319,8 +333,10 @@
 				8D6D26182B5A205B00BB5891 /* NetworkMonitor.swift in Sources */,
 				8DAE8FD22B9185BF00F36131 /* MainMenuView.swift in Sources */,
 				8D5FC6292B66058200276752 /* MockURLSessionWebSocketTask.swift in Sources */,
+				8DDFCE052B9EAA5B00947062 /* GlobalPlayersViewModel.swift in Sources */,
 				8DDD3F622B54CA0200DFFA31 /* AudioControls.swift in Sources */,
 				8DEB383B2B80583700C6FF97 /* UserDataModel.swift in Sources */,
+				8DDFCE032B9EAA3100947062 /* GlobalPlayersView.swift in Sources */,
 				8D5F53F12B0C5C9500AE646E /* AudioApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

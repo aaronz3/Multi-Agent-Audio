@@ -178,8 +178,8 @@ async function receivedStartGame(room: Room) {
 	room.gameState = "InGame"
 
 	// Let the host know that they successfully started the game
-	const errorMessage =  JSON.stringify({ type: "StartGameResult", payload: {result: "Success"} }) 
-	sendTo(room, room.host, Buffer.from(errorMessage))
+	const successMessage =  JSON.stringify({ type: "StartGameResult", payload: {result: "Success"} }) 
+	sendTo(room, room.host, Buffer.from(successMessage))
 
 	// Let all users know that the game is starting
 	const startMessage: string = JSON.stringify({ type: "StartGame" })

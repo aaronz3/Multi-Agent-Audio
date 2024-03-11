@@ -1,4 +1,6 @@
-import { AttributeValue, DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
+import { AttributeValue, DynamoDBClient, GetItemCommand, ScanCommand, PutItemCommand, UpdateItemCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
+import { RestoreObjectCommand } from "@aws-sdk/client-s3";
+import { table } from "console";
 
 // Define a type that describes the structure of your object
 type DynamoItem = {
@@ -29,8 +31,6 @@ export class AccessUserDataDynamoDB {
 		try {
 			const results = await this.client.send(command);
 			
-			console.log(`Get in ${tableName}`)
-
 			if (results.Item) {
 				return results.Item;
 			} else {
@@ -40,6 +40,32 @@ export class AccessUserDataDynamoDB {
 			throw new Error(`DEBUG: Error in getDataInTable ${e}`);
 		}
 	}
+
+	async scanPlayerStatus(): Promise<Record<string, AttributeValue>[]> {
+		// Set up the scan command with a filter expression
+		const params = {
+			TableName: "User-Data",
+			FilterExpression: "attribute_exists(Player-Status)",
+			ProjectionExpression: "User-ID, Player-Status"
+		};
+
+		const command = new ScanCommand(params);
+
+		try {
+			const results = await this.client.send(command);
+			
+			console.log(`Got results ${results}`)
+			
+			if (results.Items) {
+				return results.Items;
+			} else {
+				throw new Error("DEBUG: User data does not exist")
+			}
+		} catch (e) {
+			throw new Error(`DEBUG: Error in getDataInTable ${e}`);
+		}
+	}
+
 
 	async putItemInTable(tableName: string, partitionKey: string, partitionValue: string, item: DynamoItem) {
 

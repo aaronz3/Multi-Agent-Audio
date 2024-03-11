@@ -83,16 +83,12 @@ struct MenuBarView: View {
     }
 
     func handlePressedTalk(pressed: Bool) {
-        do {
-            if pressed {
-                self.playVM.unmuteAudio()
-                isLongPressed.toggle()
-            } else {
-                self.playVM.muteAudio()
-                isLongPressed.toggle()
-            }
-        } catch {
-            print("DEBUG: Error in handlePressedTalk \(error.localizedDescription)")
+        if pressed {
+            self.playVM.unmuteAudio()
+            isLongPressed.toggle()
+        } else {
+            self.playVM.muteAudio()
+            isLongPressed.toggle()
         }
     }
 }

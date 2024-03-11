@@ -2,6 +2,7 @@
 import { ParsedQs } from 'qs';
 import { AccessUserDataDynamoDB } from "./access-dynamodb";
 import { AttributeValue } from '@aws-sdk/client-dynamodb';
+import { request } from 'http';
 
 require("dotenv").config({ path: '../.env' });
 const databaseRegion = process.env.DYNAMODB_BUCKET_REGION!;
@@ -38,7 +39,34 @@ export async function handleSetUserData(requestBody: UserData) {
     }
 }
 
-interface UserData {
-    name: string;
+// Get all players status 
+
+export async function handleScanUsersStatus(): Promise<Record<string, AttributeValue>[] | undefined> {
+    try {
+        return await accessDB.scanPlayerStatus()
+    } catch(e) {
+        throw new Error(`DEBUG: Error in handleGetUserData ${e}`)
+    }
+}
+
+// Set player status
+export async function handleSetUserStatus(requestBody: UserStatus) {
+    try {
+        
+        // Set the user name to whatever is provided by the client
+        await accessDB.updateItemInTable("User-Data", "User-ID", requestBody.id, "Player-Status", requestBody.status)
+
+    } catch(e) {
+        throw new Error(`DEBUG: Error in handleSetUserData ${e}`)
+    }
+}
+
+interface UserStatus {
     id: string;
+    status: string;
+}
+
+interface UserData {
+    id: string;
+    name: string;
 }

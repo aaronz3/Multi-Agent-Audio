@@ -1,5 +1,5 @@
 import { handlePlay } from "./matchmaking";
-import { handleSetUserData, handleGetUserData } from "./authentication";
+import { handleSetUserData, handleGetUserData, handleSetUserStatus, handleScanUsersStatus } from "./authentication";
 import { Request, Response } from 'express';
 import express from "express";
 
@@ -42,12 +42,10 @@ server.on("upgrade", async (request: http.IncomingMessage, socket: internal.Dupl
 
         // Handle the play path 
         if (pathname === "/play") {
-            connectionQueue.push({ request, socket, head, url });
-            await processNextConnection();
+            playConnectionQueue.push({ request, socket, head, url });
+            await processNextPlayConnection();
         }
-
-        // Handle other paths here
-
+        
     } else {
         // Handle the case where request.url is undefined
         // For example, you might want to close the socket
@@ -57,7 +55,7 @@ server.on("upgrade", async (request: http.IncomingMessage, socket: internal.Dupl
 });
 
 // Define a type for the queue items
-type ConnectionQueueItem = {
+type PlayConnectionQueueItem = {
     request: http.IncomingMessage;
     socket: internal.Duplex;
     head: Buffer;
@@ -65,21 +63,21 @@ type ConnectionQueueItem = {
 };
 
 // Queue to hold the connections
-const connectionQueue: ConnectionQueueItem[] = [];
+const playConnectionQueue: PlayConnectionQueueItem[] = [];
 
 // Flag to indicate if a connection is currently being processed
-let isProcessing = false;
+let isPlayConnectionProcessing = false;
 
 // Recursive function to process the next item in the queue
-async function processNextConnection() {
+async function processNextPlayConnection() {
     
     // If the queue is currently processing or finished processing queue, exit the function
-    if (isProcessing || connectionQueue.length === 0) {
+    if (isPlayConnectionProcessing || playConnectionQueue.length === 0) {
         return;
     }
 
-    isProcessing = true;
-    const connectionItem = connectionQueue.shift();
+    isPlayConnectionProcessing = true;
+    const connectionItem = playConnectionQueue.shift();
 
     if (connectionItem) {
         const { request, socket, head, url } = connectionItem;
@@ -92,12 +90,12 @@ async function processNextConnection() {
             socket.destroy();
         // Trigger processing the next item
         } finally {
-            isProcessing = false;
-            processNextConnection();
+            isPlayConnectionProcessing = false;
+            processNextPlayConnection();
         }
     } else {
         // Ensure processing flag is reset if no item was found
-        isProcessing = false;
+        isPlayConnectionProcessing = false;
     }
 }
 
@@ -120,10 +118,37 @@ app.get("/login", express.json(), async (req: Request, res: Response) => {
     }
 });
 
-// Update the database and respond to client
+// Update the player data and respond to client
 app.post("/login", express.json(), async (req: Request, res: Response) => {
     try {
         await handleSetUserData(req.body)
+        res.status(200).send("Data Received")
+    } catch (e) {
+        res.status(500).send(e)
+    }
+});
+
+// Get all users status and respond to client
+app.get("/status", express.json(), async (req: Request, res: Response) => {
+    try {
+        // User data may return undefined to specifically signal that the user data does not exist
+        const data = await handleScanUsersStatus()
+        if (data) {
+            res.json(data);
+        } else {
+            // No data found for userID, send a 404 response
+            res.status(404).json({ message: "User data not found" });
+        }
+    } catch (e) {
+        res.status(500).send(e)
+    }
+    
+});
+
+// Update the player status and respond to client
+app.post("/status", express.json(), async (req: Request, res: Response) => {
+    try {
+        await handleSetUserStatus(req.body)
         res.status(200).send("Data Received")
     } catch (e) {
         res.status(500).send(e)

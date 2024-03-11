@@ -13,6 +13,11 @@ struct User: Codable {
     var name: String
 }
 
+struct UserStatus: Codable {
+    var id: String
+    var status: String
+}
+
 struct UserRecord: Codable {
     var userName: String
     var userId: String
@@ -48,3 +53,4 @@ struct UserRecord: Codable {
         self.userId = userId
     }
 }
+

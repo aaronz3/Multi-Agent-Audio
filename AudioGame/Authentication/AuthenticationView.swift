@@ -50,7 +50,27 @@ struct AuthenticationView: View {
         }
         .onAppear {
             networkMonitor.start()
-            handleOnAppear()
+            
+            // When the view appears, start listening for notifications
+            NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
+                Task {
+                    // Tell the server that the user is offline
+                    try await authenticationVM.sendUserStatus(status: "Offline")
+                }
+            }
+            
+            NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
+                Task {
+                    // When the user first opens the app
+                    await handleOnAppear()
+                }
+                
+            }
+        }
+        .onDisappear {
+            // When the view disappears, stop listening to avoid memory leaks
+            NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
+            NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
         }
     }
     
@@ -62,7 +82,9 @@ struct AuthenticationView: View {
                 .padding(50)
             
             Button("Retry") {
-                handleOnAppear()
+                Task {
+                    await handleOnAppear()
+                }
             }
         }
     }
@@ -75,39 +97,43 @@ struct AuthenticationView: View {
                 .padding(50)
             
             Button("Retry") {
-                handleOnAppear()
+                Task {
+                    await handleOnAppear()
+                }
             }
         }
     }
     
-    func handleOnAppear() {
-        Task {
-            do {
-                // Check to see if userID is nil
-                if GKLocalPlayer.local.playerID == "" {
-                    try await authenticationVM.authenticateViaGameCenter()
-                }
-                try await authenticationVM.getUserData()
-                
-                serverDown = false
-                noInternet = false
-                
-            } catch AuthenticationError.serverError {
-                serverDown = true
-            } catch let error as URLError {
-                // Show a view with the option to retry authentication or quit the app
-                // If the retried authentication fails, redisplay the view
-                if error.errorCode == -1004 {
-                    serverDown = true
-                } else {
-                    noInternet = true
-                }
-
-            } catch {
-                // Handle all other errors
-                print("DEBUG:", error.localizedDescription)
-                fatalError()
+    func handleOnAppear() async {
+        do {
+            // Check to see if userID is nil
+            if GKLocalPlayer.local.playerID == "" {
+                try await authenticationVM.authenticateViaGameCenter()
             }
+            // Check to see if database returned user data
+            if authenticationVM.userData == nil {
+                try await authenticationVM.getUserData()
+            }
+            try await authenticationVM.sendUserStatus(status: "Online")
+            
+            serverDown = false
+            noInternet = false
+            
+        } catch AuthenticationError.serverError {
+            serverDown = true
+        } catch let error as URLError {
+            // Show a view with the option to retry authentication or quit the app
+            // If the retried authentication fails, redisplay the view
+            if error.errorCode == -1004 {
+                serverDown = true
+            } else {
+                noInternet = true
+            }
+
+        } catch {
+            // Handle all other errors
+            print("DEBUG:", error.localizedDescription)
+            fatalError()
         }
     }
 }
