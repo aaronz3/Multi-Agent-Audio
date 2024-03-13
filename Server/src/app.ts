@@ -6,6 +6,7 @@ import express from "express";
 // Use the 'https' module instead of 'http' for production
 import http from "http";
 import internal from "stream";
+import { json } from "stream/consumers";
 // const fs = require('fs')
 // import https from 'https';  
 
@@ -108,13 +109,14 @@ app.get("/login", express.json(), async (req: Request, res: Response) => {
         // User data may return undefined to specifically signal that the user data does not exist
         const data = await handleGetUserData(req.query)
         if (data) {
-            res.json(data);
+            res.status(200).json(data);
         } else {
             // No data found for userID, send a 404 response
             res.status(404).json({ message: "User data not found" });
         }
     } catch (e) {
-        res.status(500).send(e)
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+        res.status(500).json(errorMessage)
     }
 });
 
@@ -124,25 +126,22 @@ app.post("/login", express.json(), async (req: Request, res: Response) => {
         await handleSetUserData(req.body)
         res.status(200).send("Data Received")
     } catch (e) {
-        res.status(500).send(e)
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+        res.status(500).send(errorMessage);
     }
 });
 
 // Get all users status and respond to client
 app.get("/status", express.json(), async (req: Request, res: Response) => {
     try {
-        // User data may return undefined to specifically signal that the user data does not exist
         const data = await handleScanUsersStatus()
         if (data) {
-            res.json(data);
-        } else {
-            // No data found for userID, send a 404 response
-            res.status(404).json({ message: "User data not found" });
+            res.status(200).json(data);    
         }
     } catch (e) {
-        res.status(500).send(e)
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+        res.status(500).json(errorMessage)
     }
-    
 });
 
 // Update the player status and respond to client
@@ -150,8 +149,9 @@ app.post("/status", express.json(), async (req: Request, res: Response) => {
     try {
         await handleSetUserStatus(req.body)
         res.status(200).send("Data Received")
-    } catch (e) {
-        res.status(500).send(e)
+    } catch(e) {
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+        res.status(500).json(errorMessage)
     }
 });
 

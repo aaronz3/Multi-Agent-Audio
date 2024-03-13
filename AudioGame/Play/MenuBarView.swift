@@ -22,22 +22,22 @@ struct MenuBarView: View {
             if let hostUUID = playVM.roomCharacteristics.hostUUID,
                 hostUUID == playVM.signalingClient.currentUserUUID {
                 VStack {
-                    gameState()
+                    gameStateView()
                     
                     if let result = playVM.startGameResult {
-                        startGameResult(result: result)
+                        startGameResultView(result: result)
                     }
 
                 }
                 
             }
 
-            talk()
+            talkView()
             
         }
     }
     
-    func gameState() -> some View {
+    func gameStateView() -> some View {
         let inLobby = playVM.roomCharacteristics.gameState == .InLobby
         return Button(inLobby ? "Start Game" : "End Game") {
             Task {
@@ -52,7 +52,7 @@ struct MenuBarView: View {
         
     }
     
-    func startGameResult(result: String) -> some View {
+    func startGameResultView(result: String) -> some View {
 
         Text(result)
             .onAppear {
@@ -70,7 +70,7 @@ struct MenuBarView: View {
         
     }
     
-    func talk() -> some View {
+    func talkView() -> some View {
         Button("Talk") { }
             .padding(20.0)
             .onLongPressGesture(

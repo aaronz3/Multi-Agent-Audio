@@ -2,8 +2,6 @@ import WebSocket from "ws";
 import { roomsContainer, getCurrentTime, Room, Message, maxNumberOfPlayers } from "./global-properties";
 import { IncomingMessage } from "http";
 import { AccessUserDataDynamoDB } from "./access-dynamodb";
-import { send } from "process";
-import { json } from "stream/consumers";
 
 require("dotenv").config({ path: '../.env' });
 const databaseRegion = process.env.DYNAMODB_BUCKET_REGION!;

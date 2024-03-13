@@ -8,8 +8,33 @@
 import SwiftUI
 
 struct GlobalPlayersView: View {
+    
+    @EnvironmentObject var globalPlayersVM: GlobalPlayersViewModel
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            HStack {
+                Button("", systemImage: "chevron.backward") {
+                    globalPlayersVM.userStatus = []
+                }
+                Spacer()
+            }
+            List(globalPlayersVM.userStatus) { user in
+                HStack {
+                    Spacer() // Spacer before the text to push it to the middle
+                    VStack {
+                        Text(user.userId)
+                        Text(user.playerStatus)
+                    }
+                    Spacer() // Spacer after the text to keep it centered
+                }
+            }
+        }
+        .refreshable {
+            Task {
+                try await globalPlayersVM.getUserStatus()
+            }
+        }
     }
 }
 

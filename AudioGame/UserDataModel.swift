@@ -7,15 +7,40 @@
 
 import Foundation
 
-// Uploading user data
-struct User: Codable {
-    var id: String
-    var name: String
-}
+struct UserStatus: Codable, Identifiable {
+    var id: String { userId }
+    var userId: String
+    var playerStatus: String
+    
+    enum CodingKeys: String, CodingKey {
+        case playerStatus = "Player-Status"
+        case userId = "User-ID"
+    }
+    
+    struct AttributeValue: Codable {
+        let S: String?
+    }
+    
+    init(userId: String, playerStatus: String) {
+        self.playerStatus = playerStatus
+        self.userId = userId
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let statusAttribute = try container.decode(AttributeValue.self, forKey: .playerStatus)
+        let userIdAttribute = try container.decode(AttributeValue.self, forKey: .userId)
 
-struct UserStatus: Codable {
-    var id: String
-    var status: String
+        guard let playerStatus = statusAttribute.S,
+              let userId = userIdAttribute.S
+        else {
+            throw DecodingError.dataCorruptedError(forKey: .playerStatus, in: container, debugDescription: "Expected String value")
+        }
+        
+        self.playerStatus = playerStatus
+        self.userId = userId
+        
+    }
 }
 
 struct UserRecord: Codable {
@@ -33,7 +58,7 @@ struct UserRecord: Codable {
         let S: String?
     }
     
-    init(userName: String, userId: String) {
+    init(userId: String, userName: String) {
         self.userName = userName
         self.userId = userId
     }

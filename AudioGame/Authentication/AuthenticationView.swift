@@ -133,7 +133,6 @@ struct AuthenticationView: View {
         } catch {
             // Handle all other errors
             print("DEBUG:", error.localizedDescription)
-            fatalError()
         }
     }
 }

@@ -2,7 +2,6 @@
 import { ParsedQs } from 'qs';
 import { AccessUserDataDynamoDB } from "./access-dynamodb";
 import { AttributeValue } from '@aws-sdk/client-dynamodb';
-import { request } from 'http';
 
 require("dotenv").config({ path: '../.env' });
 const databaseRegion = process.env.DYNAMODB_BUCKET_REGION!;
@@ -18,6 +17,7 @@ export async function handleGetUserData(requestQuery: ParsedQs): Promise<Record<
     try {
         return await accessDB.getDataInTable("User-Data", "User-ID", requestQuery.uuid)
     } catch(e) {
+        console.log("DEBUG: Error in handleGetUserData", e)
         throw new Error(`DEBUG: Error in handleGetUserData ${e}`)
     }
 }
@@ -25,14 +25,13 @@ export async function handleGetUserData(requestQuery: ParsedQs): Promise<Record<
 // Set the user data 
 export async function handleSetUserData(requestBody: UserData) {
     try {
-        
         // Format of the data to update the database
         const userNameItem = {
-            "User-Name" : { "S" : requestBody.name }
+            "User-Name" : { "S" : requestBody['User-Name'] }
         }
 
         // Set the user name to whatever is provided by the client
-        await accessDB.putItemInTable("User-Data", "User-ID", requestBody.id, userNameItem)
+        await accessDB.putItemInTable("User-Data", "User-ID", requestBody['User-ID'], userNameItem)
 
     } catch(e) {
         throw new Error(`DEBUG: Error in handleSetUserData ${e}`)
@@ -40,33 +39,31 @@ export async function handleSetUserData(requestBody: UserData) {
 }
 
 // Get all players status 
-
 export async function handleScanUsersStatus(): Promise<Record<string, AttributeValue>[] | undefined> {
     try {
         return await accessDB.scanPlayerStatus()
     } catch(e) {
-        throw new Error(`DEBUG: Error in handleGetUserData ${e}`)
+        throw new Error(`DEBUG: Error in handleScanUsersStatus ${e}`)
     }
 }
 
 // Set player status
 export async function handleSetUserStatus(requestBody: UserStatus) {
     try {
-        
         // Set the user name to whatever is provided by the client
-        await accessDB.updateItemInTable("User-Data", "User-ID", requestBody.id, "Player-Status", requestBody.status)
+        await accessDB.updateItemInTable("User-Data", "User-ID", requestBody['User-ID'], "Player-Status", requestBody['Player-Status'])
 
     } catch(e) {
-        throw new Error(`DEBUG: Error in handleSetUserData ${e}`)
+        throw new Error(`DEBUG: Error in handleSetUserStatus ${e}`)
     }
 }
 
 interface UserStatus {
-    id: string;
-    status: string;
+    "User-ID": string;
+    "Player-Status": string;
 }
 
 interface UserData {
-    id: string;
-    name: string;
+    "User-ID": string;
+    "User-Name": string;
 }

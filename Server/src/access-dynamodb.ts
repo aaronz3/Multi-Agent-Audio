@@ -1,6 +1,4 @@
 import { AttributeValue, DynamoDBClient, GetItemCommand, ScanCommand, PutItemCommand, UpdateItemCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
-import { RestoreObjectCommand } from "@aws-sdk/client-s3";
-import { table } from "console";
 
 // Define a type that describes the structure of your object
 type DynamoItem = {
@@ -15,57 +13,54 @@ export class AccessUserDataDynamoDB {
 		this.client = new DynamoDBClient({ region: region });
 	}
 
-	async getDataInTable(tableName: string, partitionKey: string, partitionValue: string): Promise<Record<string, AttributeValue>> {
+	async getDataInTable(tableName: string, partitionKey: string, partitionValue: string): Promise<Record<string, AttributeValue> | undefined> {
 
 		const input = {
-			"Key": {
+			Key: {
 				[partitionKey]: {
 					"S": `${partitionValue}`
 				}
 			},
-			"TableName": tableName,
+			TableName: tableName,
 		};
 
 		const command = new GetItemCommand(input);
 
 		try {
 			const results = await this.client.send(command);
-			
-			if (results.Item) {
-				return results.Item;
-			} else {
-				throw new Error("DEBUG: User data does not exist")
-			}
+			return results.Item
 		} catch (e) {
 			throw new Error(`DEBUG: Error in getDataInTable ${e}`);
 		}
 	}
 
-	async scanPlayerStatus(): Promise<Record<string, AttributeValue>[]> {
+	async scanPlayerStatus(): Promise<Record<string, AttributeValue>[] | undefined> {
 		// Set up the scan command with a filter expression
 		const params = {
 			TableName: "User-Data",
-			FilterExpression: "attribute_exists(Player-Status)",
-			ProjectionExpression: "User-ID, Player-Status"
+			ProjectionExpression: "#userID, #playerStatus",
+			FilterExpression: "attribute_exists(#playerStatus)",
+			ExpressionAttributeNames: {
+				"#userID": "User-ID",
+				"#playerStatus": "Player-Status"
+			}
 		};
 
 		const command = new ScanCommand(params);
 
 		try {
+			
 			const results = await this.client.send(command);
-			
-			console.log(`Got results ${results}`)
-			
+						
 			if (results.Items) {
 				return results.Items;
 			} else {
-				throw new Error("DEBUG: User data does not exist")
+				return undefined;
 			}
 		} catch (e) {
-			throw new Error(`DEBUG: Error in getDataInTable ${e}`);
+			throw new Error(`DEBUG: Error in scanPlayerStatus ${e}`);
 		}
 	}
-
 
 	async putItemInTable(tableName: string, partitionKey: string, partitionValue: string, item: DynamoItem) {
 

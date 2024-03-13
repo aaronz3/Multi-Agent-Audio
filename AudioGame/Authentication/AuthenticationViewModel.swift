@@ -126,7 +126,7 @@ class AuthenticationViewModel: ObservableObject {
             try await sendUserData(name: randomName)
             
             // Set default values to userData
-            self.userData = UserRecord(userName: randomName, userId: GKLocalPlayer.local.playerID)
+            self.userData = UserRecord(userId: GKLocalPlayer.local.playerID, userName: randomName)
             
         } else {
             throw AuthenticationError.unknownFourZeroFourError
@@ -141,12 +141,12 @@ class AuthenticationViewModel: ObservableObject {
     // MARK: Send user data to server
     
     func sendUserData(name: String) async throws {
-        var data = User(id: GKLocalPlayer.local.playerID, name: name)
+        var data = UserRecord(userId: GKLocalPlayer.local.playerID, userName: name)
         try await postRequest(data: data, endpoint: loginUrl)
     }
     
     func sendUserStatus(status: String) async throws {
-        var data = UserStatus(id: GKLocalPlayer.local.playerID, status: status)
+        var data = UserStatus(userId: GKLocalPlayer.local.playerID, playerStatus: status)
         try await postRequest(data: data, endpoint: userStatusUrl)
     }
     
@@ -157,7 +157,6 @@ class AuthenticationViewModel: ObservableObject {
             // Send the block of user data to the server.
             let bodyData = try JSONEncoder().encode(data)
             
-            
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpMethod = "POST"
             request.httpBody = bodyData
@@ -167,10 +166,10 @@ class AuthenticationViewModel: ObservableObject {
         }
         
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (resData, response) = try await URLSession.shared.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-                print("DEBUG: HTTP Request failed")
+                print("DEBUG: HTTP Request failed", response)
                 throw AuthenticationError.httpResponseError
             }
             

@@ -18,22 +18,17 @@ class AccessUserDataDynamoDB {
     getDataInTable(tableName, partitionKey, partitionValue) {
         return __awaiter(this, void 0, void 0, function* () {
             const input = {
-                "Key": {
+                Key: {
                     [partitionKey]: {
                         "S": `${partitionValue}`
                     }
                 },
-                "TableName": tableName,
+                TableName: tableName,
             };
             const command = new client_dynamodb_1.GetItemCommand(input);
             try {
                 const results = yield this.client.send(command);
-                if (results.Item) {
-                    return results.Item;
-                }
-                else {
-                    throw new Error("DEBUG: User data does not exist");
-                }
+                return results.Item;
             }
             catch (e) {
                 throw new Error(`DEBUG: Error in getDataInTable ${e}`);
@@ -45,22 +40,25 @@ class AccessUserDataDynamoDB {
             // Set up the scan command with a filter expression
             const params = {
                 TableName: "User-Data",
-                FilterExpression: "attribute_exists(Player-Status)",
-                ProjectionExpression: "User-ID, Player-Status"
+                ProjectionExpression: "#userID, #playerStatus",
+                FilterExpression: "attribute_exists(#playerStatus)",
+                ExpressionAttributeNames: {
+                    "#userID": "User-ID",
+                    "#playerStatus": "Player-Status"
+                }
             };
             const command = new client_dynamodb_1.ScanCommand(params);
             try {
                 const results = yield this.client.send(command);
-                console.log(`Got results ${results}`);
                 if (results.Items) {
                     return results.Items;
                 }
                 else {
-                    throw new Error("DEBUG: User data does not exist");
+                    return undefined;
                 }
             }
             catch (e) {
-                throw new Error(`DEBUG: Error in getDataInTable ${e}`);
+                throw new Error(`DEBUG: Error in scanPlayerStatus ${e}`);
             }
         });
     }

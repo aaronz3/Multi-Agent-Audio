@@ -40,7 +40,7 @@ export async function handlePlay(request: http.IncomingMessage, socket: internal
 export async function updateRoomReturnWebSocketServer(uuid: string): Promise<WebSocket.Server> {
 
 	const userData = await accessDB.getDataInTable("User-Data", "User-ID", uuid)
-	const previousRoomUUID = userData["Previous-Room"]?.S // The previous room string exists
+	const previousRoomUUID = userData!["Previous-Room"]?.S // The previous room string exists
 
 	// IF USER WAS NOT IN A GAME OR GAME DOES NOT EXIST
 	if (previousRoomUUID === undefined) {

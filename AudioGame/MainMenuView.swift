@@ -24,11 +24,15 @@ struct MainMenuView: View {
         
         // If signaling client connected then show the play view
         if playVM.signalingConnected {
-        
+            
             // Display the play view
             PlayView()
                 .environmentObject(playVM)
-        
+        } else if !globalPlayersVM.userStatus.isEmpty {
+            
+            GlobalPlayersView()
+                .environmentObject(globalPlayersVM)
+            
         // If still processing the play task load the progress view
         } else if isProcessing {
 
@@ -73,15 +77,7 @@ struct MainMenuView: View {
                 
                 Button("PLAYERS") {
                     Task {
-                        isProcessing = true
-                        
-                        do {
-                            try await self.globalPlayersVM.getUserStatus()
-                        } catch {
-                            loadingError = true
-                        }
-                        
-                        isProcessing = false
+                        try await self.globalPlayersVM.getUserStatus()
                     }
                 }
             }

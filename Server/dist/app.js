@@ -97,7 +97,7 @@ app.get("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void
         // User data may return undefined to specifically signal that the user data does not exist
         const data = yield (0, authentication_1.handleGetUserData)(req.query);
         if (data) {
-            res.json(data);
+            res.status(200).json(data);
         }
         else {
             // No data found for userID, send a 404 response
@@ -105,7 +105,8 @@ app.get("/login", express_1.default.json(), (req, res) => __awaiter(void 0, void
         }
     }
     catch (e) {
-        res.status(500).send(e);
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+        res.status(500).json(errorMessage);
     }
 }));
 // Update the player data and respond to client
@@ -115,24 +116,21 @@ app.post("/login", express_1.default.json(), (req, res) => __awaiter(void 0, voi
         res.status(200).send("Data Received");
     }
     catch (e) {
-        res.status(500).send(e);
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+        res.status(500).send(errorMessage);
     }
 }));
 // Get all users status and respond to client
 app.get("/status", express_1.default.json(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // User data may return undefined to specifically signal that the user data does not exist
         const data = yield (0, authentication_1.handleScanUsersStatus)();
         if (data) {
-            res.json(data);
-        }
-        else {
-            // No data found for userID, send a 404 response
-            res.status(404).json({ message: "User data not found" });
+            res.status(200).json(data);
         }
     }
     catch (e) {
-        res.status(500).send(e);
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+        res.status(500).json(errorMessage);
     }
 }));
 // Update the player status and respond to client
@@ -142,7 +140,8 @@ app.post("/status", express_1.default.json(), (req, res) => __awaiter(void 0, vo
         res.status(200).send("Data Received");
     }
     catch (e) {
-        res.status(500).send(e);
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+        res.status(500).json(errorMessage);
     }
 }));
 server.listen(port, () => {
