@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		8D0588BC2B527CE500D77E7D /* PeerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0588BB2B527CE500D77E7D /* PeerConnection.swift */; };
 		8D18D62F2B5CD9E20019781C /* SignalingTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D18D62E2B5CD9E20019781C /* SignalingTest.swift */; };
+		8D1B16432BA1D1110021609F /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D1B16422BA1D1110021609F /* StoreKit.framework */; };
+		8D1B16462BA1DA7D0021609F /* StoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1B16452BA1DA7D0021609F /* StoreView.swift */; };
+		8D1B16482BA1DB0C0021609F /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1B16472BA1DB0C0021609F /* StoreManager.swift */; };
 		8D25708A2B91F0CB00E4047B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8D2570892B91F0CB00E4047B /* LaunchScreen.storyboard */; };
 		8D456E6F2B578D4B008EB384 /* WebRTCMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D456E6E2B578D4B008EB384 /* WebRTCMessage.swift */; };
 		8D5F53F12B0C5C9500AE646E /* AudioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5F53F02B0C5C9500AE646E /* AudioApp.swift */; };
@@ -49,6 +52,10 @@
 /* Begin PBXFileReference section */
 		8D0588BB2B527CE500D77E7D /* PeerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerConnection.swift; sourceTree = "<group>"; };
 		8D18D62E2B5CD9E20019781C /* SignalingTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingTest.swift; sourceTree = "<group>"; };
+		8D1B16422BA1D1110021609F /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		8D1B16442BA1D9150021609F /* Classified Mission.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Classified Mission.storekit"; sourceTree = "<group>"; };
+		8D1B16452BA1DA7D0021609F /* StoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreView.swift; sourceTree = "<group>"; };
+		8D1B16472BA1DB0C0021609F /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
 		8D2570892B91F0CB00E4047B /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8D456E6E2B578D4B008EB384 /* WebRTCMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCMessage.swift; sourceTree = "<group>"; };
 		8D5F53ED2B0C5C9500AE646E /* AudioGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -85,6 +92,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DDD3F5C2B53792500DFFA31 /* WebRTC in Frameworks */,
+				8D1B16432BA1D1110021609F /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,12 +117,22 @@
 			path = PlayTests;
 			sourceTree = "<group>";
 		};
+		8D1B16412BA1D1110021609F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8D1B16422BA1D1110021609F /* StoreKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		8D5F53E42B0C5C9500AE646E = {
 			isa = PBXGroup;
 			children = (
+				8D1B16442BA1D9150021609F /* Classified Mission.storekit */,
 				8D5F53EF2B0C5C9500AE646E /* AudioGame */,
 				8D6515472B5C0E6D00B6843A /* AudioGameTests */,
 				8D5F53EE2B0C5C9500AE646E /* Products */,
+				8D1B16412BA1D1110021609F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -139,6 +157,7 @@
 				8DEB383A2B80583700C6FF97 /* UserDataModel.swift */,
 				8DAED04F2B70A7BB00F0837A /* Authentication */,
 				8DAE8FD12B9185BF00F36131 /* MainMenuView.swift */,
+				8D94116F2BA2A0C900869160 /* Store */,
 				8DDFCE062B9EAA6300947062 /* GlobalPlayers */,
 				8DCE11162B55750500E0AC8A /* Play */,
 				8D5F53F72B0C5C9600AE646E /* Preview Content */,
@@ -170,6 +189,15 @@
 				8DEB38382B804E2C00C6FF97 /* AuthenticationVMTest.swift */,
 			);
 			path = AudioGameTests;
+			sourceTree = "<group>";
+		};
+		8D94116F2BA2A0C900869160 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				8D1B16452BA1DA7D0021609F /* StoreView.swift */,
+				8D1B16472BA1DB0C0021609F /* StoreManager.swift */,
+			);
+			path = Store;
 			sourceTree = "<group>";
 		};
 		8DAED04F2B70A7BB00F0837A /* Authentication */ = {
@@ -324,12 +352,14 @@
 				8DFD26A82B9344790006E076 /* MonitorAudio.swift in Sources */,
 				8DEEDEBD2B4BA80300ECA1A5 /* PlayView.swift in Sources */,
 				8DDD3F602B53BD0D00DFFA31 /* PlayViewModel.swift in Sources */,
+				8D1B16462BA1DA7D0021609F /* StoreView.swift in Sources */,
 				8DB166F62B528D9A003E6AB5 /* SignalingClient.swift in Sources */,
 				8D456E6F2B578D4B008EB384 /* WebRTCMessage.swift in Sources */,
 				8DDD3F642B54F98D00DFFA31 /* MenuBarView.swift in Sources */,
 				8DAED04E2B70A7B700F0837A /* AuthenticationViewModel.swift in Sources */,
 				8D0588BC2B527CE500D77E7D /* PeerConnection.swift in Sources */,
 				8DAED04C2B70A79600F0837A /* AuthenticationView.swift in Sources */,
+				8D1B16482BA1DB0C0021609F /* StoreManager.swift in Sources */,
 				8D6D26182B5A205B00BB5891 /* NetworkMonitor.swift in Sources */,
 				8DAE8FD22B9185BF00F36131 /* MainMenuView.swift in Sources */,
 				8D5FC6292B66058200276752 /* MockURLSessionWebSocketTask.swift in Sources */,

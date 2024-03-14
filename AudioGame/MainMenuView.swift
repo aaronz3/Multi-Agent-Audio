@@ -14,8 +14,8 @@ struct MainMenuView: View {
 
     @StateObject var playVM = PlayViewModel(signalingClient:
                                                 SignalingClient(url: defaultSignalingServerUrl, currentUserUUID: GKLocalPlayer.local.playerID))
-    
     @StateObject var globalPlayersVM = GlobalPlayersViewModel(url: userStatusUrl)
+    @StateObject var storeManager = StoreManager()
     
     @State var isProcessing = false
     @State var loadingError = false
@@ -24,15 +24,17 @@ struct MainMenuView: View {
         
         // If signaling client connected then show the play view
         if playVM.signalingConnected {
+        
+            PlayView().environmentObject(playVM)
             
-            // Display the play view
-            PlayView()
-                .environmentObject(playVM)
         } else if !globalPlayersVM.userStatus.isEmpty {
             
-            GlobalPlayersView()
-                .environmentObject(globalPlayersVM)
+            GlobalPlayersView().environmentObject(globalPlayersVM)
             
+        } else if !storeManager.products.isEmpty {
+            
+            StoreView().environmentObject(storeManager)
+        
         // If still processing the play task load the progress view
         } else if isProcessing {
 
@@ -77,8 +79,20 @@ struct MainMenuView: View {
                 
                 Button("PLAYERS") {
                     Task {
-                        try await self.globalPlayersVM.getUserStatus()
+                        isProcessing = true
+                        
+                        do {
+                            try await self.globalPlayersVM.getUserStatus()
+                        } catch {
+                            loadingError = true
+                        }
+                        
+                        isProcessing = false
                     }
+                }
+                
+                Button("STORE") {
+                    storeManager.loadProducts()
                 }
             }
             

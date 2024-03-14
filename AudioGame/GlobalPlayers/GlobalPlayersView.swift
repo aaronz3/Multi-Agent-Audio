@@ -19,6 +19,7 @@ struct GlobalPlayersView: View {
                 }
                 Spacer()
             }
+            .padding(.horizontal, 20)
             List(globalPlayersVM.userStatus) { user in
                 HStack {
                     Spacer() // Spacer before the text to push it to the middle
@@ -29,7 +30,9 @@ struct GlobalPlayersView: View {
                     Spacer() // Spacer after the text to keep it centered
                 }
             }
+            .padding(20)
         }
+        .padding(20)
         .refreshable {
             Task {
                 try await globalPlayersVM.getUserStatus()

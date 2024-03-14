@@ -18,7 +18,6 @@ struct AudioApp: App {
             AuthenticationView()
                 .environmentObject(authenticationVM)
                 .environmentObject(networkMonitor)
-            
         }
     }
 }
